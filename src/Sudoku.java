@@ -5,6 +5,16 @@ public class Sudoku {
 
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {
+		Puzzle NRC_5dec14 = new NRCPuzzle("NRC_5dec14", new String[] {
+				"....65...",
+				".......6.",
+				"1......78",
+				".........",
+				"..27.....",
+				".3..9...1",
+				"..6..45..",
+				".8...2...",
+				"........." });
 
 		Puzzle NRC_28dec = new NRCPuzzle("NRC_28dec", new String[] {
 				".....2...",
@@ -98,7 +108,8 @@ public class Sudoku {
 		
 		Puzzle p = 
 //				null; // null means it will solve all
-				NRC_28dec
+				NRC_5dec14
+//				NRC_28dec
 //				NRC_17nov
 //				Parool_18nov
 //				Trouw_535

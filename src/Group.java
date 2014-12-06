@@ -63,6 +63,20 @@ public abstract class Group {
 		return true;
 	}
 	
+	private Integer getUniquePossibility(PossibilitiesPerCellCache cache,
+			SolutionContainer sols, Coord myCell) {
+		Set<Integer> remainingPossibilities = new HashSet<Integer>(cache.getPossibilities(myCell));
+		for (Coord otherCell : coords.keySet()) {
+			if (otherCell != myCell) {
+				remainingPossibilities.removeAll(cache.getPossibilities(otherCell));
+			}
+		}
+		if (remainingPossibilities.size() == 1) {
+			return remainingPossibilities.iterator().next();
+		}
+		return null;
+	}
+
 	public boolean fillPossibleCells(PossibilitiesPerCellCache cache, SolutionContainer sols) {
 		boolean found = false;
 
@@ -72,21 +86,19 @@ public abstract class Group {
 			if (coords.get(myCell) != null && digits[coords.get(myCell)] != -1) continue;
 			
 			Set<Integer> cellPossibilities = cache.getPossibilities(myCell);
-			if (cellPossibilities != null && cellPossibilities.size() == 1) {
-				// keep unique solutions - cell set is 1, only possibility must be the value in the set
-				sols.addSolution(myCell, cellPossibilities.iterator().next(), "in " + groupID + ": Lone Number");
-				found = true;
-			} else if (cellPossibilities != null && cellPossibilities.size() > 1) {
-				// otherwise, see if there is a unique value in this set, that exists no-where else in the group
-				Set<Integer> remainingPossibilities = new HashSet<Integer>(cellPossibilities);
-				for (Coord otherCell : coords.keySet()) {
-					if (otherCell != myCell) {
-						remainingPossibilities.removeAll(cache.getPossibilities(otherCell));
-					}
-				}
-				if (remainingPossibilities.size() == 1) {
-					sols.addSolution(myCell, remainingPossibilities.iterator().next(), "in " + groupID + ": Unique Cell");
+			if (cellPossibilities != null) {
+				// Try both - often solutions are both unique and lone numbers
+				if (cellPossibilities.size() == 1) {
+					// keep unique solutions - cell set is 1, only possibility must be the value in the set
+					sols.addSolution(myCell, cellPossibilities.iterator().next(), "in " + groupID + ": Lone Number");
 					found = true;
+				} else if (cellPossibilities.size() > 1) {
+					// otherwise, see if there is a unique value in this set, that exists no-where else in the group
+					Integer uniquePossibility = getUniquePossibility(cache, sols, myCell);
+					if (uniquePossibility != null) {
+						sols.addSolution(myCell, uniquePossibility, "in " + groupID + ": Unique Cell");
+						found = true;
+					}
 				}
 			}
 		}
