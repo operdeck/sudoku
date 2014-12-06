@@ -1,0 +1,3 @@
+Super duper Sudoku solver. Handles normal ones as well as the 'NRC' variation with the four extra squares.
+
+Have not seen a Sodoku yet it cannot handle...
