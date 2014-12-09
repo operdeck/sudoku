@@ -98,20 +98,30 @@ public class Puzzle {
 				cache.merge(newCache);
 			}
 
-//			cache.dump();
-			
-			if (eliminateByXWings(cache)) updated = true;
-
+			// Try progressively, simple solutions first
+			System.out.println("Check unique cells:");
 			for (Group g : groups) {
-				if (g.eliminateNakedPairs(this, cache)) updated = true;
+				if (g.fillUniqueCells(cache, sols)) updated = true;
 			}
-			
-			if (eliminateByRadiationFromIntersections(cache)) updated = true;			
-			
-//			cache.dump();
-			
-			for (Group g : groups) {
-				if (g.fillPossibleCells(cache, sols)) updated = true;
+			if (!updated) {
+				System.out.println("Check lone numbers (that can't be placed anywhere else):");
+				for (Group g : groups) {
+					if (g.fillLoneNumbers(cache, sols)) updated = true;
+				}
+			}
+			if (!updated) {
+				System.out.println("Eliminate by radiation from intersections:");
+				if (eliminateByRadiationFromIntersections(cache)) updated = true;
+			}
+			if (!updated) {
+				System.out.println("Eliminate naked pairs:");
+				for (Group g : groups) {
+					if (g.eliminateNakedPairs(this, cache)) updated = true;
+				}
+			}
+			if (!updated) {
+				System.out.println("Eliminate by X-Wings:");
+				if (eliminateByXWings(cache)) updated = true;
 			}
 			
 			if (updated) {

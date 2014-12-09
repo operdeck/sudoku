@@ -78,34 +78,48 @@ public abstract class Group {
 		return null;
 	}
 
-	public boolean fillPossibleCells(PossibilitiesPerCellCache cache, SolutionContainer sols) {
+	public boolean fillLoneNumbers(PossibilitiesPerCellCache cache, SolutionContainer sols) {
 		boolean found = false;
 
-		// Figure out cell by cell if cell C contains a value that is unique, i.e.
-		// cannot be placed anywhere else in this group
 		for (Coord myCell : coords.keySet()) {
 			if (coords.get(myCell) != null && digits[coords.get(myCell)] != -1) continue;
 			
 			Set<Integer> cellPossibilities = cache.getPossibilities(myCell);
 			if (cellPossibilities != null) {
-				// Try both - often solutions are both unique and lone numbers
+				Integer loneNumber = null;
 				if (cellPossibilities.size() == 1) {
-					// keep unique solutions - cell set is 1, only possibility must be the value in the set
-					sols.addSolution(myCell, cellPossibilities.iterator().next(), "in " + groupID + ": Lone Number");
+					loneNumber = cellPossibilities.iterator().next();
+				}
+				if (loneNumber != null) {
+					sols.addSolution(myCell, loneNumber, "in " + groupID + ": Lone Number");
 					found = true;
-				} else if (cellPossibilities.size() > 1) {
-					// otherwise, see if there is a unique value in this set, that exists no-where else in the group
-					Integer uniquePossibility = getUniquePossibility(cache, sols, myCell);
-					if (uniquePossibility != null) {
-						sols.addSolution(myCell, uniquePossibility, "in " + groupID + ": Unique Cell");
-						found = true;
-					}
 				}
 			}
 		}
 		return found;
 	}
 
+	public boolean fillUniqueCells(PossibilitiesPerCellCache cache, SolutionContainer sols) {
+		boolean found = false;
+
+		for (Coord myCell : coords.keySet()) {
+			if (coords.get(myCell) != null && digits[coords.get(myCell)] != -1) continue;
+			
+			Set<Integer> cellPossibilities = cache.getPossibilities(myCell);
+			if (cellPossibilities != null) {
+				Integer uniquePossibility = null;
+				if (cellPossibilities.size() >= 1) {
+					uniquePossibility = getUniquePossibility(cache, sols, myCell);
+				}
+				if (uniquePossibility != null) {
+					sols.addSolution(myCell, uniquePossibility, "in " + groupID + ": Unique Cell");
+					found = true;
+				}
+			}
+		}
+		return found;
+	}
+	
 	public boolean solved() {
 		for (int n : Digits.all) if (!hasDigit[n]) return false;
 		return true;
