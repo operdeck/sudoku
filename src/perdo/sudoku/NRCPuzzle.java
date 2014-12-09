@@ -1,6 +1,11 @@
+package perdo.sudoku;
 
 public class NRCPuzzle extends Puzzle {
 
+	public NRCPuzzle(String[] mySudoku) {
+		this(null, mySudoku);
+	}
+	
 	public NRCPuzzle(String name, String[] mySudoku) {
 		super(name);
 		addStandardGroups(mySudoku);

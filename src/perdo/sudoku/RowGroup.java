@@ -1,3 +1,4 @@
+package perdo.sudoku;
 
 public class RowGroup extends Group {
 

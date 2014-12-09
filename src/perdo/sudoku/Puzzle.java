@@ -1,3 +1,4 @@
+package perdo.sudoku;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +18,9 @@ public class Puzzle {
 	
 	public static List<Puzzle> all = new ArrayList<Puzzle>();
 	
+	public Puzzle(String[] mySudoku) {
+		this(null, mySudoku);
+	}
 	public Puzzle(String name, String[] mySudoku) {
 		this(name);
 		addStandardGroups(mySudoku);
