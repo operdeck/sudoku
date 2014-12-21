@@ -27,25 +27,65 @@ public class SolutionContainer {
 		}
 	}
 	
+// TODO represent final solution more compact:
+//	
+//	 S H F | C R P | T I U  
+//	 I P R | T U S | C H F  
+//	 U C T | I F H | R S P  
+//   ------+-------+------
+//	 F R I | P S U | H C T  
+//	 T U H | F C I | S P R  
+//	 C S P | H T R | F U I  
+//  -------+-------+------
+//	 R T S | U I C | P F H  
+//	 P F U | S H T | I R C  
+//	 H I C | R P F | U T S  
+
+	
 	public String toString(Puzzle originalPuzzle) {
 		StringBuffer buf = new StringBuffer();
-		
+
+		boolean isAllOccupied = true;
 		for (int y=0; y<9; y++) {
 			for (int x=0; x<9; x++) {
 				boolean isOccupied = originalPuzzle.isOccupied(y, x);
-				if (isOccupied) {
-					buf.append(' ').append(originalPuzzle.getOriginalCharacter(y, x)).append(' ');
-				} else {
-					Integer sol = sols.get(new Coord(x,y));
-					if (sol != null) {
-						buf.append('[').append(originalPuzzle.toChar(sol)).append(']');
-					} else {
-						buf.append(" . ");
-					}
-				}
-				buf.append(' ');
+				if (isAllOccupied && !isOccupied) isAllOccupied = false;
 			}
-			buf.append(System.getProperty("line.separator"));
+		}
+		
+		if (isAllOccupied) {
+			for (int y=0; y<9; y++) {
+				if (y > 0 && y % 3 == 0) {
+					buf.append("------+-------+------");
+					buf.append(System.getProperty("line.separator"));
+				}
+				for (int x=0; x<9; x++) {
+					if (x % 3 == 0 && x > 0) {
+						buf.append(" |");
+					}
+					if (x > 0) buf.append(' ');
+					buf.append(originalPuzzle.getOriginalCharacter(y, x));
+				}
+				buf.append(System.getProperty("line.separator"));
+			}
+		} else {
+			for (int y=0; y<9; y++) {
+				for (int x=0; x<9; x++) {
+					boolean isOccupied = originalPuzzle.isOccupied(y, x);
+					if (isOccupied) {
+						buf.append(' ').append(originalPuzzle.getOriginalCharacter(y, x)).append(' ');
+					} else {
+						Integer sol = sols.get(new Coord(x,y));
+						if (sol != null) {
+							buf.append('[').append(originalPuzzle.toChar(sol)).append(']');
+						} else {
+							buf.append(" . ");
+						}
+					}
+					buf.append(' ');
+				}
+				buf.append(System.getProperty("line.separator"));
+			}
 		}
 		
 		return buf.toString();				

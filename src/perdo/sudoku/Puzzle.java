@@ -163,6 +163,9 @@ public class Puzzle {
 
 		if (!solved()) {
 			cache.dump();
+		} else {
+			System.out.println("Final solution in " + iterations + " iterations:");
+			System.out.println(sols.toString(this));
 		}
 
 		return iterations;
@@ -212,7 +215,7 @@ public class Puzzle {
 							candidateRemovals.removeAll(other.getCoords());
 						}
 						if (cache.removePossibility(digit, candidateRemovals, 
-								" of " + g + " because " + digit + " has to be in " +
+								" of " + g + " because " + toChar(digit) + " has to be in " +
 								entry.getKey() + " X " + entry.getValue() + " (X-Wing)")) updated = true;
 					}
 				}
@@ -244,7 +247,7 @@ public class Puzzle {
 							// anywhere else in the other group either.
 							if (cache.removePossibility(digit, r[1-i],  
 									" (in " + a.grps[1-i] + ") because " + 
-											digit + " has to be in " + 
+											toChar(digit) + " has to be in " + 
 											a.grps[i] + " in one of " + a + " (Intersection Radiation)")) result = true;;
 							}
 					}
