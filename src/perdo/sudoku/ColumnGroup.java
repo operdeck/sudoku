@@ -2,8 +2,8 @@ package perdo.sudoku;
 
 public class ColumnGroup extends Group {
 
-	public ColumnGroup(int startX, int startY, String[] mySudoku, String id) {
-		super(startX, startY, mySudoku, id);
+	public ColumnGroup(int startX, int startY, Puzzle myPuzzle, String id) {
+		super(startX, startY, myPuzzle, id);
 	}
 
 	@Override

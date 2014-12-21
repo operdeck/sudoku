@@ -13,12 +13,12 @@ public abstract class Group {
 	protected int startX, startY;
 	private String groupID;
 	
-	public Group(int startX, int startY, String[] mySudoku, String id) {
+	public Group(int startX, int startY, Puzzle myPuzzle, String id) {
 		this.startX = startX;
 		this.startY = startY;
 		this.groupID = id;
 		for (int i=0; i<9; i++) {
-			digits[i] = toValue(mySudoku[startY+internalIndexToRelativeY(i)].charAt(startX+internalIndexToRelativeX(i)));
+			digits[i] = myPuzzle.getInternalRepresentation(startY+internalIndexToRelativeY(i), startX+internalIndexToRelativeX(i));
 			if (digits[i] != -1) {
 				hasDigit[digits[i]] = true;
 			}
@@ -31,17 +31,6 @@ public abstract class Group {
 			coords.put(new Coord(absX, absY), internalIndex);
 		}
 	}
-
-	private int toValue(char charAt) {
-		if (charAt == '.' || charAt == ' ') return -1;
-		return charAt - '0';
-	}
-
-	protected char toChar(int value) {
-		if (value == -1) return '.';
-		return (char) ('0'+value);
-	}
-	
 
 	protected abstract int internalIndexToRelativeX(int idx);
 	protected abstract int internalIndexToRelativeY(int idx);

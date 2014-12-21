@@ -48,8 +48,6 @@ public class Coord implements Comparable<Coord>{
 		return coord - o.coord;
 	}
 
-	// Now, is this finally syncing???
-	// Yes it is
 	public Integer getRow() {
 		return coord / 9;
 	}

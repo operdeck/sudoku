@@ -9,34 +9,36 @@ import java.util.Map;
  */
 public class SolutionContainer {
 	private Map<Coord, Integer> sols;
+	private Puzzle myPuzzle;
 	
-	public SolutionContainer() {
+	public SolutionContainer(Puzzle p) {
 		sols = new HashMap<Coord, Integer>();
+		myPuzzle = p;
 	}
 	
 	public void addSolution(Coord c, int n, String source) {
 		if (sols.containsKey(c)) {
 			if (sols.get(c) != n) {
-				throw new RuntimeException("ERROR: trying to place " + n + " at " + c + " which is occupied by " + sols.get(c));
+				throw new RuntimeException("ERROR: trying to place " + myPuzzle.toChar(n) + " at " + c + " which is occupied by " + myPuzzle.toChar(sols.get(c)));
 			}
 		} else {
-			System.out.println("Put " + n + " at " + c + " (" + source + ")");
+			System.out.println("Put " + myPuzzle.toChar(n) + " at " + c + " (" + source + ")");
 			sols.put(c, n);
 		}
 	}
 	
-	public String toString(String[] originalPuzzle) {
+	public String toString(Puzzle originalPuzzle) {
 		StringBuffer buf = new StringBuffer();
 		
 		for (int y=0; y<9; y++) {
 			for (int x=0; x<9; x++) {
-				char original = originalPuzzle[y].charAt(x);
-				if (original >= '1' && original <= '9') {
-					buf.append(' ').append(original).append(' ');
+				boolean isOccupied = originalPuzzle.isOccupied(y, x);
+				if (isOccupied) {
+					buf.append(' ').append(originalPuzzle.getOriginalCharacter(y, x)).append(' ');
 				} else {
 					Integer sol = sols.get(new Coord(x,y));
 					if (sol != null) {
-						buf.append('[').append(sol).append(']');
+						buf.append('[').append(originalPuzzle.toChar(sol)).append(']');
 					} else {
 						buf.append(" . ");
 					}
@@ -51,19 +53,19 @@ public class SolutionContainer {
 
 	// Generate a string representation of the current sodoku merged with the solutions
 	// NOTE: will be very similar to the 'toString'
-	public String[] merge(String[] originalPuzzle) {
+	public String[] merge(Puzzle puzzle) {
 		List<String> rowsList = new ArrayList<String>();
 		
 		for (int y=0; y<9; y++) {
 			StringBuffer buf = new StringBuffer();
 			for (int x=0; x<9; x++) {
-				char original = originalPuzzle[y].charAt(x);
-				if (original >= '1' && original <= '9') {
-					buf.append(original);
+				boolean isOccupied = puzzle.isOccupied(y, x);
+				if (isOccupied) {
+					buf.append(puzzle.getOriginalCharacter(y,x));
 				} else {
 					Integer sol = sols.get(new Coord(x,y));
 					if (sol != null) {
-						buf.append(sol);
+						buf.append(puzzle.toChar(sol));
 					} else {
 						buf.append(".");
 					}

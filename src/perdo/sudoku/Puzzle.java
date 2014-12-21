@@ -13,20 +13,56 @@ import java.util.TreeSet;
 public class Puzzle {
 	private String name;
 	protected List<Group> groups;
-	private String[] mySudoku;
+	protected String[] mySudoku;
 	private Set<GroupIntersection> subareas;
+	protected Map<Character, Integer> toInternalRepresentation = null;
+	protected List<Character> fromInternalRepresentation = null;
 	
 	public static List<Puzzle> all = new ArrayList<Puzzle>();
 	
 	public Puzzle(String[] mySudoku) {
 		this(null, mySudoku);
 	}
+	
 	public Puzzle(String name, String[] mySudoku) {
 		this(name);
-		addStandardGroups(mySudoku);
+		init(mySudoku);
+	}
+	
+	public void init(String[] mySudoku) {
+		this.mySudoku = mySudoku;
+		setRepresentation(mySudoku);
+		addGroups();
 		setSubAreas();
 	}
 
+	protected void setRepresentation(String[] mySudoku) {
+		toInternalRepresentation = new HashMap<Character, Integer>();
+		fromInternalRepresentation = new ArrayList<Character>();
+		fromInternalRepresentation.add(null); // we'll start at index 1
+		
+		Set<Character> chars = new TreeSet<Character>();
+		for (String s : mySudoku) {
+			for (int i = 0; i<s.length(); i++) {
+				char c = s.charAt(i);
+				if (isOccupied(c)) {
+					chars.add(c);
+				}
+			}
+		}
+		for (Character c : chars) {
+			if (!toInternalRepresentation.containsKey(c)) {
+				int idx = fromInternalRepresentation.size();
+				fromInternalRepresentation.add(c);
+				toInternalRepresentation.put(c, idx);
+			}
+		}
+		
+//		for (int i = 0; i<fromInternalRepresentation.size(); i++) {
+//			System.out.println(i + ": " + fromInternalRepresentation.get(i) + "->" + toInternalRepresentation.get(fromInternalRepresentation.get(i)));
+//		}
+	}
+	
 	protected Puzzle(String name) {
 		this.name = name;
 		all.add(this);
@@ -37,12 +73,7 @@ public class Puzzle {
 		return name;
 	}
 	
-	public void reInit(String[] mySudoku) {
-		addStandardGroups(mySudoku);
-		setSubAreas();
-	}
-	
-	protected void setSubAreas() {
+	private void setSubAreas() {
 		subareas = new LinkedHashSet<GroupIntersection>();
 		for (Group a:groups) {
 			for (Group b:groups) {
@@ -56,19 +87,18 @@ public class Puzzle {
 		}
 	}
 
-	protected void addStandardGroups(String[] mySudoku) {
+	void addGroups() {
 		groups = new ArrayList<Group>();
-		this.mySudoku = mySudoku;
 		
 		int cnt=0;
 		for (int y=0; y<3; y++) {
 			for (int x=0; x<3; x++) {
-				groups.add(new SquareGroup(x*3, y*3, mySudoku, "Group "+(++cnt)));
+				groups.add(new SquareGroup(x*3, y*3, this, "Group "+(++cnt)));
 			}
 		}
 		for (int i=0; i<9;i++) {
-			groups.add(new RowGroup(0, i, mySudoku, "Row "+(1+i)));
-			groups.add(new ColumnGroup(i, 0, mySudoku, "Column "+(1+i)));
+			groups.add(new RowGroup(0, i, this, "Row "+(1+i)));
+			groups.add(new ColumnGroup(i, 0, this, "Column "+(1+i)));
 		}
 	}
 
@@ -85,7 +115,7 @@ public class Puzzle {
 	public int solve() {
 		boolean updated = false;
 		int iterations = 0;
-		SolutionContainer sols = new SolutionContainer();
+		SolutionContainer sols = new SolutionContainer(this);
 		PossibilitiesPerCellCache cache = null;
 		do {
 			updated = false;
@@ -126,8 +156,8 @@ public class Puzzle {
 			
 			if (updated) {
 				iterations++;
-				System.out.println(sols.toString(mySudoku));
-				reInit(sols.merge(mySudoku));
+				System.out.println(sols.toString(this));
+				init(sols.merge(this));
 			}
 		} while (updated && !solved());
 
@@ -247,4 +277,32 @@ public class Puzzle {
 		}
 		return result;
 	}
+
+	public int getInternalRepresentation(int y, int x) {
+		return toInternalRepresentation(getOriginalCharacter(y,x));
+	}
+
+	public char getOriginalCharacter(int y, int x) {
+		return mySudoku[y].charAt(x);
+	}
+
+	public boolean isOccupied(int y, int x) {
+		return isOccupied(getOriginalCharacter(y,x));
+	}
+	
+	private boolean isOccupied(char c) {
+		return c != '.' && c != ' ';
+	}
+	
+	private int toInternalRepresentation(char charAt) {
+		if (!isOccupied(charAt)) return -1;
+		return toInternalRepresentation.get(charAt);
+	}
+
+	char toChar(int internalRepresentation) {
+		if (internalRepresentation == -1) return '.';
+		return fromInternalRepresentation.get(internalRepresentation);
+	}
+	
+	
 }

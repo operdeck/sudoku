@@ -2,8 +2,8 @@ package perdo.sudoku;
 
 public class RowGroup extends Group {
 
-	public RowGroup(int startX, int startY, String[] mySudoku, String id) {
-		super(startX, startY, mySudoku, id);
+	public RowGroup(int startX, int startY, Puzzle myPuzzle, String id) {
+		super(startX, startY, myPuzzle, id);
 	}
 
 	@Override

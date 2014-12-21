@@ -3,8 +3,8 @@ package perdo.sudoku;
 
 public class SquareGroup extends Group {
 
-	public SquareGroup(int startX, int startY, String[] mySudoku, String id) {
-		super(startX, startY, mySudoku, id);
+	public SquareGroup(int startX, int startY, Puzzle myPuzzle, String id) {
+		super(startX, startY, myPuzzle, id);
 	}
 
 //	protected int getIndex(int x, int y) { return y*3 + x; }
