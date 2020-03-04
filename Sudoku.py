@@ -6,7 +6,8 @@ class Sudoku:
     """Base Sudoku class"""
     def __init__(self, sudoku):
         self.current = self.fromTextTuple(sudoku)
-        self.initConstraints()
+        self.initGroups()
+        self.initPossibilities()
 
     def fromTextTuple(self, sudoku):
         allrows = list()
@@ -27,28 +28,36 @@ class Sudoku:
             allrows.append(allcells)
         return np.asmatrix(allrows)
 
-    def initConstraints(self):
+    def initGroups(self):
         allrows = list()
         allcols = list()
+        allsquares = list()
         self.allcells = list()
         for x in range(9):
             allrows.append({ "name" : "row " + str(1+x), "cells" : list()})
             allcols.append({ "name" : "col " + str(1+x), "cells" : list()})
+            allsquares.append({"name": "sqr " + str(1 + x), "cells": list()})
         for i in range(9):
             for j in range(9):
                 cell = (i,j)
                 self.allcells.append(cell)
                 allrows[i]["cells"].append(cell)
                 allcols[j]["cells"].append(cell)
-        self.constraints = allrows + allcols
+                allsquares[3*(i//3)+(j//3)]["cells"].append(cell)
+        self.groups = allrows + allcols + allsquares
+
+    def initPossibilities(self):
+        self.possibilities = dict()
+        for cell in self.allcells:
+            self.possibilities[cell] = range(1,10)
 
     def place(self, digit, cell):
         self.current[cell[0], cell[1]] = digit
 
     def print(self):
         print(self.current)
-        print( self.constraints )
-        print(str(len(self.constraints)) + " constraints")
+        print( self.groups )
+        print(str(len(self.groups)) + " groups")
 
     def getShowRaster(self):
         mx = np.zeros((9,9))
@@ -73,15 +82,28 @@ class Sudoku:
         ax.set_yticklabels(range(1,10))
         for cell in self.allcells:
             if self.current[cell[0], cell[1]] == 0:
-                # TODO: show cell candidates
-                text = ax.text(cell[1], cell[0], "123\n456\n789",
-                               ha="center", va="center", color="black", size=9, alpha=0.6)
+                p = self.possibilities[(cell[0], cell[1])]
+                txt = ""
+                for i in range(1,10):
+                    if i > 1 and (i-1)%3 == 0:
+                        txt = txt + "\n"
+                    if i in p:
+                        txt = txt + str(i)
+                    elif i < 9:
+                        txt = txt + " "
+                ax.text(cell[1], cell[0], txt, ha="center", va="center", color="black", size=9, alpha=0.6)
             else:
-                text = ax.text(cell[1], cell[0], self.current[cell[0], cell[1]],
-                               ha="center", va="center", color="black", size=15)
-        for x in range(9):
-            plt.axhline(0.5+x)
-            plt.axvline(0.5 + x)
+                ax.text(cell[1], cell[0], self.current[cell[0], cell[1]], ha="center", va="center", color="black", size=15)
+        for x in range(8):
+            if x==2 or x==5:
+                pass
+            else:
+                plt.axhline(0.5+x, color="grey")
+                plt.axvline(0.5 + x, color="grey")
+        for x in range(8):
+            if x==2 or x==5:
+                plt.axhline(0.5+x, color="black")
+                plt.axvline(0.5 + x, color="black")
         ax.set_title("Sudoku")
         fig.tight_layout()
         plt.show()
@@ -90,14 +112,14 @@ class Sudoku:
         return str(1+pair[0])+","+str(1+pair[1])
 
     # TODO: keep candidates per cell
-    def solver1(self):
+    def groupElimination(self):
         print('Simple elimination per cell')
         # First simple solver:
-        # apply constraints per cell
+        # apply groups per cell
         # for all cells (i,j)
         #     if not occupied (i,j)
         #           candidates = 1..9
-        #           for all constraints C that (i,j) is part of
+        #           for all groups C that (i,j) is part of
         #                  O = current values for all cells in C
         #                  remove all of O from the list of candidates
         moves = list()
@@ -105,16 +127,17 @@ class Sudoku:
             if self.current[cell[0], cell[1]] == 0:
                 candidates = set(range(1,10))
                 #print( cell )
-                for aconstraint in self.constraints:
-                    if cell in aconstraint["cells"]:
-                        #print(aconstraint)
-                        cellsinconstraint = list()
-                        for pair in aconstraint["cells"]:
+                for agroup in self.groups:
+                    if cell in agroup["cells"]:
+                        #print(agroup)
+                        cellsingroup = list()
+                        for pair in agroup["cells"]:
                             if self.current[pair[0], pair[1]] != 0:
-                                cellsinconstraint.append(self.current[pair[0], pair[1]])
-                        #print(cellsinconstraint)
-                        candidates = candidates - set(cellsinconstraint)
+                                cellsingroup.append(self.current[pair[0], pair[1]])
+                        #print(cellsingroup)
+                        candidates = candidates - set(cellsingroup)
                 #print(candidates)
+                self.possibilities[cell] = candidates
                 if len(candidates) == 1:
                     print("Elimination results in 1 possibility at " + self.celltostr(cell) + ": " + str(list(candidates)[0]))
                     moves.append({"value" : list(candidates)[0], "cell" : cell})
@@ -122,17 +145,17 @@ class Sudoku:
 
     def solver2(self):
         # Second simple solver:
-        #   for all constraints C
+        #   for all groups C
         #       M = digits missing in C
         #
-        #     look what is missing per constraint
+        #     look what is missing per group
         moves = list()
         return moves
 
 class NRCSudoku(Sudoku):
     """ Adds rectangular areas """
-    def initConstraints(self):
-        super().initConstraints()
+    def initGroups(self):
+        super().initGroups()
         r1 = list()
         r2 = list()
         r3 = list()
@@ -147,10 +170,10 @@ class NRCSudoku(Sudoku):
                     r3.append((i, j))
                 if (i >= 5 and i <= 7 and j >= 5 and j <= 7):
                     r4.append((i, j))
-        self.constraints.append({ "name" : "rect 1", "cells" : r1})
-        self.constraints.append({ "name" : "rect 2", "cells" : r2})
-        self.constraints.append({ "name" : "rect 3", "cells" : r3})
-        self.constraints.append({ "name" : "rect 4", "cells" : r4})
+        self.groups.append({ "name" : "nrc 1", "cells" : r1})
+        self.groups.append({ "name" : "nrc 2", "cells" : r2})
+        self.groups.append({ "name" : "nrc 3", "cells" : r3})
+        self.groups.append({ "name" : "nrc 4", "cells" : r4})
 
     def getShowRaster(self):
         mx = super().getShowRaster()
@@ -175,15 +198,25 @@ def main():
                    " 3  41   ",
                    "    7    ")
                   )
+
+    s1 = NRCSudoku((" 1   2   ",
+                   "  8      ",
+                   "      5 3",
+                   "   9    2",
+                   "       9 ",
+                   "4 52     ",
+                   "    1 38 ",
+                   "         ",
+                   "  6      "))
     s.print()
     #s.show()
-    mvz = s.solver1()
+    mvz = s.groupElimination()
     print(mvz)
     # if len(mvz) > 0:
     #     s.place( mvz[0]["value"], mvz[0]["cell"] )
     # s.print()
     s.show()
-    # mvz = s.solver1()
+    # mvz = s.groupElimination()
     # print(mvz)
 
 
