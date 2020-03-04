@@ -10,23 +10,21 @@ class Sudoku:
         self.initPossibilities()
 
     def fromTextTuple(self, sudoku):
-        allrows = list()
+        puzzle = dict()
         if (len(sudoku) != 9):
             raise Exception('Need 9 rows')
         for r in range(9):
             arow = sudoku[r]
-            allcells = list()
             if (len(arow) != 9):
                 raise Exception('Need 9 cells in row '+ str(r+1) + ': \"' + arow + '"')
             for c in range(9):
                 if arow[c] == ' ' or arow[c] == '.':
-                    allcells.append(0)
+                    pass
                 elif arow[c] >= '1' and arow[c] <= '9':
-                    allcells.append(int(arow[c]))
+                    puzzle[(r,c)] = int(arow[c])
                 else:
                     raise Exception('Unrecognized character ' + arow[c] + ' at row ' + str(r + 1) + " col " + str(c+1) + ': \"' + arow + '"')
-            allrows.append(allcells)
-        return np.asmatrix(allrows)
+        return puzzle
 
     def initGroups(self):
         allrows = list()
@@ -48,15 +46,17 @@ class Sudoku:
 
     def initPossibilities(self):
         self.possibilities = dict()
+        self.explanations = dict()
         for cell in self.allcells:
             self.possibilities[cell] = set(range(1,10))
+            self.explanations[cell] = []
 
     def place(self, digit, cell):
-        self.puzzle[cell[0], cell[1]] = digit
+        self.puzzle[cell] = digit
         self.initPossibilities()
 
     def print(self):
-        print(self.puzzle)
+        print(self.puzzle) # rather useless
         print( self.groups )
         print(str(len(self.groups)) + " groups")
 
@@ -82,10 +82,12 @@ class Sudoku:
         ax.set_xticklabels(range(1,10))
         ax.set_yticklabels(range(1,10))
         for cell in self.allcells:
-            if self.puzzle[cell[0], cell[1]] == 0:
+            if cell in self.puzzle:
+                ax.text(cell[1], cell[0], self.puzzle[cell], ha="center", va="center", color="black", size=15)
+            else:
                 p = self.possibilities[(cell[0], cell[1])]
                 txt = ""
-                for i in range(1,10):
+                for i in range(1, 10):
                     if i in p:
                         txt = txt + str(i)
                     else:
@@ -93,8 +95,6 @@ class Sudoku:
                     if i < 9 and i % 3 == 0:
                         txt = txt + "\n"
                 ax.text(cell[1], cell[0], txt, ha="center", va="center", color="black", size=9, alpha=0.6, family='monospace')
-            else:
-                ax.text(cell[1], cell[0], self.puzzle[cell[0], cell[1]], ha="center", va="center", color="black", size=15)
         for x in range(8):
             if x==2 or x==5:
                 pass
@@ -117,20 +117,20 @@ class Sudoku:
     # from all groups that this cell is part of.
     def groupElimination(self):
         print('Simple elimination per cell')
-        for cell in self.allcells:
-            # not occupied
-            if self.puzzle[cell[0], cell[1]] == 0:
-                candidates = self.possibilities[cell]
-                for agroup in self.groups:
-                    if cell in agroup["cells"]:
-                        cellsingroup = list()
-                        for cellinagroup in agroup["cells"]:
-                            if self.puzzle[cellinagroup[0], cellinagroup[1]] != 0:
-                                cellsingroup.append(self.puzzle[cellinagroup[0], cellinagroup[1]])
-                        candidates = candidates - set(cellsingroup)
-                self.possibilities[cell] = candidates
-                if len(candidates) == 1:
-                    print("Elimination results in 1 possibility at " + self.celltostr(cell) + ": " + str(list(candidates)[0]))
+        for cell in set(self.allcells) - set(self.puzzle):
+            candidates = self.possibilities[cell]
+            for agroup in self.groups:
+                if cell in agroup["cells"]:
+                    digitsingroup = set([self.puzzle[c] for c in agroup["cells"] if c in self.puzzle])
+                    commonelements = candidates.intersection(digitsingroup)
+                    if (len(commonelements) > 0):
+                        candidates = candidates - digitsingroup
+                        self.explanations[cell].append(agroup["name"] + ": " + str(sorted(commonelements)))
+            self.possibilities[cell] = candidates
+            # TODO below belongs elsewhere
+            if len(candidates) == 1:
+                print("Elimination results in 1 possibility at " + self.celltostr(cell) + ": " + str(list(candidates)[0]))
+                print("because: " + "; ".join(self.explanations[cell]))
 
     def solver2(self):
         # Second simple solver:
