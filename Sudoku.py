@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 class Sudoku:
     """Base Sudoku class"""
     def __init__(self, sudoku):
-        self.current = self.fromTextTuple(sudoku)
+        self.puzzle = self.fromTextTuple(sudoku)
         self.initGroups()
         self.initPossibilities()
 
@@ -49,13 +49,14 @@ class Sudoku:
     def initPossibilities(self):
         self.possibilities = dict()
         for cell in self.allcells:
-            self.possibilities[cell] = range(1,10)
+            self.possibilities[cell] = set(range(1,10))
 
     def place(self, digit, cell):
-        self.current[cell[0], cell[1]] = digit
+        self.puzzle[cell[0], cell[1]] = digit
+        self.initPossibilities()
 
     def print(self):
-        print(self.current)
+        print(self.puzzle)
         print( self.groups )
         print(str(len(self.groups)) + " groups")
 
@@ -81,19 +82,19 @@ class Sudoku:
         ax.set_xticklabels(range(1,10))
         ax.set_yticklabels(range(1,10))
         for cell in self.allcells:
-            if self.current[cell[0], cell[1]] == 0:
+            if self.puzzle[cell[0], cell[1]] == 0:
                 p = self.possibilities[(cell[0], cell[1])]
                 txt = ""
                 for i in range(1,10):
-                    if i > 1 and (i-1)%3 == 0:
-                        txt = txt + "\n"
                     if i in p:
                         txt = txt + str(i)
-                    elif i < 9:
-                        txt = txt + " "
-                ax.text(cell[1], cell[0], txt, ha="center", va="center", color="black", size=9, alpha=0.6)
+                    else:
+                        txt = txt + "."
+                    if i < 9 and i % 3 == 0:
+                        txt = txt + "\n"
+                ax.text(cell[1], cell[0], txt, ha="center", va="center", color="black", size=9, alpha=0.6, family='monospace')
             else:
-                ax.text(cell[1], cell[0], self.current[cell[0], cell[1]], ha="center", va="center", color="black", size=15)
+                ax.text(cell[1], cell[0], self.puzzle[cell[0], cell[1]], ha="center", va="center", color="black", size=15)
         for x in range(8):
             if x==2 or x==5:
                 pass
@@ -112,36 +113,24 @@ class Sudoku:
         return str(1+pair[0])+","+str(1+pair[1])
 
     # TODO: keep candidates per cell
+    # Filters the existing possibilities per cell by applying elimination
+    # from all groups that this cell is part of.
     def groupElimination(self):
         print('Simple elimination per cell')
-        # First simple solver:
-        # apply groups per cell
-        # for all cells (i,j)
-        #     if not occupied (i,j)
-        #           candidates = 1..9
-        #           for all groups C that (i,j) is part of
-        #                  O = current values for all cells in C
-        #                  remove all of O from the list of candidates
-        moves = list()
         for cell in self.allcells:
-            if self.current[cell[0], cell[1]] == 0:
-                candidates = set(range(1,10))
-                #print( cell )
+            # not occupied
+            if self.puzzle[cell[0], cell[1]] == 0:
+                candidates = self.possibilities[cell]
                 for agroup in self.groups:
                     if cell in agroup["cells"]:
-                        #print(agroup)
                         cellsingroup = list()
-                        for pair in agroup["cells"]:
-                            if self.current[pair[0], pair[1]] != 0:
-                                cellsingroup.append(self.current[pair[0], pair[1]])
-                        #print(cellsingroup)
+                        for cellinagroup in agroup["cells"]:
+                            if self.puzzle[cellinagroup[0], cellinagroup[1]] != 0:
+                                cellsingroup.append(self.puzzle[cellinagroup[0], cellinagroup[1]])
                         candidates = candidates - set(cellsingroup)
-                #print(candidates)
                 self.possibilities[cell] = candidates
                 if len(candidates) == 1:
                     print("Elimination results in 1 possibility at " + self.celltostr(cell) + ": " + str(list(candidates)[0]))
-                    moves.append({"value" : list(candidates)[0], "cell" : cell})
-        return moves
 
     def solver2(self):
         # Second simple solver:
