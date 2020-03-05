@@ -2,10 +2,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Sudoku:
     """Base Sudoku class"""
+
     def __init__(self, sudoku):
         self.puzzle = self.fromTextTuple(sudoku)
+        self.originalPuzzle = self.puzzle.copy()
         self.initGroups()
         self.initPossibilities()
 
@@ -16,108 +19,170 @@ class Sudoku:
         for r in range(9):
             arow = sudoku[r]
             if (len(arow) != 9):
-                raise Exception('Need 9 cells in row '+ str(r+1) + ': \"' + arow + '"')
+                raise Exception('Need 9 cells in row ' + str(r + 1) + ': \"' + arow + '"')
             for c in range(9):
                 if arow[c] == ' ' or arow[c] == '.':
                     pass
                 elif arow[c] >= '1' and arow[c] <= '9':
-                    puzzle[(r,c)] = int(arow[c])
+                    puzzle[(r, c)] = int(arow[c])
                 else:
-                    raise Exception('Unrecognized character ' + arow[c] + ' at row ' + str(r + 1) + " col " + str(c+1) + ': \"' + arow + '"')
+                    raise Exception('Unrecognized character ' + arow[c] + ' at row ' + str(r + 1) + " col " + str(
+                        c + 1) + ': \"' + arow + '"')
         return puzzle
 
     def initGroups(self):
         allrows = list()
         allcols = list()
         allsquares = list()
-        self.allcells = list()
+        self.emptycells = set()
         for x in range(9):
-            allrows.append({ "name" : "row " + str(1+x), "cells" : list()})
-            allcols.append({ "name" : "col " + str(1+x), "cells" : list()})
+            allrows.append({"name": "row " + str(1 + x), "cells": list()})
+            allcols.append({"name": "col " + str(1 + x), "cells": list()})
             allsquares.append({"name": "sqr " + str(1 + x), "cells": list()})
         for i in range(9):
             for j in range(9):
-                cell = (i,j)
-                self.allcells.append(cell)
+                cell = (i, j)
                 allrows[i]["cells"].append(cell)
                 allcols[j]["cells"].append(cell)
-                allsquares[3*(i//3)+(j//3)]["cells"].append(cell)
+                allsquares[3 * (i // 3) + (j // 3)]["cells"].append(cell)
+                if not cell in self.puzzle:
+                    self.emptycells.add(cell)
         self.groups = allrows + allcols + allsquares
 
     def initPossibilities(self):
         self.possibilities = dict()
         self.explanations = dict()
-        for cell in self.allcells:
-            self.possibilities[cell] = set(range(1,10))
+        for cell in self.emptycells:
+            self.possibilities[cell] = set(range(1, 10))
             self.explanations[cell] = []
 
-    def place(self, digit, cell):
+    def place(self, digit, cellAsString):
+        if len(cellAsString) != 4:
+            raise Exception('Place format is 4 characters R<row>C<col>')
+        row = int(cellAsString[1])-1
+        col = int(cellAsString[3])-1
+        cell = (row,col)
+        print("Place " + str(digit) + " at " + self.celltostr(cell))
         self.puzzle[cell] = digit
+        self.emptycells.remove(cell)
         self.initPossibilities()
 
     def print(self):
-        print(self.puzzle) # rather useless
-        print( self.groups )
+        print(self.groups)
         print(str(len(self.groups)) + " groups")
 
     def getShowRaster(self):
-        mx = np.zeros((9,9))
+        mx = np.zeros((9, 9))
         # color some squares to highlight the structure
-        for x in range(0,3):
-            for y in range(0,3):
-                mx[x,y] = 1
-                mx[x+6,y] = 1
-                mx[x, y+6] = 1
-                mx[x+6, y+6] = 1
-                mx[x+3, y+3] = 1
+        for x in range(0, 3):
+            for y in range(0, 3):
+                mx[x, y] = 1
+                mx[x + 6, y] = 1
+                mx[x, y + 6] = 1
+                mx[x + 6, y + 6] = 1
+                mx[x + 3, y + 3] = 1
         return mx
 
     def show(self):
         fig, ax = plt.subplots()
-        im = ax.imshow(self.getShowRaster(), cmap="Purples", alpha=0.6) # strange way to plot a grid - need something simpler...
+        im = ax.imshow(self.getShowRaster(), cmap="Purples",
+                       alpha=0.6)  # strange way to plot a grid - need something simpler...
         # https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html
         # All ticks and label them with the respective list entries
         ax.set_xticks(np.arange(9))
         ax.set_yticks(np.arange(9))
-        ax.set_xticklabels(range(1,10))
-        ax.set_yticklabels(range(1,10))
-        for cell in self.allcells:
-            if cell in self.puzzle:
-                ax.text(cell[1], cell[0], self.puzzle[cell], ha="center", va="center", color="black", size=15)
-            else:
-                p = self.possibilities[(cell[0], cell[1])]
-                txt = ""
-                for i in range(1, 10):
-                    if i in p:
-                        txt = txt + str(i)
-                    else:
-                        txt = txt + "."
-                    if i < 9 and i % 3 == 0:
-                        txt = txt + "\n"
-                ax.text(cell[1], cell[0], txt, ha="center", va="center", color="black", size=9, alpha=0.6, family='monospace')
+        ax.set_xticklabels(range(1, 10))
+        ax.set_yticklabels(range(1, 10))
+        for cell in self.puzzle:
+            ax.text(cell[1], cell[0], self.puzzle[cell], ha="center", va="center",
+                    color= ("black" if (cell in self.originalPuzzle) else "blue"), size=15)
+        for cell in self.emptycells:
+            p = self.possibilities[cell]
+            txt = "\n".join(["".join((str(i) if (i in p) else ".") for i in range(1, 4)),
+                             "".join((str(i) if (i in p) else ".") for i in range(4, 7)),
+                             "".join((str(i) if (i in p) else ".") for i in range(7, 10))])
+            ax.text(cell[1], cell[0], txt, ha="center", va="center", color="black", size=9, alpha=0.6,
+                    family='monospace')
         for x in range(8):
-            if x==2 or x==5:
+            if x == 2 or x == 5:
                 pass
             else:
-                plt.axhline(0.5+x, color="grey")
+                plt.axhline(0.5 + x, color="grey")
                 plt.axvline(0.5 + x, color="grey")
         for x in range(8):
-            if x==2 or x==5:
-                plt.axhline(0.5+x, color="black")
+            if x == 2 or x == 5:
+                plt.axhline(0.5 + x, color="black")
                 plt.axvline(0.5 + x, color="black")
         ax.set_title("Sudoku")
         fig.tight_layout()
         plt.show()
 
     def celltostr(self, pair):
-        return str(1+pair[0])+","+str(1+pair[1])
+        return "R"+str(1 + pair[0]) + "C" + str(1 + pair[1])
 
-    # TODO: keep candidates per cell
+    def printPossibleMoves(self):
+        possibleMoves = dict()
+        for cell in self.emptycells:
+            p = self.possibilities[cell]
+            if (len(p) == 1):
+                d = list(p)[0]
+                if cell in possibleMoves:
+                    if possibleMoves[cell]["move"] == d:
+                        # just add another reason for the same move
+                        possibleMoves[cell]["reasons"].append({"method" : "single cell value",
+                                                         "elimination" : self.explanations[cell]})
+                    else:
+                        # inconsistent results
+                        print("ERROR! Found different move than " + str(d) + " at " + self.celltostr(cell))
+                        print(possibleMoves[cell])
+                else:
+                    possibleMoves[cell] = {"move" : d,
+                                           "reasons" : [{"method" : "single cell value",
+                                                         "elimination" : self.explanations[cell]}]}
+        for group in self.groups:
+            for d in range(1,10):
+                onlyPossibileCellInGroup = None
+                nPossibilitiesInGroup = 0
+                emptyCellsInGroup = set(group["cells"]).intersection(self.emptycells)
+                for cell in emptyCellsInGroup:
+                    if d in self.possibilities[cell]:
+                        onlyPossibileCellInGroup = cell
+                        nPossibilitiesInGroup = nPossibilitiesInGroup + 1
+                if nPossibilitiesInGroup == 1:
+                    # reasons why d is excluded in all other cells in the group
+                    # for all other cells get explanations x
+                    # if x[1] contains d then add x[0] to reason why d is excluded
+                    detailedReasons = set()
+                    emptyCellsInGroup.remove(onlyPossibileCellInGroup)
+                    for cell in emptyCellsInGroup:
+                        for xplain in self.explanations[cell]:
+                            if d in set(xplain[1]):
+                                detailedReasons.add(xplain[0])
+                                # possible overlap, look for largest explanations first however difficult
+                                # today as the explanations per cell do not overlap, so we cannot tell which
+                                # is the larger one really
+                    if onlyPossibileCellInGroup in possibleMoves:
+                        if possibleMoves[onlyPossibileCellInGroup]["move"] == d:
+                            # just add another reason for the same move
+                            possibleMoves[onlyPossibileCellInGroup]["reasons"].append({"method" : "only place in " + group["name"],
+                                                                                 "elimination" : str(detailedReasons)})
+                        else:
+                            # inconsistent results
+                            print("ERROR! Found different move than " + str(d) + " at " + self.celltostr(onlyPossibileCellInGroup))
+                            print(possibleMoves[onlyPossibileCellInGroup])
+                    else:
+                        possibleMoves[onlyPossibileCellInGroup] = {"move" : d,
+                                                                   "reasons" : [{"method" : "only place in " + group["name"],
+                                                                                 "elimination" : str(detailedReasons)}]}
+                        # print('Possibility at ' + self.celltostr(onlyPossibileCellInGroup) + ": " + str(d))
+                        # print('   only place for ' + str(d) + ' in ' + group["name"] )
+        return possibleMoves
+
     # Filters the existing possibilities per cell by applying elimination
     # from all groups that this cell is part of.
     def groupElimination(self):
         print('Simple elimination per cell')
-        for cell in set(self.allcells) - set(self.puzzle):
+        for cell in self.emptycells:
             candidates = self.possibilities[cell]
             for agroup in self.groups:
                 if cell in agroup["cells"]:
@@ -125,24 +190,35 @@ class Sudoku:
                     commonelements = candidates.intersection(digitsingroup)
                     if (len(commonelements) > 0):
                         candidates = candidates - digitsingroup
-                        self.explanations[cell].append(agroup["name"] + ": " + str(sorted(commonelements)))
+                        self.explanations[cell].append( (agroup["name"], sorted(commonelements)) )
             self.possibilities[cell] = candidates
-            # TODO below belongs elsewhere
-            if len(candidates) == 1:
-                print("Elimination results in 1 possibility at " + self.celltostr(cell) + ": " + str(list(candidates)[0]))
-                print("because: " + "; ".join(self.explanations[cell]))
 
-    def solver2(self):
-        # Second simple solver:
-        #   for all groups C
-        #       M = digits missing in C
-        #
-        #     look what is missing per group
-        moves = list()
-        return moves
+    # Filters the existing possibilities by checking if there are subgroups
+    # in each group that all have the same possibilities
+    def nakedPairElimination(self):
+        for agroup in self.groups:
+            subgroups = dict()
+            subgroupPossibilities = dict()
+            for cell in agroup["cells"]:
+                if cell in self.emptycells:
+                    possibilitiesKey = str(sorted(self.possibilities[cell]))
+                    if not possibilitiesKey in subgroups:
+                        subgroups[possibilitiesKey] = []
+                        subgroupPossibilities[possibilitiesKey] = sorted(self.possibilities[cell])
+                    subgroups[possibilitiesKey].append(cell)
+            for k in subgroups.keys():
+                if len(subgroupPossibilities[k]) == len(subgroups[k]):
+                    print("NAKED SUBGROUP FOUND IN " + agroup["name"])
+                    print(subgroupPossibilities[k])
+                    print(subgroups[k])
+                    # this means these can be eliminated from all other cells
+                    # in that same group
+                    # reason: "naked subgroup [1,6,7] in nrc4" or so
+
 
 class NRCSudoku(Sudoku):
     """ Adds rectangular areas """
+
     def initGroups(self):
         super().initGroups()
         r1 = list()
@@ -152,31 +228,33 @@ class NRCSudoku(Sudoku):
         for i in range(9):
             for j in range(9):
                 if (i >= 1 and i <= 3 and j >= 1 and j <= 3):
-                    r1.append( (i,j) )
+                    r1.append((i, j))
                 if (i >= 1 and i <= 3 and j >= 5 and j <= 7):
                     r2.append((i, j))
                 if (i >= 5 and i <= 7 and j >= 1 and j <= 3):
                     r3.append((i, j))
                 if (i >= 5 and i <= 7 and j >= 5 and j <= 7):
                     r4.append((i, j))
-        self.groups.append({ "name" : "nrc 1", "cells" : r1})
-        self.groups.append({ "name" : "nrc 2", "cells" : r2})
-        self.groups.append({ "name" : "nrc 3", "cells" : r3})
-        self.groups.append({ "name" : "nrc 4", "cells" : r4})
+        self.groups.append({"name": "nrc 1", "cells": r1})
+        self.groups.append({"name": "nrc 2", "cells": r2})
+        self.groups.append({"name": "nrc 3", "cells": r3})
+        self.groups.append({"name": "nrc 4", "cells": r4})
 
     def getShowRaster(self):
         mx = super().getShowRaster()
-        for x in range(0,3):
-            for y in range(0,3):
-                mx[x+1,y+1] = 2
-                mx[x+5,y+1] = 2
-                mx[x+1,y+5] = 2
-                mx[x+5,y+5] = 2
+        for x in range(0, 3):
+            for y in range(0, 3):
+                mx[x + 1, y + 1] = 2
+                mx[x + 5, y + 1] = 2
+                mx[x + 1, y + 5] = 2
+                mx[x + 5, y + 5] = 2
         return mx
+
 
 def main():
     # https://www.nrc.nl/nieuws/2018/02/03/sudoku-a1590454
     # NRC saturday 3 feb 2018
+    # solvable by simple elimination only :(
     s = NRCSudoku((" 9   4 7 ",
                    " 7 3  9 8",
                    "         ",
@@ -188,25 +266,34 @@ def main():
                    "    7    ")
                   )
 
-    s1 = NRCSudoku((" 1   2   ",
-                   "  8      ",
-                   "      5 3",
-                   "   9    2",
-                   "       9 ",
-                   "4 52     ",
-                   "    1 38 ",
-                   "         ",
-                   "  6      "))
+    # NRC saturday 29 feb 2020
+    # even this one requires nothing fancy
+    s = NRCSudoku((" 1   2   ",
+                    "  8      ",
+                    "      5 3",
+                    "   9    2",
+                    "       9 ",
+                    "4 52     ",
+                    "    1 38 ",
+                    "         ",
+                    "  6      "))
     s.print()
-    #s.show()
-    mvz = s.groupElimination()
-    print(mvz)
-    # if len(mvz) > 0:
-    #     s.place( mvz[0]["value"], mvz[0]["cell"] )
-    # s.print()
-    s.show()
-    # mvz = s.groupElimination()
-    # print(mvz)
+
+    while True:
+        s.groupElimination()
+        s.nakedPairElimination()
+        mvz = s.printPossibleMoves()
+        if len(mvz) == 0:
+            print("No moves!")
+            s.show()
+            break
+        for mv in sorted(mvz.keys()):
+            print("Possible move at " + s.celltostr(mv) + ": " + str(mvz[mv]["move"]))
+            for r in mvz[mv]["reasons"]:
+                print("   reason: " + str(r))
+        s.show()
+        nextMove = sorted(mvz.keys())[0]
+        s.place(mvz[nextMove]["move"], s.celltostr(nextMove))
 
 
 if __name__ == "__main__":
