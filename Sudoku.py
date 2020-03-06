@@ -117,6 +117,10 @@ class Sudoku:
         fig.tight_layout()
         plt.show()
 
+    # Make sure all groups are correct
+    def check(self):
+        pass
+
     def celltostr(self, pair):
         return "R"+str(1 + pair[0]) + "C" + str(1 + pair[1])
 
@@ -130,15 +134,14 @@ class Sudoku:
                     if possibleMoves[cell]["move"] == d:
                         # just add another reason for the same move
                         possibleMoves[cell]["reasons"].append({"method" : "single cell value",
-                                                         "elimination" : self.explanations[cell]})
+                                                         "reason" : self.explanations[cell]})
                     else:
                         # inconsistent results
-                        print("ERROR! Found different move than " + str(d) + " at " + self.celltostr(cell))
-                        print(possibleMoves[cell])
+                        raise Exception("ERROR! Found different move than " + str(d) + " at " + self.celltostr(cell))
                 else:
                     possibleMoves[cell] = {"move" : d,
                                            "reasons" : [{"method" : "single cell value",
-                                                         "elimination" : self.explanations[cell]}]}
+                                                         "reason" : self.explanations[cell]}]}
         for group in self.groups:
             for d in range(1,10):
                 onlyPossibileCellInGroup = None
@@ -152,12 +155,14 @@ class Sudoku:
                     # reasons why d is excluded in all other cells in the group
                     # for all other cells get explanations x
                     # if x[1] contains d then add x[0] to reason why d is excluded
-                    detailedReasons = set()
+                    detailedReasons = []
                     emptyCellsInGroup.remove(onlyPossibileCellInGroup)
                     for cell in emptyCellsInGroup:
-                        for xplain in self.explanations[cell]:
-                            if d in set(xplain[1]):
-                                detailedReasons.add(xplain[0])
+                        for x in self.explanations[cell]:
+                            if d in x["eliminations"]:
+                                # TODO: for simple eliminations the list is not interesting here, we know it is d
+                                # only the group it comes from (detail). See how this works with other eliminations.
+                                detailedReasons.append(x)
                                 # possible overlap, look for largest explanations first however difficult
                                 # today as the explanations per cell do not overlap, so we cannot tell which
                                 # is the larger one really
@@ -165,21 +170,22 @@ class Sudoku:
                         if possibleMoves[onlyPossibileCellInGroup]["move"] == d:
                             # just add another reason for the same move
                             possibleMoves[onlyPossibileCellInGroup]["reasons"].append({"method" : "only place in " + group["name"],
-                                                                                 "elimination" : str(detailedReasons)})
+                                                                                 "reason" : detailedReasons})
                         else:
                             # inconsistent results
-                            print("ERROR! Found different move than " + str(d) + " at " + self.celltostr(onlyPossibileCellInGroup))
-                            print(possibleMoves[onlyPossibileCellInGroup])
+                            raise Exception("ERROR! Found different move than " + str(d) + " at " + self.celltostr(onlyPossibileCellInGroup))
                     else:
                         possibleMoves[onlyPossibileCellInGroup] = {"move" : d,
                                                                    "reasons" : [{"method" : "only place in " + group["name"],
-                                                                                 "elimination" : str(detailedReasons)}]}
+                                                                                 "reason" : detailedReasons}]}
                         # print('Possibility at ' + self.celltostr(onlyPossibileCellInGroup) + ": " + str(d))
                         # print('   only place for ' + str(d) + ' in ' + group["name"] )
         return possibleMoves
 
     # Filters the existing possibilities per cell by applying elimination
     # from all groups that this cell is part of.
+    # TODO: iteratively do the largest elimination first until there is no
+    # more elimination to do
     def groupElimination(self):
         print('Simple elimination per cell')
         for cell in self.emptycells:
@@ -189,12 +195,19 @@ class Sudoku:
                     digitsingroup = set([self.puzzle[c] for c in agroup["cells"] if c in self.puzzle])
                     commonelements = candidates.intersection(digitsingroup)
                     if (len(commonelements) > 0):
+                        # TODO keep list of group & common elements then later go over this
+                        # iteratively
                         candidates = candidates - digitsingroup
-                        self.explanations[cell].append( (agroup["name"], sorted(commonelements)) )
+                        self.explanations[cell].append({"method": "simple elimination",
+                                                        "detail": agroup["name"],
+                                                        "eliminations": sorted(commonelements)} )
             self.possibilities[cell] = candidates
 
     # Filters the existing possibilities by checking if there are subgroups
-    # in each group that all have the same possibilities
+    # in each group that all have the same possibilities (complete subgroups). So
+    # if there are three cells in a group with all {1,7,8} then we are sure these
+    # values can only exist there and 1, 7 and 8 can be removed from all other
+    # possibilities in the cells of this group.
     def nakedPairElimination(self):
         for agroup in self.groups:
             subgroups = dict()
@@ -215,6 +228,22 @@ class Sudoku:
                     # in that same group
                     # reason: "naked subgroup [1,6,7] in nrc4" or so
 
+    # Filters by looking for subgroups of values inside a group, where a subgroup
+    # of size N exists in N cells (with N > 1 and N < 9) - which means that the
+    # values of this subgroup can be eliminated from the other cells in the group.
+    # This is similar to the above method however does not require the subgroups are
+    # complete, i.e. there could be two cells with possibilities {1,6,7} and {1,3,7,8}
+    # and {1,7} not occuring anywhere else in the possibilities of that group. This
+    # means the two cells can be limited to just {1,7} and both 1 and 7 can be
+    # eliminated from the rest of the group.
+    def subgroupElimination(self):
+        pass
+
+    # Filters by looking at intersections of pairs of groups. If a value can only occur
+    # in that intersection from the perspective of one of the two groups, that value can
+    # be eliminated from the rest of the other group as well.
+    def radiationElimination(self):
+        pass
 
 class NRCSudoku(Sudoku):
     """ Adds rectangular areas """
@@ -268,7 +297,7 @@ def main():
 
     # NRC saturday 29 feb 2020
     # even this one requires nothing fancy
-    s = NRCSudoku((" 1   2   ",
+    s1 = NRCSudoku((" 1   2   ",
                     "  8      ",
                     "      5 3",
                     "   9    2",
@@ -290,7 +319,9 @@ def main():
         for mv in sorted(mvz.keys()):
             print("Possible move at " + s.celltostr(mv) + ": " + str(mvz[mv]["move"]))
             for r in mvz[mv]["reasons"]:
-                print("   reason: " + str(r))
+                print("   explanation: " + r["method"])
+                for detail in r["reason"]:
+                    print("      * " + str(detail))
         s.show()
         nextMove = sorted(mvz.keys())[0]
         s.place(mvz[nextMove]["move"], s.celltostr(nextMove))
@@ -298,3 +329,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# TODO add mode to batch-solve puzzle and report on # of steps
+# also check consistency while doing that
