@@ -124,7 +124,7 @@ class Sudoku:
     def celltostr(self, pair):
         return "R"+str(1 + pair[0]) + "C" + str(1 + pair[1])
 
-    def printPossibleMoves(self):
+    def getMoves(self):
         possibleMoves = dict()
         for cell in self.emptycells:
             p = self.possibilities[cell]
@@ -134,7 +134,7 @@ class Sudoku:
                     if possibleMoves[cell]["move"] == d:
                         # just add another reason for the same move
                         possibleMoves[cell]["reasons"].append({"method" : "single cell value",
-                                                         "reason" : self.explanations[cell]})
+                                                               "reason" : self.explanations[cell]})
                     else:
                         # inconsistent results
                         raise Exception("ERROR! Found different move than " + str(d) + " at " + self.celltostr(cell))
@@ -155,53 +155,49 @@ class Sudoku:
                     # reasons why d is excluded in all other cells in the group
                     # for all other cells get explanations x
                     # if x[1] contains d then add x[0] to reason why d is excluded
-                    detailedReasons = []
+                    detailedReasons = {}
                     emptyCellsInGroup.remove(onlyPossibileCellInGroup)
                     for cell in emptyCellsInGroup:
                         for x in self.explanations[cell]:
                             if d in x["eliminations"]:
-                                # TODO: for simple eliminations the list is not interesting here, we know it is d
-                                # only the group it comes from (detail). See how this works with other eliminations.
-                                detailedReasons.append(x)
-                                # possible overlap, look for largest explanations first however difficult
-                                # today as the explanations per cell do not overlap, so we cannot tell which
-                                # is the larger one really
-                    if onlyPossibileCellInGroup in possibleMoves:
-                        if possibleMoves[onlyPossibileCellInGroup]["move"] == d:
-                            # just add another reason for the same move
-                            possibleMoves[onlyPossibileCellInGroup]["reasons"].append({"method" : "only place in " + group["name"],
-                                                                                 "reason" : detailedReasons})
-                        else:
-                            # inconsistent results
-                            raise Exception("ERROR! Found different move than " + str(d) + " at " + self.celltostr(onlyPossibileCellInGroup))
+                                detailedReasons[ x["method"] + str(x["detail"]) ] = {"method" : x["method"], "detail" : x["detail"]}
+                    if not onlyPossibileCellInGroup in possibleMoves:
+                        possibleMoves[onlyPossibileCellInGroup] = {"move": d, "reasons": []}
+                    if possibleMoves[onlyPossibileCellInGroup]["move"] == d:
+                        # just add another reason for the same move
+                        possibleMoves[onlyPossibileCellInGroup]["reasons"].append({"method" : "only place in " + group["name"],
+                                                                                   "reason" : detailedReasons.values()})
                     else:
-                        possibleMoves[onlyPossibileCellInGroup] = {"move" : d,
-                                                                   "reasons" : [{"method" : "only place in " + group["name"],
-                                                                                 "reason" : detailedReasons}]}
-                        # print('Possibility at ' + self.celltostr(onlyPossibileCellInGroup) + ": " + str(d))
-                        # print('   only place for ' + str(d) + ' in ' + group["name"] )
+                        raise Exception("ERROR! Found different move than " + str(d) + " at " + self.celltostr(onlyPossibileCellInGroup))
         return possibleMoves
 
     # Filters the existing possibilities per cell by applying elimination
-    # from all groups that this cell is part of.
-    # TODO: iteratively do the largest elimination first until there is no
-    # more elimination to do
+    # from all groups that this cell is part of. Basis is simple but we also
+    # want to process the group that provides the largest nr of eliminations
+    # first, so this becomes an iterative process.
     def groupElimination(self):
         print('Simple elimination per cell')
         for cell in self.emptycells:
             candidates = self.possibilities[cell]
-            for agroup in self.groups:
-                if cell in agroup["cells"]:
-                    digitsingroup = set([self.puzzle[c] for c in agroup["cells"] if c in self.puzzle])
-                    commonelements = candidates.intersection(digitsingroup)
-                    if (len(commonelements) > 0):
-                        # TODO keep list of group & common elements then later go over this
-                        # iteratively
-                        candidates = candidates - digitsingroup
-                        self.explanations[cell].append({"method": "simple elimination",
-                                                        "detail": agroup["name"],
-                                                        "eliminations": sorted(commonelements)} )
-            self.possibilities[cell] = candidates
+            while True:
+                highestNrOfIntersections = 0
+                groupWithHighestNrOfIntersections = None
+                for agroup in self.groups:
+                    if cell in agroup["cells"]:
+                        digitsingroup = set([self.puzzle[c] for c in agroup["cells"] if c in self.puzzle])
+                        commonelements = candidates.intersection(digitsingroup)
+                        if len(commonelements) > highestNrOfIntersections:
+                            highestNrOfIntersections = len(commonelements)
+                            groupWithHighestNrOfIntersections = agroup
+                if highestNrOfIntersections == 0:
+                    break # Done - no more intersections to be found
+                digitsingroupWithHighestNrOfIntersections = set([self.puzzle[c] for c in groupWithHighestNrOfIntersections["cells"] if c in self.puzzle])
+                commonelements = candidates.intersection(digitsingroupWithHighestNrOfIntersections)
+                candidates = candidates - digitsingroupWithHighestNrOfIntersections
+                self.explanations[cell].append({"method": "simple elimination",
+                                                "detail": groupWithHighestNrOfIntersections["name"],
+                                                "eliminations": sorted(commonelements)} )
+                self.possibilities[cell] = candidates
 
     # Filters the existing possibilities by checking if there are subgroups
     # in each group that all have the same possibilities (complete subgroups). So
@@ -311,7 +307,7 @@ def main():
     while True:
         s.groupElimination()
         s.nakedPairElimination()
-        mvz = s.printPossibleMoves()
+        mvz = s.getMoves()
         if len(mvz) == 0:
             print("No moves!")
             s.show()
