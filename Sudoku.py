@@ -10,13 +10,6 @@ class Sudoku:
         self.puzzle = self.fromTextTuple(sudoku)
         self.originalPuzzle = self.puzzle.copy()
         self.initGroups()
-        self.overlappingGroups = []
-        for group1 in self.groups:
-            for group2 in self.groups:
-                if group1 != group2:
-                    overlap = group1["cells"].intersection(group2["cells"])
-                    if len(overlap) > 1:
-                        self.overlappingGroups.append( (group1["name"], group2["name"]) )
         self.initPossibilities()
         self.eliminationSteps = {} # stats for solutions
 
@@ -39,25 +32,20 @@ class Sudoku:
         return puzzle
 
     def initGroups(self):
-        allrows = list()
-        allcols = list()
-        allsquares = list()
         self.emptycells = set()
+        self.groups = dict()
         for x in range(9):
-            allrows.append({"name": "row " + str(1 + x), "cells": set()})
-            allcols.append({"name": "col " + str(1 + x), "cells": set()})
-            allsquares.append({"name": "sqr " + str(1 + x), "cells": set()})
+            self.groups[ "row " + str(1 + x) ] = set()
+            self.groups[ "col " + str(1 + x) ] = set()
+            self.groups[ "sqr " + str(1 + x) ] = set()
         for i in range(9):
             for j in range(9):
                 cell = (i, j)
-                allrows[i]["cells"].add(cell)
-                allcols[j]["cells"].add(cell)
-                allsquares[3 * (i // 3) + (j // 3)]["cells"].add(cell)
+                self.groups[ "row " + str(1 + i) ].add(cell)
+                self.groups[ "col " + str(1 + j) ].add(cell)
+                self.groups[ "sqr " + str(1 + 3 * (i // 3) + (j // 3)) ].add(cell)
                 if not cell in self.puzzle:
                     self.emptycells.add(cell)
-        # TODO make a dict and iterate over items, forget "cells" and "name" attributes
-        # like for key, value in a_dict.items():
-        self.groups = allrows + allcols + allsquares
 
     def initPossibilities(self):
         self.possibilities = dict()
@@ -65,6 +53,7 @@ class Sudoku:
         for cell in self.emptycells:
             self.possibilities[cell] = set(range(1, 10))
             self.explanations[cell] = []
+        self.pendingRemovals = {}
 
     def isCompleted(self):
         return len(self.emptycells) == 0
@@ -83,7 +72,6 @@ class Sudoku:
     def print(self):
         print(self.groups)
         print(str(len(self.groups)) + " groups")
-        print(self.overlappingGroups)
 
     def getShowRaster(self):
         mx = np.zeros((9, 9))
@@ -159,19 +147,16 @@ class Sudoku:
                     possibleMoves[cell] = {"move" : d,
                                            "reasons" : [{"method" : "single cell value",
                                                          "reason" : self.explanations[cell]}]}
-        for group in self.groups:
+        for groupName, groupCells in self.groups.items():
             for d in range(1,10):
                 onlyPossibileCellInGroup = None
                 nPossibilitiesInGroup = 0
-                emptyCellsInGroup = group["cells"].intersection(self.emptycells)
+                emptyCellsInGroup = groupCells.intersection(self.emptycells)
                 for cell in emptyCellsInGroup:
                     if d in self.possibilities[cell]:
                         onlyPossibileCellInGroup = cell
                         nPossibilitiesInGroup = nPossibilitiesInGroup + 1
                 if nPossibilitiesInGroup == 1:
-                    # reasons why d is excluded in all other cells in the group
-                    # for all other cells get explanations x
-                    # if x[1] contains d then add x[0] to reason why d is excluded
                     detailedReasons = {}
                     emptyCellsInGroup.remove(onlyPossibileCellInGroup)
                     for cell in emptyCellsInGroup:
@@ -182,7 +167,7 @@ class Sudoku:
                         possibleMoves[onlyPossibileCellInGroup] = {"move": d, "reasons": []}
                     if possibleMoves[onlyPossibileCellInGroup]["move"] == d:
                         # just add another reason for the same move
-                        possibleMoves[onlyPossibileCellInGroup]["reasons"].append({"method" : "only place in " + group["name"],
+                        possibleMoves[onlyPossibileCellInGroup]["reasons"].append({"method" : "only place in " + groupName,
                                                                                    "reason" : detailedReasons.values()})
                     else:
                         raise Exception("ERROR! Found different move than " + str(d) + " at " + self.celltostr(onlyPossibileCellInGroup))
@@ -200,7 +185,18 @@ class Sudoku:
             self.explanations[cell].append({"method": methodName,
                                             "detail": methodDetail,
                                             "eliminations": sorted(commonElements)})
-            self.possibilities[cell] = candidates - commonElements
+            # can we push back this - just keep a dict of cell --> removals
+            #self.possibilities[cell] = candidates - commonElements
+            if not cell in self.pendingRemovals:
+                self.pendingRemovals[cell] = eliminations
+            else:
+                self.pendingRemovals[cell] = self.pendingRemovals[cell].union(eliminations)
+
+    # apply & empty bulk removal list
+    def doBulkElimination(self):
+        for cell, removals in self.pendingRemovals.items():
+            self.possibilities[cell] = self.possibilities[cell] - removals
+        self.pendingRemovals = {}
 
     # Filters the existing possibilities per cell by applying elimination
     # from all groups that this cell is part of. Basis is simple but we also
@@ -213,19 +209,21 @@ class Sudoku:
                 highestNrOfIntersections = 0
                 groupWithHighestNrOfIntersections = None
                 candidates = self.possibilities[cell]
-                for agroup in self.groups:
-                    if cell in agroup["cells"]:
-                        digitsingroup = set([self.puzzle[c] for c in agroup["cells"] if c in self.puzzle])
+                for groupName, groupCells in self.groups.items():
+                    if cell in groupCells:
+                        digitsingroup = set([self.puzzle[c] for c in groupCells if c in self.puzzle])
                         commonelements = candidates.intersection(digitsingroup)
                         if len(commonelements) > highestNrOfIntersections:
                             highestNrOfIntersections = len(commonelements)
-                            groupWithHighestNrOfIntersections = agroup
+                            groupNameWithHighestNrOfIntersections = groupName
+                            groupCellsWithHighestNrOfIntersections = groupCells
                 if highestNrOfIntersections == 0:
                     break # Done - no more intersections to be found
-                digitsingroupWithHighestNrOfIntersections = set([self.puzzle[c] for c in groupWithHighestNrOfIntersections["cells"] if c in self.puzzle])
+                digitsingroupWithHighestNrOfIntersections = set([self.puzzle[c] for c in groupCellsWithHighestNrOfIntersections if c in self.puzzle])
                 self.updateCandidates(cell, "simple elimination",
-                                      groupWithHighestNrOfIntersections["name"],
+                                      groupNameWithHighestNrOfIntersections,
                                       digitsingroupWithHighestNrOfIntersections)
+                self.doBulkElimination()
 
     # Filters the existing possibilities by checking if there are subgroups
     # in each group that all have the same possibilities (complete subgroups). So
@@ -233,25 +231,23 @@ class Sudoku:
     # values can only exist there and 1, 7 and 8 can be removed from all other
     # possibilities in the cells of this group.
     def perfectSubgroupElimination(self):
-        for agroup in self.groups:
+        for groupName, groupCells in self.groups.items():
             subgroups = dict()
             subgroupPossibilities = dict()
-            for cell in agroup["cells"]:
-                if cell in self.emptycells:
-                    possibilitiesKey = str(sorted(self.possibilities[cell]))
-                    if not possibilitiesKey in subgroups:
-                        subgroups[possibilitiesKey] = set()
-                        subgroupPossibilities[possibilitiesKey] = set(sorted(self.possibilities[cell]))
-                    subgroups[possibilitiesKey].add(cell)
+            for cell in groupCells.intersection(self.emptycells):
+                possibilitiesKey = str(sorted(self.possibilities[cell]))
+                if not possibilitiesKey in subgroups:
+                    subgroups[possibilitiesKey] = set()
+                    subgroupPossibilities[possibilitiesKey] = self.possibilities[cell]
+                subgroups[possibilitiesKey].add(cell)
             # Instead of applying directly consider first listing the possibilities independently
             # so keeping a structure of group key, subgroup cells, valueset then applying those later
             for k in subgroups.keys():
                 if len(subgroupPossibilities[k]) == len(subgroups[k]) and len(subgroups[k]) > 1:
-                    for cell in agroup["cells"] - subgroups[k]:
-                        if cell in self.emptycells:
-                            self.updateCandidates(cell, "perfect subgroups",
-                                                  "{0} subgroup {1}: {2}".format(agroup["name"], self.cellstostr(subgroups[k]), str(sorted(subgroupPossibilities[k]))),
-                                                  subgroupPossibilities[k])
+                    for cell in (groupCells - subgroups[k]).intersection(self.emptycells):
+                        self.updateCandidates(cell, "perfect subgroups",
+                                              "{0} subgroup {1}: {2}".format(groupName, self.cellstostr(subgroups[k]), str(sorted(subgroupPossibilities[k]))),
+                                              subgroupPossibilities[k])
 
 
     # Filters by looking for subgroups of values inside a group, where a subgroup
@@ -263,27 +259,32 @@ class Sudoku:
     # means the two cells can be limited to just {1,7} and both 1 and 7 can be
     # eliminated from the rest of the group.
     def subgroupElimination(self):
-        for groupPair in self.overlappingGroups:
-            print(groupPair)
-            print(groupPair[0])
-            print(self.groups[groupPair[0]])
-            overlap = self.groups[groupPair[0]]["cells"].intersection(self.groups[groupPair[1]]["cells"])
-            possibilitiesInOverlap = set()
-            for cell in overlap:
-                if cell in self.emptycells:
-                    possibilitiesInOverlap.add(self.possibilities[cell])
-            if len(possibilitiesInOverlap)>0:
-                print("Overlap {0} and {1} has {2}".format(self.groups[groupPair[0]]["name"], self.groups[groupPair[1]]["name"], str(overlap)))
-            valuesInOverlap = None
-            valuesInRestOf1 = None
-            valuesInRestOf2 = None
+        pass
+
 
 
     # Filters by looking at intersections of pairs of groups. If a value can only occur
     # in that intersection from the perspective of one of the two groups, that value can
     # be eliminated from the rest of the other group as well.
     def radiationElimination(self):
-        pass
+        for group1Name, group1Cells in self.groups.items():
+            for group2Name, group2Cells in self.groups.items():
+                if group1Name != group2Name:
+                    overlap = group1Cells.intersection(group2Cells).intersection(self.emptycells)
+                    if len(overlap) > 1: # and at least 2 are empty
+                        valuesInOverlap = set()
+                        for cell in overlap:
+                            valuesInOverlap = valuesInOverlap.union(self.possibilities[cell])
+                        valuesInGroup1 = set()
+                        for cell in group1Cells.intersection(self.emptycells).difference(overlap):
+                            valuesInGroup1 = valuesInGroup1.union(self.possibilities[cell])
+                        valuesInOverlap = valuesInOverlap - valuesInGroup1
+                        if len(valuesInOverlap) > 0:
+                            # TODO: line up and do later in batch, otherwise too confusing...
+                            for cell in (group2Cells - overlap).intersection(self.emptycells):
+                                self.updateCandidates(cell, "radiation",
+                                                      "{2} only occurs in overlap {0}/{1}, not in other cells of {0}, so removed from rest of {1}".format(group1Name, group2Name, valuesInOverlap),
+                                                      valuesInOverlap)
 
     def batchSolve(self):
         n = 0
@@ -291,6 +292,9 @@ class Sudoku:
             n = n + 1
             self.groupElimination()
             self.perfectSubgroupElimination()
+            self.radiationElimination()
+            self.subgroupElimination()
+            self.doBulkElimination()
             mvz = self.getMoves()
             if len(mvz) == 0:
                 print("No moves!")
@@ -304,24 +308,18 @@ class NRCSudoku(Sudoku):
 
     def initGroups(self):
         super().initGroups()
-        r1 = set()
-        r2 = set()
-        r3 = set()
-        r4 = set()
+        for i in range(1, 5):
+            self.groups[ "nrc {0}".format(i) ] = set()
         for i in range(9):
             for j in range(9):
                 if (i >= 1 and i <= 3 and j >= 1 and j <= 3):
-                    r1.add((i, j))
+                    self.groups["nrc 1"].add((i, j))
                 if (i >= 1 and i <= 3 and j >= 5 and j <= 7):
-                    r2.add((i, j))
+                    self.groups["nrc 2"].add((i, j))
                 if (i >= 5 and i <= 7 and j >= 1 and j <= 3):
-                    r3.add((i, j))
+                    self.groups["nrc 3"].add((i, j))
                 if (i >= 5 and i <= 7 and j >= 5 and j <= 7):
-                    r4.add((i, j))
-        self.groups.append({"name": "nrc 1", "cells": r1})
-        self.groups.append({"name": "nrc 2", "cells": r2})
-        self.groups.append({"name": "nrc 3", "cells": r3})
-        self.groups.append({"name": "nrc 4", "cells": r4})
+                    self.groups["nrc 4"].add((i, j))
 
     def getShowRaster(self):
         mx = super().getShowRaster()
@@ -372,7 +370,9 @@ def main():
         s.groupElimination()
         sbefore = copy.deepcopy(s)
         s.perfectSubgroupElimination()
+        s.radiationElimination()
         s.subgroupElimination()
+        s.doBulkElimination()
         mvz = s.getMoves()
         if len(mvz) == 0:
             print("No moves!")
