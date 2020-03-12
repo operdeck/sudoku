@@ -12,6 +12,7 @@ class Sudoku:
         self.initGroups()
         self.initPossibilities()
         self.eliminationSteps = {} # stats for solutions
+        self.nextMove = None
 
     def fromTextTuple(self, sudoku):
         puzzle = dict()
@@ -95,6 +96,7 @@ class Sudoku:
         ax.set_yticks(np.arange(9))
         ax.set_xticklabels(range(1, 10))
         ax.set_yticklabels(range(1, 10))
+        self.nextMove = None
 
         def draw():
             for cell in self.puzzle:
@@ -126,7 +128,12 @@ class Sudoku:
                 row = int(round(event.ydata))
                 col = int(round(event.xdata))
                 cell = (row, col)
-                if cell in self.emptycells:
+                if cell == self.nextMove:
+                    self.nextMove = None
+                    draw()
+                    fig.canvas.draw()
+                elif cell in self.emptycells:
+                    self.nextMove = cell
                     p = self.possibilities[cell]
                     txt = "\n".join(["".join((str(i) if (i in p) else ".") for i in range(1, 4)),
                                      "".join((str(i) if (i in p) else ".") for i in range(4, 7)),
@@ -397,6 +404,17 @@ def main():
                     "    1 38 ",
                     "         ",
                     "  6      "))
+
+    # NRC do march 12, 2020
+    s = NRCSudoku(("         ",
+                   "6        ",
+                   "  28  6 9",
+                   " 54      ",
+                   "    1  2 ",
+                   "8   4 1  ",
+                   " 694 3 7 ",
+                   " 7     5 ",
+                   " 4     9 "))
     s.print()
 
     print("Batch solving")
@@ -417,10 +435,12 @@ def main():
         if len(mvz) == 0:
             print("No moves!")
             break
-        for mv in sorted(mvz.keys()):
-            print("Possible move {0} at {1}".format(mvz[mv]["move"], s.celltostr(mv)))
+        print("Moves: " + str([ "{0}@{1}".format(mvz[mv]["move"], s.celltostr(mv)) for mv in sorted(mvz.keys()) ]))
         sbefore.show(s, mvz)
-        nextMove = sorted(mvz.keys())[0]
+        if (sbefore.nextMove in mvz.keys()):
+            nextMove = sbefore.nextMove
+        else:
+            nextMove = sorted(mvz.keys())[0]
         s.place(mvz[nextMove]["move"], s.celltostr(nextMove))
 
 
