@@ -85,7 +85,7 @@ class Sudoku:
                 mx[x + 3, y + 3] = 1
         return mx
 
-    def show(self):
+    def show(self, current, currentMoves):
         fig, ax = plt.subplots()
         im = ax.imshow(self.getShowRaster(), cmap="Purples",
                        alpha=0.6)  # strange way to plot a grid - need something simpler...
@@ -95,28 +95,68 @@ class Sudoku:
         ax.set_yticks(np.arange(9))
         ax.set_xticklabels(range(1, 10))
         ax.set_yticklabels(range(1, 10))
-        for cell in self.puzzle:
-            ax.text(cell[1], cell[0], self.puzzle[cell], ha="center", va="center",
-                    color= ("black" if (cell in self.originalPuzzle) else "blue"), size=15)
-        for cell in self.emptycells:
-            p = self.possibilities[cell]
-            txt = "\n".join(["".join((str(i) if (i in p) else ".") for i in range(1, 4)),
-                             "".join((str(i) if (i in p) else ".") for i in range(4, 7)),
-                             "".join((str(i) if (i in p) else ".") for i in range(7, 10))])
-            ax.text(cell[1], cell[0], txt, ha="center", va="center", color="black", size=9, alpha=0.6,
-                    family='monospace')
-        for x in range(8):
-            if x == 2 or x == 5:
-                pass
-            else:
-                plt.axhline(0.5 + x, color="grey")
-                plt.axvline(0.5 + x, color="grey")
-        for x in range(8):
-            if x == 2 or x == 5:
-                plt.axhline(0.5 + x, color="black")
-                plt.axvline(0.5 + x, color="black")
-        ax.set_title("Sudoku")
-        fig.tight_layout()
+
+        def draw():
+            for cell in self.puzzle:
+                ax.text(cell[1], cell[0], self.puzzle[cell], ha="center", va="center",
+                        color= ("black" if (cell in self.originalPuzzle) else "blue"), size=15)
+            for cell in self.emptycells:
+                p = self.possibilities[cell]
+                txt = "\n".join(["".join((str(i) if (i in p) else ".") for i in range(1, 4)),
+                                 "".join((str(i) if (i in p) else ".") for i in range(4, 7)),
+                                 "".join((str(i) if (i in p) else ".") for i in range(7, 10))])
+                ax.text(cell[1], cell[0], txt, ha="center", va="center", color="blue", size=9,
+                        family='monospace')
+            for x in range(8):
+                if x == 2 or x == 5:
+                    pass
+                else:
+                    plt.axhline(0.5 + x, color="grey")
+                    plt.axvline(0.5 + x, color="grey")
+            for x in range(8):
+                if x == 2 or x == 5:
+                    plt.axhline(0.5 + x, color="black")
+                    plt.axvline(0.5 + x, color="black")
+            ax.set_title("Sudoku")
+            fig.tight_layout()
+
+        # see https://matplotlib.org/3.1.1/users/event_handling.html
+        def onclick(event):
+            if event.xdata is not None and event.ydata is not None:
+                row = int(round(event.ydata))
+                col = int(round(event.xdata))
+                cell = (row, col)
+                if cell in self.emptycells:
+                    p = self.possibilities[cell]
+                    txt = "\n".join(["".join((str(i) if (i in p) else ".") for i in range(1, 4)),
+                                     "".join((str(i) if (i in p) else ".") for i in range(4, 7)),
+                                     "".join((str(i) if (i in p) else ".") for i in range(7, 10))])
+                    draw()
+                    ax.text(cell[1], cell[0], txt, ha="center", va="center", color="red", size=9,
+                            family='monospace')
+                    fig.canvas.draw()
+
+                    print("Cell: {0}, possibilities: {1}".format(self.celltostr(cell), sorted(current.possibilities[cell])))
+                    if cell in currentMoves:
+                        print("Possible move {0} because:".format(currentMoves[cell]["move"]))
+                        for r in currentMoves[cell]["reasons"]:
+                            print("   explanation: " + r["method"])
+                            for detail in r["reason"]:
+                                if "eliminations" in detail:
+                                    print("      * {0}: {1} removes {2}".format(detail["method"], detail["detail"],
+                                                                                detail["eliminations"]))
+                                else:
+                                    print("      * {0}: {1}".format(detail["method"], detail["detail"]))
+                    else:
+                        print("   eliminations:")
+                        for x in current.explanations[cell]:
+                            print("      * {0}: {1} removes {2}".format(x["method"], x["detail"],
+                                                                        x["eliminations"]))
+                else:
+                    print("Cell: {0}: {1}".format(self.celltostr(cell), self.puzzle[cell]))
+
+        draw()
+        cid = fig.canvas.mpl_connect('button_press_event', onclick)
         plt.show()
 
     # Make sure all groups are correct
@@ -348,7 +388,7 @@ def main():
 
     # NRC saturday 29 feb 2020
     # even this one requires nothing fancy
-    s1 = NRCSudoku((" 1   2   ",
+    s = NRCSudoku((" 1   2   ",
                     "  8      ",
                     "      5 3",
                     "   9    2",
@@ -379,17 +419,10 @@ def main():
             break
         for mv in sorted(mvz.keys()):
             print("Possible move {0} at {1}".format(mvz[mv]["move"], s.celltostr(mv)))
-            for r in mvz[mv]["reasons"]:
-                print("   explanation: " + r["method"])
-                for detail in r["reason"]:
-                    print("      * " + str(detail))
-        sbefore.show()
+        sbefore.show(s, mvz)
         nextMove = sorted(mvz.keys())[0]
         s.place(mvz[nextMove]["move"], s.celltostr(nextMove))
 
 
 if __name__ == "__main__":
     main()
-
-# TODO add mode to batch-solve puzzle and report on # of steps
-# also check consistency while doing that
