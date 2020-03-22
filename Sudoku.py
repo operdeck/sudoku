@@ -194,6 +194,7 @@ class Sudoku:
                     possibleMoves[cell] = {"move" : d,
                                            "reasons" : [{"method" : "single cell value",
                                                          "reason" : self.explanations[cell]}]}
+        # "Only place" is easier to understand than single cell value
         for groupName, groupCells in self.groups.items():
             for d in range(1,10):
                 onlyPossibileCellInGroup = None
@@ -330,7 +331,7 @@ class Sudoku:
                             # TODO: line up and do later in batch, otherwise too confusing...
                             for cell in (group2Cells - overlap).intersection(self.emptycells):
                                 self.updateCandidates(cell, "radiation",
-                                                      "{2} only occurs in overlap {0}/{1}, not in other cells of {0}, so removed from rest of {1}".format(group1Name, group2Name, valuesInOverlap),
+                                                      "for {0}, {2} only occurs in overlap with {1}, so removed from rest of {1}".format(group1Name, group2Name, valuesInOverlap),
                                                       valuesInOverlap)
 
     def batchSolve(self):
@@ -415,6 +416,28 @@ def main():
                    " 694 3 7 ",
                    " 7     5 ",
                    " 4     9 "))
+
+    # NRC sat 14 march 2020
+    s = NRCSudoku((" 5       ",
+                   "  6     9",
+                   "2    4 13",
+                   "  7 5    ",
+                   "    2    ",
+                   "4        ",
+                   " 8 3 9   ",
+                   "         ",
+                   " 1       "))
+    
+    # NRC sat 21 march 2020
+    s = NRCSudoku(("  4      ",
+                   "   1  9  ",
+                   "         ",
+                   "   4   5 ",
+                   "2 3     8",
+                   "9  53    ",
+                   "     93  ",
+                   "   6   8 ",
+                   "      7  "))
     s.print()
 
     print("Batch solving")
@@ -435,6 +458,7 @@ def main():
         if len(mvz) == 0:
             print("No moves!")
             break
+        # show moves orderd per digit mvz[mv]["move"], most possibilities first
         print("Moves: " + str([ "{0}@{1}".format(mvz[mv]["move"], s.celltostr(mv)) for mv in sorted(mvz.keys()) ]))
         sbefore.show(s, mvz)
         if (sbefore.nextMove in mvz.keys()):
