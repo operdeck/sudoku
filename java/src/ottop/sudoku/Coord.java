@@ -1,4 +1,4 @@
-package perdo.sudoku;
+package ottop.sudoku;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +10,7 @@ public class Coord implements Comparable<Coord>{
 	
 	private int coord;
 
-	static final List<Coord> all = new ArrayList<Coord>();
+	static final List<Coord> all = new ArrayList<>();
 	
 	static {
 		for (int x=0; x<9; x++) {

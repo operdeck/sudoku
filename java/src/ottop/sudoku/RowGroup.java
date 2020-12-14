@@ -1,4 +1,4 @@
-package perdo.sudoku;
+package ottop.sudoku;
 
 public class RowGroup extends Group {
 
@@ -7,12 +7,12 @@ public class RowGroup extends Group {
 	}
 
 	@Override
-	protected int internalIndexToRelativeX(int idx) {
+	public int internalIndexToRelativeX(int idx) {
 		return idx;
 	}
 
 	@Override
-	protected int internalIndexToRelativeY(int idx) {
+	public int internalIndexToRelativeY(int idx) {
 		return 0;
 	}
 

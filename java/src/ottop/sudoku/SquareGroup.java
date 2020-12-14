@@ -1,4 +1,4 @@
-package perdo.sudoku;
+package ottop.sudoku;
 
 
 public class SquareGroup extends Group {
@@ -9,9 +9,9 @@ public class SquareGroup extends Group {
 
 //	protected int getIndex(int x, int y) { return y*3 + x; }
 	@Override
-	protected int internalIndexToRelativeX(int idx) { return idx % 3; }
+	public int internalIndexToRelativeX(int idx) { return idx % 3; }
 	@Override
-	protected int internalIndexToRelativeY(int idx) { return idx / 3; }
+	public int internalIndexToRelativeY(int idx) { return idx / 3; }
 	
 //	@Override
 //	protected boolean isInGroup(int absX, int absY) {

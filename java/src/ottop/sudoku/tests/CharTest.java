@@ -1,10 +1,9 @@
-package perdo.sudoku.tests;
+package ottop.sudoku.tests;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Test;
-
-import perdo.sudoku.Puzzle;
+import org.testng.annotations.Test;
+import ottop.sudoku.Puzzle;
 
 public class CharTest {
 

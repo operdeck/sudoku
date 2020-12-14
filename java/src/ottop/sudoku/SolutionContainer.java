@@ -1,4 +1,5 @@
-package perdo.sudoku;
+package ottop.sudoku;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,9 +10,9 @@ import java.util.Map;
  */
 public class SolutionContainer {
 	private Map<Coord, Integer> sols;
-	private Puzzle myPuzzle;
+	private IPuzzle myPuzzle;
 	
-	public SolutionContainer(Puzzle p) {
+	public SolutionContainer(IPuzzle p) {
 		sols = new HashMap<Coord, Integer>();
 		myPuzzle = p;
 	}
@@ -42,7 +43,7 @@ public class SolutionContainer {
 //	 H I C | R P F | U T S  
 
 	
-	public String toString(Puzzle originalPuzzle) {
+	public String toString(IPuzzle originalPuzzle) {
 		StringBuffer buf = new StringBuffer();
 
 		boolean isAllOccupied = true;

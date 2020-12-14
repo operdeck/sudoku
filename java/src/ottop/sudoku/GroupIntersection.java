@@ -1,10 +1,11 @@
-package perdo.sudoku;
+package ottop.sudoku;
+
 import java.util.Set;
 import java.util.TreeSet;
 
 public class GroupIntersection {
 	Set<Coord> intersection;
-	Group[] grps = new Group[2];
+	protected Group[] grps = new Group[2];
 	
 	public GroupIntersection(Group a, Group b) {
 		intersection = new TreeSet<Coord>(a.getCoords());

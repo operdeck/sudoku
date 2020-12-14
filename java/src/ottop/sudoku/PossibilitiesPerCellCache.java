@@ -1,4 +1,5 @@
-package perdo.sudoku;
+package ottop.sudoku;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.TreeSet;
 
 public class PossibilitiesPerCellCache {
 	// Map of cell to a set of possible values.
-	Map<Coord, Set<Integer>> nonCollissionMap = new HashMap<Coord, Set<Integer>> ();
+	private Map<Coord, Set<Integer>> nonCollissionMap = new HashMap<Coord, Set<Integer>> ();
 
 	public PossibilitiesPerCellCache(List<Group> groups) {
 		updateNonCollisions(groups);

@@ -1,4 +1,4 @@
-package perdo.sudoku;
+package ottop.sudoku;
 
 public class Digits {
 

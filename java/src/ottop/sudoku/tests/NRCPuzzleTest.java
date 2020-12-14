@@ -1,17 +1,14 @@
-package perdo.sudoku.tests;
+package ottop.sudoku.tests;
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
-import perdo.sudoku.NRCPuzzle;
-import perdo.sudoku.Puzzle;
+import org.testng.annotations.Test;
+import ottop.sudoku.IPuzzle;
 
 public class NRCPuzzleTest {
 
 	@Test
 	public void NRC_5dec14() {
-		Puzzle p = new NRCPuzzle(new String[] {
+		IPuzzle p = new ottop.sudoku.NRCPuzzle(
+				"NRC 5 dec '14",
 				"....65...",
 				".......6.",
 				"1......78",
@@ -20,14 +17,15 @@ public class NRCPuzzleTest {
 				".3..9...1",
 				"..6..45..",
 				".8...2...",
-				"........." });
+				"........." );
 		p.solve();
-		assertTrue(p.solved());
+		assert(p.solved());
 	}
 
 	@Test
 	public void unsolvable() {
-		Puzzle p = new NRCPuzzle(new String[] {
+		IPuzzle p = new ottop.sudoku.NRCPuzzle(
+				"Unsolvable",
 				"....652..",
 				".......6.",
 				"1......78",
@@ -36,14 +34,15 @@ public class NRCPuzzleTest {
 				".3..9...1",
 				"..6..45..",
 				".8...2...",
-				"........." });
+				"........." );
 		p.solve();
-		assertFalse(p.solved());
+		assert(p.solved());
 	}
 
 	@Test
 	public void NRC_28dec() {
-		Puzzle p = new NRCPuzzle(new String[] {
+		IPuzzle p = new ottop.sudoku.NRCPuzzle(
+				"NRC 28 dec 2014",
 				".....2...",
 				"..85..1.9",
 				".......6.",
@@ -52,14 +51,15 @@ public class NRCPuzzleTest {
 				".....3...",
 				".24..5...",
 				".8.7.....",
-				"...1....7" });
+				"...1....7" );
 		p.solve();
-		assertTrue(p.solved());
+		assert(p.solved());
 	}
 
 	@Test
 	public void NRC_17nov() {
-		Puzzle p = new NRCPuzzle(new String[] {
+		IPuzzle p = new ottop.sudoku.NRCPuzzle(
+				"NRC 17 nov 2014",
 				".86...3..",
 				"..95.....",
 				"......1.8",
@@ -68,9 +68,9 @@ public class NRCPuzzleTest {
 				"........9",
 				"..41.....",
 				".....5...",
-				"........." });
+				"........." );
 		p.solve();
-		assertTrue(p.solved());
+		assert(p.solved());
 	}
 
 }

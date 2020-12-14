@@ -1,4 +1,5 @@
-package perdo.sudoku;
+package ottop.sudoku;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -32,8 +33,8 @@ public abstract class Group {
 		}
 	}
 
-	protected abstract int internalIndexToRelativeX(int idx);
-	protected abstract int internalIndexToRelativeY(int idx);
+	public abstract int internalIndexToRelativeX(int idx);
+	public abstract int internalIndexToRelativeY(int idx);
 	
 	private boolean isInGroup(Coord c) {
 		return coords.containsKey(c);
@@ -54,7 +55,7 @@ public abstract class Group {
 	}
 	
 	private Integer getUniquePossibility(PossibilitiesPerCellCache cache,
-			SolutionContainer sols, Coord myCell) {
+										 SolutionContainer sols, Coord myCell) {
 		Set<Integer> remainingPossibilities = new HashSet<Integer>(cache.getPossibilities(myCell));
 		for (Coord otherCell : coords.keySet()) {
 			if (otherCell != myCell) {
