@@ -1,19 +1,16 @@
 package ottop.sudoku;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 public abstract class Group {
 	private boolean[] hasDigit = new boolean[10]; // map that tells which digits are currently contained
-	protected Map<Coord, Integer> coords; // the cell coordinates contained in this group, mapped to internal index (0..9)
-	protected int[] digits = new int[9];
-	protected int startX, startY;
+	private Map<Coord, Integer> coords; // the cell coordinates contained in this group, mapped to internal index (0..9)
+	private int[] digits = new int[9];
+	protected int startX;
+	protected int startY;
 	private String groupID;
-	
+
 	public Group(int startX, int startY, Puzzle myPuzzle, String id) {
 		this.startX = startX;
 		this.startY = startY;
@@ -54,9 +51,9 @@ public abstract class Group {
 		return true;
 	}
 	
-	private Integer getUniquePossibility(PossibilitiesPerCellCache cache,
+	private Integer getUniquePossibility(PossibilitiesContainer cache,
 										 SolutionContainer sols, Coord myCell) {
-		Set<Integer> remainingPossibilities = new HashSet<Integer>(cache.getPossibilities(myCell));
+		Set<Integer> remainingPossibilities = new HashSet<>(cache.getPossibilities(myCell));
 		for (Coord otherCell : coords.keySet()) {
 			if (otherCell != myCell) {
 				remainingPossibilities.removeAll(cache.getPossibilities(otherCell));
@@ -68,7 +65,7 @@ public abstract class Group {
 		return null;
 	}
 
-	public boolean fillLoneNumbers(PossibilitiesPerCellCache cache, SolutionContainer sols) {
+	public boolean addLoneNumbersToSolution(PossibilitiesContainer cache, SolutionContainer sols) {
 		boolean found = false;
 
 		for (Coord myCell : coords.keySet()) {
@@ -89,17 +86,17 @@ public abstract class Group {
 		return found;
 	}
 
-	public boolean fillUniqueCells(PossibilitiesPerCellCache cache, SolutionContainer sols) {
+	public boolean addUniqueValuesToSolution(PossibilitiesContainer poss, SolutionContainer sols) {
 		boolean found = false;
 
 		for (Coord myCell : coords.keySet()) {
 			if (coords.get(myCell) != null && digits[coords.get(myCell)] != -1) continue;
 			
-			Set<Integer> cellPossibilities = cache.getPossibilities(myCell);
+			Set<Integer> cellPossibilities = poss.getPossibilities(myCell);
 			if (cellPossibilities != null) {
 				Integer uniquePossibility = null;
 				if (cellPossibilities.size() >= 1) {
-					uniquePossibility = getUniquePossibility(cache, sols, myCell);
+					uniquePossibility = getUniquePossibility(poss, sols, myCell);
 				}
 				if (uniquePossibility != null) {
 					sols.addSolution(myCell, uniquePossibility, "in " + groupID + ": Unique Cell");
@@ -120,20 +117,16 @@ public abstract class Group {
 	}
 
 	public boolean eliminateNakedPairs(Puzzle p,
-			PossibilitiesPerCellCache cache) {
+			PossibilitiesContainer cache) {
 		
 		boolean result = false;
 		
 		// create map from sets of possibilities to the coordinates (in this group) that have those (same) possibilities
-		Map<Set<Integer>, Set<Coord>> map = new LinkedHashMap<Set<Integer>, Set<Coord>>();
+		Map<Set<Integer>, Set<Coord>> map = new LinkedHashMap<>();
 		for (Coord c : coords.keySet()) {
 			if (!isOccupied(c)) {
 				Set<Integer> pc = cache.getPossibilities(c);
-				Set<Coord> coordSet = map.get(pc);
-				if (coordSet == null) {
-					coordSet = new HashSet<Coord>();
-					map.put(pc, coordSet);
-				}
+				Set<Coord> coordSet = map.computeIfAbsent(pc, k -> new HashSet<>());
 				coordSet.add(c);
 			}
 		}
@@ -153,9 +146,9 @@ public abstract class Group {
 		return result;
 	}
 
-	private boolean eliminateInGroup(PossibilitiesPerCellCache cache,
-			boolean result, Map<Set<Integer>, Set<Coord>> map,
-			String reason) {
+	private boolean eliminateInGroup(PossibilitiesContainer cache,
+									 boolean result, Map<Set<Integer>, Set<Coord>> map,
+									 String reason) {
 		for (Entry<Set<Integer>, Set<Coord>> entry : map.entrySet()) {
 		    Set<Integer> possibilities = entry.getKey();
 		    Set<Coord> coordinates = entry.getValue();
@@ -253,7 +246,7 @@ public abstract class Group {
 		return result;
 	}
 	
-	public Set<Integer> getRowSet(int digit, PossibilitiesPerCellCache cache) {
+	public Set<Integer> getRowSet(int digit, PossibilitiesContainer cache) {
 		Set<Integer> set = new HashSet<Integer>();
 		
 		for (Coord c : coords.keySet()) {
@@ -265,7 +258,7 @@ public abstract class Group {
 		return set;
 	}
 
-	public Set<Integer> getColSet(int digit, PossibilitiesPerCellCache cache) {
+	public Set<Integer> getColSet(int digit, PossibilitiesContainer cache) {
 		Set<Integer> set = new HashSet<Integer>();
 		
 		for (Coord c : coords.keySet()) {
@@ -282,4 +275,18 @@ public abstract class Group {
 		return groupID;
 	}
 
+	public double getMinX() {
+		return startX;
+	}
+
+	public double getMinY() {
+		return startY;
+	}
+	public double getMaxX() {
+		return startX+3;
+	}
+
+	public double getMaxY() {
+		return startY+3;
+	}
 }

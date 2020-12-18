@@ -17,6 +17,6 @@ public class RowGroup extends Group {
 	}
 
 	public int getRow() {
-		return startY;
+		return super.startY;
 	}
 }

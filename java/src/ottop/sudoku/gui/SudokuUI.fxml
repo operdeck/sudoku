@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="337.0" prefWidth="564.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ottop.sudoku.gui.Controller">
+   <children>
+      <ButtonBar fx:id="digitButtonBar" layoutX="513.5" layoutY="342.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+      <ToolBar layoutX="14.0" layoutY="329.0" prefHeight="40.0" prefWidth="407.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0">
+        <items>
+          <Button mnemonicParsing="false" onAction="#digitClicked" text="1" />
+            <Button mnemonicParsing="false" onAction="#digitClicked" text="2" />
+            <Button mnemonicParsing="false" onAction="#digitClicked" text="3" />
+            <Button mnemonicParsing="false" onAction="#digitClicked" text="4" />
+            <Button mnemonicParsing="false" onAction="#digitClicked" text="5" />
+            <Button mnemonicParsing="false" onAction="#digitClicked" text="6" />
+            <Button mnemonicParsing="false" onAction="#digitClicked" text="7" />
+            <Button mnemonicParsing="false" onAction="#digitClicked" text="8" />
+            <Button mnemonicParsing="false" onAction="#digitClicked" text="9" />
+            <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="2.0" />
+            <Button fx:id="clearButton" mnemonicParsing="false" onAction="#clearClicked" text="Clear" />
+            <Button fx:id="undoButton" mnemonicParsing="false" text="Undo" />
+        </items>
+      </ToolBar>
+      <Canvas fx:id="gameCanvas" height="253.0" layoutX="20.0" layoutY="14.0" onMouseClicked="#canvasMouseClick" width="306.0" AnchorPane.bottomAnchor="112.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="281.0" AnchorPane.topAnchor="14.0" />
+      <Label fx:id="tbNotes" layoutX="21.0" layoutY="278.0" prefHeight="17.0" prefWidth="306.0" text="Info" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="21.0" />
+      <AnchorPane layoutX="349.0" layoutY="42.0" AnchorPane.rightAnchor="10.0">
+         <children>
+            <CheckBox fx:id="cbBasicElimination" layoutY="74.0" mnemonicParsing="false" onAction="#hintsAction" text="Basic Elimination" />
+            <CheckBox fx:id="cbNakedPairs" layoutY="124.0" mnemonicParsing="false" onAction="#hintsAction" text="Naked Pairs" />
+            <CheckBox fx:id="cbXWings" layoutY="149.0" mnemonicParsing="false" onAction="#hintsAction" text="X-Wings" />
+            <CheckBox fx:id="cbRadiation" layoutY="99.0" mnemonicParsing="false" onAction="#hintsAction" text="Radiation" />
+            <Label fx:id="tbLevel" prefHeight="17.0" prefWidth="127.0" text="Level" textFill="#12299e" />
+            <Label layoutY="43.0" text="Hints:" />
+            <Separator layoutY="31.0" prefWidth="177.0" />
+         </children>
+      </AnchorPane>
+   </children>
+</AnchorPane>

@@ -19,7 +19,7 @@ public class NRCPuzzleTest {
 				".8...2...",
 				"........." );
 		p.solve();
-		assert(p.solved());
+		assert(p.isSolved());
 	}
 
 	@Test
@@ -36,7 +36,7 @@ public class NRCPuzzleTest {
 				".8...2...",
 				"........." );
 		p.solve();
-		assert(p.solved());
+		assert(p.isSolved());
 	}
 
 	@Test
@@ -53,7 +53,7 @@ public class NRCPuzzleTest {
 				".8.7.....",
 				"...1....7" );
 		p.solve();
-		assert(p.solved());
+		assert(p.isSolved());
 	}
 
 	@Test
@@ -70,7 +70,7 @@ public class NRCPuzzleTest {
 				".....5...",
 				"........." );
 		p.solve();
-		assert(p.solved());
+		assert(p.isSolved());
 	}
 
 }

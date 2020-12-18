@@ -1,6 +1,7 @@
 package ottop.sudoku;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Puzzle implements IPuzzle {
     private List<Group> groups;
@@ -11,7 +12,7 @@ public class Puzzle implements IPuzzle {
     private Map<Character, Integer> toInternalRepresentation = null;
     private List<Character> fromInternalRepresentation = null;
 
-    public static List<Puzzle> all = new ArrayList<>();
+    public static List<Puzzle> allPuzzles = new ArrayList<>();
 
     public Puzzle(String name, String[] sudokuRows) {
         this(name);
@@ -71,7 +72,7 @@ public class Puzzle implements IPuzzle {
 
     public Puzzle(String name) {
         this.name = name;
-        all.add(this);
+        allPuzzles.add(this);
     }
 
     @Override
@@ -113,7 +114,7 @@ public class Puzzle implements IPuzzle {
     }
 
     @Override
-    public boolean solved() {
+    public boolean isSolved() {
         boolean isSolved = true;
         for (Group g:groups) {
             if (!g.solved()) isSolved = false;
@@ -128,42 +129,42 @@ public class Puzzle implements IPuzzle {
         boolean updated = false;
         int iterations = 0;
         SolutionContainer sols = new SolutionContainer(this);
-        PossibilitiesPerCellCache cache = null;
+        PossibilitiesContainer possibilities = null;
         do {
             updated = false;
 
-            PossibilitiesPerCellCache newCache =
-                    new PossibilitiesPerCellCache(groups);
-            if (cache == null) {
-                cache = newCache;
+            PossibilitiesContainer newCache =
+                    new PossibilitiesContainer(groups);
+            if (possibilities == null) {
+                possibilities = newCache;
             } else {
-                cache.merge(newCache);
+                possibilities.merge(newCache);
             }
 
             // Try progressively, simple solutions first
             System.out.println("Check unique cells:");
             for (Group g : groups) {
-                if (g.fillUniqueCells(cache, sols)) updated = true;
+                if (g.addUniqueValuesToSolution(possibilities, sols)) updated = true;
             }
             if (!updated) {
                 System.out.println("Check lone numbers (that can't be placed anywhere else):");
                 for (Group g : groups) {
-                    if (g.fillLoneNumbers(cache, sols)) updated = true;
+                    if (g.addLoneNumbersToSolution(possibilities, sols)) updated = true;
                 }
             }
             if (!updated) {
                 System.out.println("Eliminate by radiation from intersections:");
-                if (eliminateByRadiationFromIntersections(cache)) updated = true;
+                if (eliminateByRadiationFromIntersections(possibilities)) updated = true;
             }
             if (!updated) {
                 System.out.println("Eliminate naked pairs:");
                 for (Group g : groups) {
-                    if (g.eliminateNakedPairs(this, cache)) updated = true;
+                    if (g.eliminateNakedPairs(this, possibilities)) updated = true;
                 }
             }
             if (!updated) {
                 System.out.println("Eliminate by X-Wings:");
-                if (eliminateByXWings(cache)) updated = true;
+                if (eliminateByXWings(possibilities)) updated = true;
             }
 
             if (updated) {
@@ -171,10 +172,10 @@ public class Puzzle implements IPuzzle {
                 System.out.println(sols.toString(this));
                 init(sols.merge(this));
             }
-        } while (updated && !solved());
+        } while (updated && !isSolved());
 
-        if (!solved()) {
-            cache.dump();
+        if (!isSolved()) {
+            System.out.println(possibilities);
         } else {
             System.out.println("Final solution in " + iterations + " iterations:");
             System.out.println(sols.toString(this));
@@ -183,7 +184,7 @@ public class Puzzle implements IPuzzle {
         return iterations;
     }
 
-    private boolean eliminateByXWings(PossibilitiesPerCellCache cache) {
+    private boolean eliminateByXWings(PossibilitiesContainer cache) {
         boolean updated = false;
         for (int digit : Digits.all) {
             // For each digit, figure out in which rows of each column it occurs. Then
@@ -236,7 +237,7 @@ public class Puzzle implements IPuzzle {
         return updated;
     }
 
-    private boolean eliminateByRadiationFromIntersections(PossibilitiesPerCellCache cache) {
+    public boolean eliminateByRadiationFromIntersections(PossibilitiesContainer cache) {
         boolean result = false;
 
         for (GroupIntersection a : subareas) {
@@ -320,5 +321,31 @@ public class Puzzle implements IPuzzle {
         return fromInternalRepresentation.get(internalRepresentation);
     }
 
+    @Override
+    public int getWidth() { return 9; }
+
+    @Override
+    public int getHeight() { return 9; }
+
+    @Override
+    public boolean isInconsistent() {
+        return false;
+    }
+
+    @Override
+    public PossibilitiesContainer getPossibilities() {
+        PossibilitiesContainer possibilities =
+                new PossibilitiesContainer(groups);
+        return (possibilities);
+    }
+
+    @Override
+    public List<Group> getGroups() {
+        List<Group> squareGroups =
+                groups.stream()
+                        .filter(c -> c instanceof SquareGroup)
+                        .collect(Collectors.toList());
+        return squareGroups;
+    }
 
 }

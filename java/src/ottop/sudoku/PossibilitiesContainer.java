@@ -1,17 +1,14 @@
 package ottop.sudoku;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import org.jetbrains.annotations.NotNull;
 
-public class PossibilitiesPerCellCache {
+import java.util.*;
+
+public class PossibilitiesContainer {
 	// Map of cell to a set of possible values.
-	private Map<Coord, Set<Integer>> nonCollissionMap = new HashMap<Coord, Set<Integer>> ();
+	private Map<Coord, Set<Integer>> nonCollissionMap = new HashMap<> ();
 
-	public PossibilitiesPerCellCache(List<Group> groups) {
+	public PossibilitiesContainer(List<Group> groups) {
 		updateNonCollisions(groups);
 	}
 
@@ -23,17 +20,32 @@ public class PossibilitiesPerCellCache {
 		}
 	}
 
-	public void dump() {
+	public Map<Coord, Set<Integer>> getAllPossibilities()
+	{
+		Map<Coord, Set<Integer>> allPossibilities = new HashMap<>();
+
 		for (Coord c : Coord.all) {
 			Set<Integer> p = nonCollissionMap.get(c);
 			if (p != null && !p.isEmpty()) {
-				System.out.println("Possibilities at "+c+": "+ p);
+				allPossibilities.put(c, p);
 			}
 		}
+
+		return (allPossibilities);
 	}
-	
+
+	public String toString()
+	{
+		StringBuffer result = new StringBuffer();
+		Map<Coord, Set<Integer>> allPossibilities = getAllPossibilities();
+		for (Coord c : allPossibilities.keySet()) {
+			result.append("Possibilities at " + c + ":" + allPossibilities.get(c) + "\n");
+		}
+		return result.toString();
+	}
+
 	private Set<Integer> getPossibilities(Coord c, List<Group> groups) {
-		Set<Integer> s = new HashSet<Integer>();
+		Set<Integer> s = new HashSet<>();
 		for (int n=1; n<=9; n++) {
 			boolean isPossible = true;
 			for (Group g : groups) {
@@ -65,7 +77,7 @@ public class PossibilitiesPerCellCache {
 	}
 
 	public boolean removePossibility(int digit, Set<Coord> coords, String reason) {
-		Set<Coord> removed = new TreeSet<Coord>();		
+		Set<Coord> removed = new TreeSet<>();
 		for (Coord c : coords) {
 			Set<Integer> set = nonCollissionMap.get(c);
 			if (set != null) {
@@ -81,7 +93,7 @@ public class PossibilitiesPerCellCache {
 	}
 	
 	public boolean removePossibilities(Set<Integer> possibilities, Coord c, String reason) {
-		Set<Integer> removed = new TreeSet<Integer>(); 
+		Set<Integer> removed = new TreeSet<>();
 		for (int digit : possibilities) {
 			Set<Integer> set = nonCollissionMap.get(c);
 			if (set != null) {
@@ -94,15 +106,15 @@ public class PossibilitiesPerCellCache {
 		return removed.size() > 0;
 	}
 	
-	public Set<Integer> getPossibilities(Set<Coord> subarea) {
-		Set<Integer> p = new HashSet<Integer>();
+	public Set<Integer> getPossibilities(@NotNull Set<Coord> subarea) {
+		Set<Integer> p = new HashSet<>();
 		for (Coord c : subarea) {
 			p.addAll(getPossibilities(c));
 		}
 		return p;
 	}
 
-	public void merge(PossibilitiesPerCellCache newCache) {
+	public void merge(PossibilitiesContainer newCache) {
 		for (Coord c : nonCollissionMap.keySet()) {
 			Set<Integer> p = nonCollissionMap.get(c);
 			p.retainAll(newCache.nonCollissionMap.get(c));

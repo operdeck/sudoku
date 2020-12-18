@@ -1,10 +1,9 @@
 package ottop.sudoku.tests;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
-
 import ottop.sudoku.Puzzle;
+
+import static org.junit.Assert.assertTrue;
 
 public class PuzzleTest {
 
@@ -21,7 +20,7 @@ public class PuzzleTest {
 				".5.9..2..",
 				"9........" });
 		p.solve();
-		assertTrue(p.solved());
+		assertTrue(p.isSolved());
 	}
 		
 	@Test
@@ -37,7 +36,7 @@ public class PuzzleTest {
 				"        3",
 				"   1637 5" });
 		p.solve();
-		assertTrue(p.solved());
+		assertTrue(p.isSolved());
 	}
 		
 	@Test
@@ -53,7 +52,7 @@ public class PuzzleTest {
 				"9    15  ",
 				"  5 3  1 "});
 		p.solve();
-		assertTrue(p.solved());
+		assertTrue(p.isSolved());
 	}
 		
 	@Test
@@ -69,7 +68,7 @@ public class PuzzleTest {
 				".2.7.9.5.",
 				"..4.1.6.."});
 		p.solve();
-		assertTrue(p.solved());
+		assertTrue(p.isSolved());
 	}
 		
 	@Test
@@ -86,7 +85,7 @@ public class PuzzleTest {
 				"   3   6 "
 		});
 		p.solve();
-		assertTrue(p.solved());
+		assertTrue(p.isSolved());
 	}
 		
 	@Test
@@ -103,6 +102,6 @@ public class PuzzleTest {
 				"8    74  "
 		});	
 		p.solve();
-		assertTrue(p.solved());
+		assertTrue(p.isSolved());
 	}
 }

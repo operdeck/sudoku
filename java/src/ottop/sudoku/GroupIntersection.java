@@ -8,7 +8,7 @@ public class GroupIntersection {
 	protected Group[] grps = new Group[2];
 	
 	public GroupIntersection(Group a, Group b) {
-		intersection = new TreeSet<Coord>(a.getCoords());
+		intersection = new TreeSet<>(a.getCoords());
 		intersection.retainAll(b.getCoords());
 		grps[0] = a;
 		grps[1] = b;

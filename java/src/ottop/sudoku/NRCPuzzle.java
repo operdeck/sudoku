@@ -1,9 +1,5 @@
 package ottop.sudoku;
 
-import ottop.sudoku.Group;
-import ottop.sudoku.Puzzle;
-import ottop.sudoku.SquareGroup;
-
 public class NRCPuzzle extends Puzzle {
 
 	public NRCPuzzle(String[] mySudoku) {

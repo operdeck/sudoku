@@ -1,9 +1,9 @@
 package ottop.sudoku.tests;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.testng.annotations.Test;
 import ottop.sudoku.Puzzle;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CharTest {
 
@@ -20,7 +20,7 @@ public class CharTest {
 				"P..S.T...",
 				"H...P..TS" });
 		p.solve();
-		assertTrue(p.solved());
+		assertTrue(p.isSolved());
 	}
 
 }
