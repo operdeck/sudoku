@@ -1,17 +1,23 @@
 package ottop.sudoku;
 
+import ottop.sudoku.group.AbstractGroup;
+
 import java.util.Set;
 import java.util.TreeSet;
 
 public class GroupIntersection {
-	Set<Coord> intersection;
-	protected Group[] grps = new Group[2];
+	private Set<Coord> intersection;
+	private AbstractGroup[] grps = new AbstractGroup[2];
 	
-	public GroupIntersection(Group a, Group b) {
+	public GroupIntersection(AbstractGroup a, AbstractGroup b) {
 		intersection = new TreeSet<>(a.getCoords());
 		intersection.retainAll(b.getCoords());
 		grps[0] = a;
 		grps[1] = b;
+	}
+
+	public AbstractGroup getIntersectionGroup(int i) {
+		return grps[i];
 	}
 
 	public boolean isEmpty() {
@@ -46,5 +52,9 @@ public class GroupIntersection {
 			}
 		}
 		return super.equals(obj);
+	}
+
+	public Set<Coord> getIntersection() {
+		return intersection;
 	}
 }

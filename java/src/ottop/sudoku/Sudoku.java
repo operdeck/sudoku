@@ -27,8 +27,10 @@ public class Sudoku {
 //				"   6   4 ",
 //				"         " });
 
-		int iterations = p.solve();
-		
+		SudokuSolver solver = new SudokuSolver(p);
+		solver.solve();
+		int iterations = 12345;
+
 		if (p.isSolved()) {
 			System.out.println("Puzzle " + p + " solved in " + iterations + " iterations.");
 		} else {

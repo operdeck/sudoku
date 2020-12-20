@@ -1,8 +1,10 @@
-package ottop.sudoku;
+package ottop.sudoku.group;
 
-public class RowGroup extends Group {
+import ottop.sudoku.StandardPuzzle;
 
-	public RowGroup(int startX, int startY, Puzzle myPuzzle, String id) {
+public class RowGroup extends AbstractGroup {
+
+	public RowGroup(int startX, int startY, StandardPuzzle myPuzzle, String id) {
 		super(startX, startY, myPuzzle, id);
 	}
 

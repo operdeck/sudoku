@@ -1,9 +1,11 @@
-package ottop.sudoku;
+package ottop.sudoku.group;
+
+import ottop.sudoku.*;
 
 import java.util.*;
 import java.util.Map.Entry;
 
-public abstract class Group {
+public abstract class AbstractGroup {
 	private boolean[] hasDigit = new boolean[10]; // map that tells which digits are currently contained
 	private Map<Coord, Integer> coords; // the cell coordinates contained in this group, mapped to internal index (0..9)
 	private int[] digits = new int[9];
@@ -11,7 +13,7 @@ public abstract class Group {
 	protected int startY;
 	private String groupID;
 
-	public Group(int startX, int startY, Puzzle myPuzzle, String id) {
+	public AbstractGroup(int startX, int startY, StandardPuzzle myPuzzle, String id) {
 		this.startX = startX;
 		this.startY = startY;
 		this.groupID = id;
@@ -73,12 +75,9 @@ public abstract class Group {
 			
 			Set<Integer> cellPossibilities = cache.getPossibilities(myCell);
 			if (cellPossibilities != null) {
-				Integer loneNumber = null;
 				if (cellPossibilities.size() == 1) {
-					loneNumber = cellPossibilities.iterator().next();
-				}
-				if (loneNumber != null) {
-					sols.addSolution(myCell, loneNumber, "in " + groupID + ": Lone Number");
+					Integer loneNumber = cellPossibilities.iterator().next();
+					sols.addSolution(myCell, loneNumber, null); // group ID is not relevant
 					found = true;
 				}
 			}
@@ -94,13 +93,12 @@ public abstract class Group {
 			
 			Set<Integer> cellPossibilities = poss.getPossibilities(myCell);
 			if (cellPossibilities != null) {
-				Integer uniquePossibility = null;
 				if (cellPossibilities.size() >= 1) {
-					uniquePossibility = getUniquePossibility(poss, sols, myCell);
-				}
-				if (uniquePossibility != null) {
-					sols.addSolution(myCell, uniquePossibility, "in " + groupID + ": Unique Cell");
-					found = true;
+					Integer uniquePossibility = getUniquePossibility(poss, sols, myCell);
+					if (uniquePossibility != null) {
+						sols.addSolution(myCell, uniquePossibility, groupID);
+						found = true;
+					}
 				}
 			}
 		}
@@ -116,8 +114,8 @@ public abstract class Group {
 		return coords.keySet();
 	}
 
-	public boolean eliminateNakedPairs(Puzzle p,
-			PossibilitiesContainer cache) {
+	public boolean eliminateNakedPairs(IPuzzle p,
+									   PossibilitiesContainer cache) {
 		
 		boolean result = false;
 		

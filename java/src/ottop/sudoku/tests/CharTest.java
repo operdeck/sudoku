@@ -1,7 +1,9 @@
 package ottop.sudoku.tests;
 
 import org.testng.annotations.Test;
-import ottop.sudoku.Puzzle;
+import ottop.sudoku.SolutionContainer;
+import ottop.sudoku.StandardPuzzle;
+import ottop.sudoku.SudokuSolver;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,7 +11,7 @@ public class CharTest {
 
 	@Test
 	public void EOC_dec14() {
-		Puzzle p = new Puzzle(new String[] {
+		StandardPuzzle p = new StandardPuzzle(new String[] {
 				"SH..R...U",
 				"...T.S..F",
 				"..T.FHR..",
@@ -19,7 +21,8 @@ public class CharTest {
 				"...UI.P..",
 				"P..S.T...",
 				"H...P..TS" });
-		p.solve();
+		SudokuSolver solver = new SudokuSolver(p);
+		solver.solve();
 		assertTrue(p.isSolved());
 	}
 

@@ -2,6 +2,8 @@ package ottop.sudoku.tests;
 
 import org.testng.annotations.Test;
 import ottop.sudoku.IPuzzle;
+import ottop.sudoku.SolutionContainer;
+import ottop.sudoku.SudokuSolver;
 
 public class NRCPuzzleTest {
 
@@ -18,7 +20,8 @@ public class NRCPuzzleTest {
 				"..6..45..",
 				".8...2...",
 				"........." );
-		p.solve();
+		SudokuSolver solver = new SudokuSolver(p);
+		solver.solve();
 		assert(p.isSolved());
 	}
 
@@ -35,7 +38,8 @@ public class NRCPuzzleTest {
 				"..6..45..",
 				".8...2...",
 				"........." );
-		p.solve();
+		SudokuSolver solver = new SudokuSolver(p);
+		solver.solve();
 		assert(p.isSolved());
 	}
 
@@ -52,7 +56,8 @@ public class NRCPuzzleTest {
 				".24..5...",
 				".8.7.....",
 				"...1....7" );
-		p.solve();
+		SudokuSolver solver = new SudokuSolver(p);
+		solver.solve();
 		assert(p.isSolved());
 	}
 
@@ -69,7 +74,8 @@ public class NRCPuzzleTest {
 				"..41.....",
 				".....5...",
 				"........." );
-		p.solve();
+		SudokuSolver solver = new SudokuSolver(p);
+		solver.solve();
 		assert(p.isSolved());
 	}
 

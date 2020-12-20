@@ -1,6 +1,9 @@
 package ottop.sudoku;
 
-public class NRCPuzzle extends Puzzle {
+import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.group.SquareGroup;
+
+public class NRCPuzzle extends StandardPuzzle {
 
 	public NRCPuzzle(String[] mySudoku) {
 		super(mySudoku);
@@ -25,17 +28,24 @@ public class NRCPuzzle extends Puzzle {
 
 
 	@Override
-	public void addGroups() {
-		super.addGroups();
+	public void initGroups() {
+		super.initGroups();
 		
 		// add special 'NRC' groups
 		int cnt=0;
 		for (int y=0; y<2; y++) {
 			for (int x=0; x<2; x++) {
-				Group newGrp = new SquareGroup(x*4+1, y*4+1, this, "NRC Group " + (++cnt));
+				AbstractGroup newGrp = new SquareGroup(x*4+1, y*4+1, this, "NRC Group " + (++cnt));
 				addGroup(newGrp);
 //				System.out.println(newGrp);
 			}
 		}
+	}
+
+	protected IPuzzle newInstance(String name, String[] brd) {
+		NRCPuzzle p = new NRCPuzzle(name, brd);
+		p.previousPuzzle = this;
+		return p;
+
 	}
 }

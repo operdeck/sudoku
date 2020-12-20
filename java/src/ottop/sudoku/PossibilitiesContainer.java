@@ -1,6 +1,7 @@
 package ottop.sudoku;
 
 import org.jetbrains.annotations.NotNull;
+import ottop.sudoku.group.AbstractGroup;
 
 import java.util.*;
 
@@ -8,13 +9,13 @@ public class PossibilitiesContainer {
 	// Map of cell to a set of possible values.
 	private Map<Coord, Set<Integer>> nonCollissionMap = new HashMap<> ();
 
-	public PossibilitiesContainer(List<Group> groups) {
+	public PossibilitiesContainer(AbstractGroup[] groups) {
 		updateNonCollisions(groups);
 	}
 
 	// Create the map by simply walking through all cells and all cells in all groups
 	// so order is 9 x 9 x 9 x {nr of cells}
-	private void updateNonCollisions(List<Group> groups) {
+	private void updateNonCollisions(AbstractGroup[] groups) {
 		for (Coord c : Coord.all) {
 			nonCollissionMap.put(c, getPossibilities(c, groups));
 		}
@@ -44,11 +45,11 @@ public class PossibilitiesContainer {
 		return result.toString();
 	}
 
-	private Set<Integer> getPossibilities(Coord c, List<Group> groups) {
+	private Set<Integer> getPossibilities(Coord c, AbstractGroup[] groups) {
 		Set<Integer> s = new HashSet<>();
 		for (int n=1; n<=9; n++) {
 			boolean isPossible = true;
-			for (Group g : groups) {
+			for (AbstractGroup g : groups) {
 				if (!g.isPossibility(n, c)) {
 					isPossible = false;
 					break;
