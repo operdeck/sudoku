@@ -1,82 +1,16 @@
 package ottop.sudoku.tests;
 
-import org.testng.annotations.Test;
-import ottop.sudoku.IPuzzle;
-import ottop.sudoku.SolutionContainer;
-import ottop.sudoku.SudokuSolver;
+import org.junit.Test;
+import ottop.sudoku.*;
+
+import static org.junit.Assert.*;
 
 public class NRCPuzzleTest {
-
 	@Test
-	public void NRC_5dec14() {
-		IPuzzle p = new ottop.sudoku.NRCPuzzle(
-				"NRC 5 dec '14",
-				"....65...",
-				".......6.",
-				"1......78",
-				".........",
-				"..27.....",
-				".3..9...1",
-				"..6..45..",
-				".8...2...",
-				"........." );
-		SudokuSolver solver = new SudokuSolver(p);
-		solver.solve();
-		assert(p.isSolved());
+	public void checkNRCGroups()
+	{
+		IPuzzle p = PuzzleDB.NRC_17nov;
+		assertEquals(31, p.getGroups().length);
+		assertEquals(13, p.getSquareGroups().length);
 	}
-
-	@Test
-	public void unsolvable() {
-		IPuzzle p = new ottop.sudoku.NRCPuzzle(
-				"Unsolvable",
-				"....652..",
-				".......6.",
-				"1......78",
-				".........",
-				"..27.....",
-				".3..9...1",
-				"..6..45..",
-				".8...2...",
-				"........." );
-		SudokuSolver solver = new SudokuSolver(p);
-		solver.solve();
-		assert(p.isSolved());
-	}
-
-	@Test
-	public void NRC_28dec() {
-		IPuzzle p = new ottop.sudoku.NRCPuzzle(
-				"NRC 28 dec 2014",
-				".....2...",
-				"..85..1.9",
-				".......6.",
-				"..39.....",
-				".........",
-				".....3...",
-				".24..5...",
-				".8.7.....",
-				"...1....7" );
-		SudokuSolver solver = new SudokuSolver(p);
-		solver.solve();
-		assert(p.isSolved());
-	}
-
-	@Test
-	public void NRC_17nov() {
-		IPuzzle p = new ottop.sudoku.NRCPuzzle(
-				"NRC 17 nov 2014",
-				".86...3..",
-				"..95.....",
-				"......1.8",
-				"1.7.4.5..",
-				"2........",
-				"........9",
-				"..41.....",
-				".....5...",
-				"........." );
-		SudokuSolver solver = new SudokuSolver(p);
-		solver.solve();
-		assert(p.isSolved());
-	}
-
 }

@@ -7,18 +7,41 @@ import ottop.sudoku.group.RowGroup;
 import java.util.*;
 
 public class SudokuSolver {
-    private final PossibilitiesContainer possibilities;
-    private final IPuzzle myPuzzle;
+    private PossibilitiesContainer possibilities;
+    private IPuzzle myPuzzle;
+    private boolean trace = true;
+
+    public enum EliminationMethods {
+        BASICRADIATION (1),
+        NAKEDPAIRS  (2),
+        INTERSECTION (4),
+        XWINGS   (8),
+        SIMPLEST (1),
+        SMARTEST (15);
+
+        private final int levelCode;
+        EliminationMethods(int levelCode) {
+            this.levelCode = levelCode;
+        }
+        int getLevelCode() {
+            return levelCode;
+        }
+    }
 
     public SudokuSolver(IPuzzle p) {
+        this(p, true);
+    }
+
+    public SudokuSolver(IPuzzle p, boolean trace) {
+        this.trace = trace;
         myPuzzle = p;
-        possibilities = new PossibilitiesContainer(p.getGroups());
+        p.resetState();
+        possibilities = new PossibilitiesContainer(p.getGroups(), trace);
     }
 
     // Do one elimination step taking account the flags. Returns true if anything
     // has been updated.
     public boolean doEliminationStep() {
-
         return false;
     }
 
@@ -76,7 +99,7 @@ public class SudokuSolver {
             // so it can be eliminated from the possibilities in each of those groups
             // outside of the intersections.
 
-            Map<Set<AbstractGroup>, Set<AbstractGroup>> map = new HashMap<Set<AbstractGroup>, Set<AbstractGroup>>();
+            Map<Set<AbstractGroup>, Set<AbstractGroup>> map = new HashMap<>();
             for (AbstractGroup g : myPuzzle.getGroups()) {
                 Set<AbstractGroup> intersectingGroups = null;
                 if (g instanceof ColumnGroup) {
@@ -87,11 +110,7 @@ public class SudokuSolver {
                     intersectingGroups = toColumnGroups(g.getColSet(digit, possibilities));
                 }
                 if (intersectingGroups != null && !intersectingGroups.isEmpty()) {
-                    Set<AbstractGroup> grps = map.get(intersectingGroups);
-                    if (grps == null) {
-                        grps = new HashSet<AbstractGroup>();
-                        map.put(intersectingGroups, grps);
-                    }
+                    Set<AbstractGroup> grps = map.computeIfAbsent(intersectingGroups, k -> new HashSet<AbstractGroup>());
                     grps.add(g);
                 }
             }
@@ -119,8 +138,64 @@ public class SudokuSolver {
         return updated;
     }
 
+    public boolean solveSimplest() {
+        return solve(EliminationMethods.BASICRADIATION);
+    }
+
     public boolean solve() {
-        return false;
+        return solve(EliminationMethods.SMARTEST);
+    }
+
+    public boolean solve(EliminationMethods level) {
+        if ((level.getLevelCode() & EliminationMethods.BASICRADIATION.getLevelCode()) != 0) {
+            if(trace) System.out.println("Eliminate with BASIC radiation");
+        }
+
+        while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
+            possibilities = new PossibilitiesContainer(myPuzzle.getGroups(), trace);
+
+            if ((level.getLevelCode() & EliminationMethods.NAKEDPAIRS.getLevelCode()) != 0) {
+                if(trace) System.out.println("Eliminate naked pairs");
+                eliminateNakedPairs();
+            }
+            if ((level.getLevelCode() & EliminationMethods.INTERSECTION.getLevelCode()) != 0) {
+                if(trace) System.out.println("Eliminate intersections");
+                eliminateByRadiationFromIntersections();
+            }
+            if ((level.getLevelCode() & EliminationMethods.XWINGS.getLevelCode()) != 0) {
+                if(trace) System.out.println("Eliminate XWings");
+                eliminateByXWings();
+            }
+
+            SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
+            for (AbstractGroup g : myPuzzle.getGroups()) {
+                g.addLoneNumbersToSolution(possibilities, sols);
+                g.addUniqueValuesToSolution(possibilities, sols);
+            }
+            Iterator<Map.Entry<Coord, Integer>> it = sols.getSolutions().entrySet().iterator();
+            if (it.hasNext()) {
+                Map.Entry<Coord, Integer> nextMove = it.next();
+
+                if (trace) {
+                    System.out.println("Do move: " + nextMove.getValue() + " at " + nextMove.getKey());
+                }
+
+                IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey().getCol(),
+                        nextMove.getKey().getRow(),
+                        String.valueOf(nextMove.getValue()).charAt(0));
+                myPuzzle = nextPuzzle;
+                possibilities = new PossibilitiesContainer(nextPuzzle.getGroups(), trace);
+            } else {
+                return false;
+            }
+        }
+        //if (myPuzzle.isSolved()) System.out.println("Solved: " + myPuzzle.getName());
+        return myPuzzle.isSolved();
+    }
+
+    public IPuzzle getPuzzle()
+    {
+        return myPuzzle;
     }
 
     //http://www.extremesudoku.info/sudoku.html
@@ -210,7 +285,7 @@ public class SudokuSolver {
     }
 
     public SolutionContainer getLoneNumbers() {
-        SolutionContainer sols = new SolutionContainer(myPuzzle);
+        SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
         for (AbstractGroup g : myPuzzle.getGroups()) {
             g.addLoneNumbersToSolution(possibilities, sols);
         }
@@ -219,7 +294,7 @@ public class SudokuSolver {
     }
 
     public SolutionContainer getUniqueValues() {
-        SolutionContainer sols = new SolutionContainer(myPuzzle);
+        SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
         for (AbstractGroup g : myPuzzle.getGroups()) {
             g.addUniqueValuesToSolution(possibilities, sols);
         }
@@ -229,5 +304,15 @@ public class SudokuSolver {
 
     public Map<Coord, Set<Integer>> getAllPossibilities() {
         return possibilities.getAllPossibilities();
+    }
+
+    public int getNumberOfPossibilities()
+    {
+        Map<Coord, Set<Integer>> p = possibilities.getAllPossibilities();
+        int result = 0;
+        for (Coord c : p.keySet()) {
+            result += p.get(c).size();
+        }
+        return result;
     }
 }

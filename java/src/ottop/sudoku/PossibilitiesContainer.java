@@ -9,7 +9,10 @@ public class PossibilitiesContainer {
 	// Map of cell to a set of possible values.
 	private Map<Coord, Set<Integer>> nonCollissionMap = new HashMap<> ();
 
-	public PossibilitiesContainer(AbstractGroup[] groups) {
+	private boolean trace;
+
+	public PossibilitiesContainer(AbstractGroup[] groups, boolean trace) {
+		this.trace = trace;
 		updateNonCollisions(groups);
 	}
 
@@ -32,7 +35,7 @@ public class PossibilitiesContainer {
 			}
 		}
 
-		return (allPossibilities);
+		return allPossibilities;
 	}
 
 	public String toString()
@@ -64,18 +67,18 @@ public class PossibilitiesContainer {
 		return nonCollissionMap.get(c);
 	}
 	
-	public boolean removePossibility(int digit, Coord c, String reason) {
-		Set<Integer> set = nonCollissionMap.get(c);
-		if (set != null) {
-			boolean removed = set.remove(digit);
-			if (removed) {
-				System.out.println("Eliminate " + digit + " from possibilities at " + c + reason);
-			}
-			return removed;
-		} else {
-			return false;
-		}
-	}
+//	public boolean removePossibility(int digit, Coord c, String reason) {
+//		Set<Integer> set = nonCollissionMap.get(c);
+//		if (set != null) {
+//			boolean removed = set.remove(digit);
+//			if (removed) {
+//				System.out.println("Eliminate " + digit + " from possibilities at " + c + reason);
+//			}
+//			return removed;
+//		} else {
+//			return false;
+//		}
+//	}
 
 	public boolean removePossibility(int digit, Set<Coord> coords, String reason) {
 		Set<Coord> removed = new TreeSet<>();
@@ -88,7 +91,9 @@ public class PossibilitiesContainer {
 			}
 		}
 		if (removed.size() > 0) {
-			System.out.println("Eliminate " + digit + " from possibilities at " + removed + reason);
+			if (trace) {
+				System.out.println("Eliminate " + digit + " from possibilities at " + removed + reason);
+			}
 		}
 		return removed.size() > 0;
 	}
@@ -102,7 +107,9 @@ public class PossibilitiesContainer {
 			}
 		}
 		if (removed.size() > 0) {
-			System.out.println("Eliminate " + removed + " from possibilities at " + c + reason);
+			if (trace) {
+				System.out.println("Eliminate " + removed + " from possibilities at " + c + reason);
+			}
 		}
 		return removed.size() > 0;
 	}
@@ -115,10 +122,10 @@ public class PossibilitiesContainer {
 		return p;
 	}
 
-	public void merge(PossibilitiesContainer newCache) {
-		for (Coord c : nonCollissionMap.keySet()) {
-			Set<Integer> p = nonCollissionMap.get(c);
-			p.retainAll(newCache.nonCollissionMap.get(c));
-  		}
-	}
+//	public void merge(PossibilitiesContainer newCache) {
+//		for (Coord c : nonCollissionMap.keySet()) {
+//			Set<Integer> p = nonCollissionMap.get(c);
+//			p.retainAll(newCache.nonCollissionMap.get(c));
+//  		}
+//	}
 }

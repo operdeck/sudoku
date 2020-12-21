@@ -9,9 +9,11 @@ public class SolutionContainer {
 	private Map<Coord, Integer> sols = new HashMap<Coord, Integer>();;
 	private Map<Coord, List<String>> reasons = new HashMap<Coord, List<String>>();
 	private IPuzzle myPuzzle;
-	
-	public SolutionContainer(IPuzzle p) {
+	private boolean trace;
+
+	public SolutionContainer(IPuzzle p, boolean trace) {
 		myPuzzle = p;
+		this.trace = trace;
 	}
 
 	public void addSolution(Coord c, int n, String reason) {
@@ -28,7 +30,9 @@ public class SolutionContainer {
 				}
 			}
 		} else {
-			System.out.println("Put " + myPuzzle.toChar(n) + " at " + c + " (" + reason + ")");
+			if (trace) {
+				System.out.println("Put " + myPuzzle.toChar(n) + " at " + c + " (" + reason + ")");
+			}
 			sols.put(c, n);
 			if (reason != null) {
 				reasons.put(c, new ArrayList<>(Collections.singleton(reason)));
@@ -38,6 +42,11 @@ public class SolutionContainer {
 
 	public int size() {
 		return sols.keySet().size();
+	}
+
+	public Map<Coord, Integer> getSolutions()
+	{
+		return sols;
 	}
 
 	public String toString() {

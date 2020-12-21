@@ -9,24 +9,27 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class StandardPuzzle implements IPuzzle {
-    private List<AbstractGroup> groups;
-    private Set<GroupIntersection> intersections;
-
     private String name;
-
-    char[][] board = new char[9][9];
-    protected IPuzzle previousPuzzle = null;
+    private char[][] board = new char[9][9]; // TODO get rid of char, some internal code is OK
 
     // generic way to map characters encountered to indices and back
     // TODO see what this really is, maybe just static arrays work better
     private Map<Character, Integer> toInternalRepresentation = null;
     private List<Character> fromInternalRepresentation = null;
 
-    //public static List<Puzzle> allPuzzles = new ArrayList<>();
+    // State is in these properties:
+    protected IPuzzle previousPuzzle = null;
+    private List<AbstractGroup> groups;
+    private Set<GroupIntersection> intersections;
 
     public StandardPuzzle(String name, String[] sudokuRows) {
         this.name = name;
         setRepresentation(sudokuRows); // Keep board etc
+        resetState();
+    }
+
+    public void resetState() {
+        previousPuzzle = null;
         initGroups(); // Init groups
         initGroupIntersections();
     }
@@ -97,7 +100,15 @@ public class StandardPuzzle implements IPuzzle {
 
     @Override
     public String toString() {
-        return name;
+        StringBuffer result = new StringBuffer();
+
+        if (name != null && name.length() > 0) result.append(name).append(":\n");
+
+        for (int y=0; y<9; y++) {
+            result.append(String.valueOf(board[y])).append("\n");
+        }
+
+        return result.toString();
     }
 
     private void initGroupIntersections() {
@@ -204,7 +215,7 @@ public class StandardPuzzle implements IPuzzle {
 
     protected IPuzzle newInstance(String name, String[] brd) {
         StandardPuzzle p = new StandardPuzzle(name, brd);
-        p.previousPuzzle = this;
+        p.previousPuzzle = this; // link new puzzle state to current
         return p;
     }
 
@@ -224,12 +235,17 @@ public class StandardPuzzle implements IPuzzle {
     }
 
     @Override
-    public List<AbstractGroup> getSquareGroups() {
+    public AbstractGroup[] getSquareGroups() {
         List<AbstractGroup> squareGroups =
                 groups.stream()
                         .filter(c -> c instanceof SquareGroup)
                         .collect(Collectors.toList());
-        return squareGroups;
+        return squareGroups.toArray(new AbstractGroup[0]);
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
 }

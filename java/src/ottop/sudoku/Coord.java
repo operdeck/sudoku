@@ -2,12 +2,13 @@ package ottop.sudoku;
 import java.util.ArrayList;
 import java.util.List;
 
-
+// This is specific to 9x9 boards
 public class Coord implements Comparable<Coord>{
 	public Coord(int x, int y) {
 		coord = getKey(x, y);
 	}
-	
+
+	// internal representation
 	private int coord;
 
 	static final List<Coord> all = new ArrayList<>();
@@ -48,6 +49,7 @@ public class Coord implements Comparable<Coord>{
 		return coord - o.coord;
 	}
 
+	// why not return int?
 	public Integer getRow() {
 		return coord / 9;
 	}
