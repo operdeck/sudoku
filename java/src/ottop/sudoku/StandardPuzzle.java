@@ -1,5 +1,7 @@
 package ottop.sudoku;
 
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.group.ColumnGroup;
 import ottop.sudoku.group.RowGroup;
@@ -8,44 +10,38 @@ import ottop.sudoku.group.SquareGroup;
 import java.util.*;
 import java.util.stream.Collectors;
 
+// TODO create abstract class out of this
 public class StandardPuzzle implements IPuzzle {
     public static String TYPE = "Standard";
 
     private String name;
-    private char[][] board = new char[9][9]; // TODO get rid of char, some internal code is OK
 
-    // generic way to map characters encountered to indices and back
-    // TODO see what this really is, maybe just static arrays work better
-    private Map<Character, Integer> toInternalRepresentation = null;
-    private List<Character> fromInternalRepresentation = null;
+    // Below is specific to 9x9 puzzle
+    private int[][] board = new int[9][9]; //[x][y]
+    private List<String> cellValues =
+            Arrays.asList(new String[]{" ","1","2","3","4","5","6","7","8","9"});
 
     // State is in these properties:
     protected IPuzzle previousPuzzle = null;
     private List<AbstractGroup> groups;
     private Set<GroupIntersection> intersections;
 
+    protected StandardPuzzle(String name, int[][] board) {
+        this.name = name;
+        this.board = board;
+        resetState();
+    }
+
     public StandardPuzzle(String name, String[] sudokuRows) {
         this.name = name;
-        setRepresentation(sudokuRows); // Keep board etc
+        readBoard(sudokuRows); // Keep board etc
         resetState();
-
-        System.out.println("** internal state stuff **");
-        System.out.println(toInternalRepresentation);
-        System.out.println(fromInternalRepresentation);
-        System.out.println("***");
     }
 
     public void resetState() {
-        previousPuzzle = null;
         initGroups(); // Init groups
         initGroupIntersections();
     }
-
-//    public void init(String[] sudokuRows) {
-//        setRepresentation(sudokuRows);
-//        initGroups();
-//        initGroupIntersections();
-//    }
 
     public StandardPuzzle(String[] sudokuRows) {
         this("", sudokuRows);
@@ -64,55 +60,32 @@ public class StandardPuzzle implements IPuzzle {
         this(name, new String[]{row1,row2,row3,row4,row5,row6,row7,row8,row9});
     }
 
-//    public StandardPuzzle(String name) {
-//        this.name = name;
-//        initGroups();
-//        initGroupIntersections();
-//    }
-
-
-    protected void setRepresentation(String[] sudokuRows) {
+    // below is specific to 9x9 boards or at least single character representations
+    protected void readBoard(String[] sudokuRows) {
         if (sudokuRows.length != 9) throw new IllegalArgumentException("Initialization must have 9 rows");
-
-        toInternalRepresentation = new HashMap<>();
-        fromInternalRepresentation = new ArrayList<>();
-        fromInternalRepresentation.add(null); // we'll start at index 1
 
         Set<Character> chars = new TreeSet<>();
         for (int y=0; y<9; y++) {
             String s = sudokuRows[y];
             if (s.length() != 9) throw new IllegalArgumentException("Initialization must have 9 chars for each row");
             for (int x = 0; x<s.length(); x++) {
-                char c = s.charAt(x);
-                if (charRepresentsNonEmptyCell(c)) {
-                    chars.add(c);
-                    this.board[y][x] = c;
-                } else {
-                    this.board[y][x] = ' ';
-                }
+                String symbol = s.substring(x, x+1);
+                this.board[x][y] = cellSymbolToIndex(symbol);
             }
         }
-        for (Character c : chars) {
-            if (!toInternalRepresentation.containsKey(c)) {
-                int idx = fromInternalRepresentation.size();
-                fromInternalRepresentation.add(c);
-                toInternalRepresentation.put(c, idx);
-            }
-        }
-
-//		for (int i = 0; i<fromInternalRepresentation.size(); i++) {
-//			System.out.println(i + ": " + fromInternalRepresentation.get(i) + "->" + toInternalRepresentation.get(fromInternalRepresentation.get(i)));
-//		}
     }
 
     @Override
+    // seems specific to 9x9 boards or at least single symbol boards
     public String toString() {
         StringBuffer result = new StringBuffer();
 
         if (name != null && name.length() > 0) result.append(name).append(":\n");
-
         for (int y=0; y<9; y++) {
-            result.append(String.valueOf(board[y])).append("\n");
+            for (int x=0; x<9; x++) {
+                result.append(cellValues.get(board[x][y]));
+            }
+            result.append("\n");
         }
 
         return result.toString();
@@ -160,31 +133,29 @@ public class StandardPuzzle implements IPuzzle {
         return isSolved;
     }
 
-    public int getInternalRepresentation(int y, int x) {
-        return toInternalRepresentation(getValueAtCell(y,x));
+    // TODO rename and use Coord as argument
+    // TODO do we really need to expose this? - Groups use this
+    public int getSymbolCodeAtCoordinates(int y, int x) {
+        return board[x][y];
     }
 
-    public char getValueAtCell(int y, int x) {
-        return board[y][x];
+    public String symbolCodeToSymbol(int i) {
+        return cellValues.get(i);
     }
 
+    public int cellSymbolToIndex(String symbol) {
+        int idx = Math.max(0, cellValues.indexOf(symbol)); // return 0 if not found
+        return idx;
+    }
+
+    // TODO use Coord as argument
+    public String getSymbolAtCoordinates(int y, int x) {
+        return cellValues.get(board[x][y]);
+    }
+
+    // TODO use Coord as argument and get rid of y/x
     public boolean isOccupied(int y, int x) {
-        return charRepresentsNonEmptyCell(getValueAtCell(y,x));
-    }
-
-    private boolean charRepresentsNonEmptyCell(char c) {
-        return c != '.' && c != ' ';
-    }
-
-    private int toInternalRepresentation(char charAt) {
-        if (!charRepresentsNonEmptyCell(charAt)) return -1;
-        return toInternalRepresentation.get(charAt);
-    }
-
-    @Override
-    public char toChar(int internalRepresentation) {
-        if (internalRepresentation == -1) return '.';
-        return fromInternalRepresentation.get(internalRepresentation);
+        return board[x][y] != 0;
     }
 
     @Override
@@ -194,20 +165,20 @@ public class StandardPuzzle implements IPuzzle {
     public int getHeight() { return 9; }
 
     @Override
-    public IPuzzle doMove(int xNew, int yNew, char value) { // x, y start at 0
-        if (isOccupied(yNew, xNew)) return null;
-
-        char[][] newBoard = Arrays.stream(board).toArray(char[][]::new);
-        newBoard[yNew][xNew] = value;
-
-        String[] newBoardStrings = new String[9];
-        //System.out.println("doMove creates new puzzle:");
-        for (int y=0; y<9; y++) {
-            newBoardStrings[y] = String.valueOf(newBoard[y]);
-            //System.out.println(newBoardStrings[y]);
+    public IPuzzle doMove(int xNew, int yNew, String symbol) { // x, y start at 0
+        //if (isOccupied(yNew, xNew)) return null;
+        int[][] newBoard = new int[9][9];
+        for (int x=0; x<getWidth(); x++) {
+            for (int y=0; y<getHeight(); y++) {
+                if (x==xNew && y==yNew) {
+                    newBoard[x][y] = cellSymbolToIndex(symbol);
+                } else {
+                    newBoard[x][y] = board[x][y];
+                }
+            }
         }
 
-        IPuzzle nextPuzzle = newInstance(this.name, newBoardStrings);
+        IPuzzle nextPuzzle = newInstance(this.name, newBoard);
 
         return nextPuzzle;
     }
@@ -220,9 +191,10 @@ public class StandardPuzzle implements IPuzzle {
         return previousPuzzle;
     }
 
-    protected IPuzzle newInstance(String name, String[] brd) {
+    protected IPuzzle newInstance(String name, int[][] brd) {
         StandardPuzzle p = new StandardPuzzle(name, brd);
         p.previousPuzzle = this; // link new puzzle state to current
+
         return p;
     }
 
@@ -242,19 +214,15 @@ public class StandardPuzzle implements IPuzzle {
     }
 
     @Override
-    public AbstractGroup[] getSquareGroups() {
-        List<AbstractGroup> squareGroups =
-                groups.stream()
-                        .filter(c -> c instanceof SquareGroup)
-                        .collect(Collectors.toList());
-        return squareGroups.toArray(new AbstractGroup[0]);
-    }
-
-    @Override
     public String getName() {
         return name;
     }
 
     @Override
     public String getSudokuType() { return TYPE; }
+
+    @Override
+    public Paint getCellBackground(int x, int y) {
+        return Color.WHITE;
+    }
 }

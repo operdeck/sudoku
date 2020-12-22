@@ -1,10 +1,16 @@
 package ottop.sudoku;
 
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.group.SquareGroup;
 
 public class NRCPuzzle extends StandardPuzzle {
 	public static String TYPE = "NRC";
+
+	protected NRCPuzzle(String name, int[][] brd) {
+		super(name, brd);
+	}
 
 	public NRCPuzzle(String name, String[] mySudoku) {
 		super(name, mySudoku);
@@ -40,13 +46,22 @@ public class NRCPuzzle extends StandardPuzzle {
 	}
 
 	@Override
-	protected IPuzzle newInstance(String name, String[] brd) {
+	protected IPuzzle newInstance(String name, int[][] brd) {
 		NRCPuzzle p = new NRCPuzzle(name, brd);
 		p.previousPuzzle = this;
 		return p;
-
 	}
 
 	@Override
 	public String getSudokuType() { return TYPE; }
+
+	@Override
+	public Paint getCellBackground(int x, int y) {
+		if (((x>=1 && x<=3) || (x>=5 && x<=7)) && ((y>=1 && y<=3) || (y>=5 && y<=7))) {
+			return Color.LIGHTGRAY;
+		} else {
+			return super.getCellBackground(x,y);
+		}
+	}
+
 }

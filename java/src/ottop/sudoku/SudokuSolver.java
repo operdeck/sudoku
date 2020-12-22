@@ -6,6 +6,9 @@ import ottop.sudoku.group.RowGroup;
 
 import java.util.*;
 
+//http://www.extremesudoku.info/sudoku.html
+//http://en.wikipedia.org/wiki/List_of_Sudoku_terms_and_jargon
+
 public class SudokuSolver {
     private PossibilitiesContainer possibilities;
     private IPuzzle myPuzzle;
@@ -68,7 +71,7 @@ public class SudokuSolver {
                             // anywhere else in the other group either.
                             if (possibilities.removePossibility(digit, r[1-i],
                                     " (in " + a.getIntersectionGroup(1-i) + ") because " +
-                                            myPuzzle.toChar(digit) + " has to be in " +
+                                            myPuzzle.symbolCodeToSymbol(digit) + " has to be in " +
                                             a.getIntersectionGroup(i) + " in one of " +
                                             a + " (Intersection Radiation)")) updated = true;;
                         }
@@ -129,7 +132,7 @@ public class SudokuSolver {
                             candidateRemovals.removeAll(other.getCoords());
                         }
                         if (possibilities.removePossibility(digit, candidateRemovals,
-                                " of " + g + " because " + myPuzzle.toChar(digit) + " has to be in " +
+                                " of " + g + " because " + myPuzzle.symbolCodeToSymbol(digit) + " has to be in " +
                                         entry.getKey() + " X " + entry.getValue() + " (X-Wing)")) updated = true;
                     }
                 }
@@ -182,7 +185,7 @@ public class SudokuSolver {
 
                 IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey().getCol(),
                         nextMove.getKey().getRow(),
-                        String.valueOf(nextMove.getValue()).charAt(0));
+                        myPuzzle.symbolCodeToSymbol(nextMove.getValue().intValue()));
                 myPuzzle = nextPuzzle;
                 possibilities = new PossibilitiesContainer(nextPuzzle.getGroups(), trace);
             } else {
@@ -198,70 +201,9 @@ public class SudokuSolver {
         return myPuzzle;
     }
 
-    //http://www.extremesudoku.info/sudoku.html
-    //http://en.wikipedia.org/wiki/List_of_Sudoku_terms_and_jargon
-/*
-    @Override
-    public int solve() {
-        boolean updated = false;
-        int iterations = 0;
-        SolutionContainer sols = new SolutionContainer(this);
-        PossibilitiesContainer possibilities = null;
-        do {
-            updated = false;
-
-            PossibilitiesContainer newCache =
-                    new PossibilitiesContainer(myPuzzle.getGroups());
-            if (possibilities == null) {
-                possibilities = newCache;
-            } else {
-                possibilities.merge(newCache);
-            }
-
-            // Try progressively, simple solutions first
-            System.out.println("Check unique cells:");
-            for (AbstractGroup g : myPuzzle.getGroups()) {
-                if (g.addUniqueValuesToSolution(possibilities, sols)) updated = true;
-            }
-            if (!updated) {
-                System.out.println("Check lone numbers (that can't be placed anywhere else):");
-                for (AbstractGroup g : myPuzzle.getGroups()) {
-                    if (g.addLoneNumbersToSolution(possibilities, sols)) updated = true;
-                }
-            }
-            if (!updated) {
-                System.out.println("Eliminate by radiation from intersections:");
-                if (eliminateByRadiationFromIntersections(possibilities)) updated = true;
-            }
-            if (!updated) {
-                System.out.println("Eliminate naked pairs:");
-
-            }
-            if (!updated) {
-                System.out.println("Eliminate by X-Wings:");
-                if (eliminateByXWings(possibilities)) updated = true;
-            }
-
-            if (updated) {
-                iterations++;
-                System.out.println(sols.toString(this));
-                init(sols.merge(this));
-            }
-        } while (updated && !isSolved());
-
-        if (!isSolved()) {
-            System.out.println(possibilities);
-        } else {
-            System.out.println("Final solution in " + iterations + " iterations:");
-            System.out.println(sols.toString(this));
-        }
-
-        return iterations;
-    }
-*/
 
     private Set<AbstractGroup> toRowGroups(Set<Integer> rowset) {
-        Set<AbstractGroup> result = new HashSet<AbstractGroup>();
+        Set<AbstractGroup> result = new HashSet<>();
         for (AbstractGroup g : myPuzzle.getGroups()) {
             if (g instanceof RowGroup) {
                 if (rowset.contains(((RowGroup)g).getRow())) {
@@ -273,7 +215,7 @@ public class SudokuSolver {
     }
 
     private Set<AbstractGroup> toColumnGroups(Set<Integer> colset) {
-        Set<AbstractGroup> result = new HashSet<AbstractGroup>();
+        Set<AbstractGroup> result = new HashSet<>();
         for (AbstractGroup g : myPuzzle.getGroups()) {
             if (g instanceof ColumnGroup) {
                 if (colset.contains(((ColumnGroup)g).getColumn())) {

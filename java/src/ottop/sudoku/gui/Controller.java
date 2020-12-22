@@ -35,19 +35,19 @@ public class Controller {
     public ChoiceBox cbPuzzleDB;
 
     private IPuzzle myPuzzle;
-    private String currentDigit = null;
+    private String currentCellSymbol = null;
 
     public Controller() {
         theController = this;
     }
 
     public void digitClicked(ActionEvent actionEvent) {
-        currentDigit = ((Button)actionEvent.getSource()).getText();
+        currentCellSymbol = ((Button)actionEvent.getSource()).getText();
         //System.out.println("Button text: " + currentDigit);
     }
 
     public void clearClicked(ActionEvent actionEvent) {
-        currentDigit = null;
+        currentCellSymbol = null;
     }
 
     // TODO: support arrow keys move around in canvas
@@ -77,8 +77,8 @@ public class Controller {
         int x = (int) Math.floor(myPuzzle.getWidth()*mouseEvent.getX()/gameCanvas.getWidth());
         int y = (int) Math.floor(myPuzzle.getHeight()*mouseEvent.getY()/gameCanvas.getHeight());
 
-        if (currentDigit != null) {
-            IPuzzle newPuzzle = myPuzzle.doMove(x, y, currentDigit.charAt(0));
+        if (null != currentCellSymbol) {
+            IPuzzle newPuzzle = myPuzzle.doMove(x, y, currentCellSymbol);
             if (newPuzzle != null) {
                 setPuzzle(newPuzzle, new Coord(x,y));
             }
@@ -106,7 +106,7 @@ public class Controller {
         }
 
         // Puzzle name and type
-        typeDropdown.getItems().setAll(new String[] {StandardPuzzle.TYPE, NRCPuzzle.TYPE});
+        typeDropdown.getItems().setAll(new String[] {StandardPuzzle.TYPE, NRCPuzzle.TYPE, SudokuLetterPuzzle.TYPE, Sudoku10x10Puzzle.TYPE});
         typeDropdown.setValue(myPuzzle.getSudokuType());
         cbPuzzleDB.setValue(myPuzzle.getName());
         undoButton.setDisable(!myPuzzle.canUndo());
@@ -115,11 +115,21 @@ public class Controller {
         double canvasHeight = gameCanvas.getHeight();
         double canvasWidth = gameCanvas.getWidth();
 
+        // Big white background
         gc.setFill(Color.WHITE);
         gc.setStroke(Color.BLUE);
         gc.setLineWidth(1);
         gc.fillRect(0, 0, canvasWidth, canvasHeight);
 
+        // Background of individual cells
+        for (int x=0; x<myPuzzle.getWidth(); x++) {
+            for (int y = 0; y < myPuzzle.getHeight(); y++) {
+                gc.setFill(myPuzzle.getCellBackground(x, y));
+                gc.fillRect(getCellX(x), getCellY(y), getCellWidth(), getCellHeight());
+            }
+        }
+
+        // Symbols
         Font cellText = Font.font("Helvetica", 15);
         gc.setFont(cellText);
         gc.setTextAlign(TextAlignment.CENTER);
@@ -135,20 +145,21 @@ public class Controller {
                     } else {
                         gc.setStroke(Color.BLACK);
                     }
-                    gc.strokeText(String.valueOf(myPuzzle.getValueAtCell(y, x)),
+                    gc.strokeText(String.valueOf(myPuzzle.getSymbolAtCoordinates(y, x)),
                             getCellX(x+0.5), getCellY(y+0.5));
                 }
             }
         }
         labelPosition.setText("");
 
-        // Groups
+        // Big square groups
+        // TODO this is currently specific for 9x9
+        gc.setStroke(Color.BLUE);
         gc.setLineWidth(3);
-        gc.setStroke(Color.DARKBLUE);
-        for (AbstractGroup g: myPuzzle.getSquareGroups()) {
-            gc.strokeRect(getCellX(g.getMinX()), getCellY(g.getMinY()),
-                    getCellWidth()*(g.getMaxX()-g.getMinX()),
-                    getCellHeight()*(g.getMaxY()-g.getMinY()));
+        for (int x=0; x<3; x++) {
+            for (int y = 0; y<3; y++) {
+                gc.strokeRect(getCellX(x*3), getCellY(y*3), 3*getCellWidth(), 3*getCellHeight());
+            }
         }
 
         // Hints & help
@@ -242,14 +253,16 @@ public class Controller {
 
     public void puzzleSelectAction(ActionEvent actionEvent) {
         String puzzleName = String.valueOf(cbPuzzleDB.getValue());
-        IPuzzle p;
-        try {
-            p = PuzzleDB.getPuzzleByName(puzzleName);
-            if (p != null) {
-                setPuzzle(p);
+        if (!puzzleName.equals(myPuzzle.getName())) { // event triggers very often
+            IPuzzle p;
+            try {
+                p = PuzzleDB.getPuzzleByName(puzzleName);
+                if (p != null) {
+                    setPuzzle(p);
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
             }
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
         }
     }
 }

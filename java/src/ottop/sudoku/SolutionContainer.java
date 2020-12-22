@@ -19,7 +19,7 @@ public class SolutionContainer {
 	public void addSolution(Coord c, int n, String reason) {
 		if (sols.containsKey(c)) {
 			if (sols.get(c) != n) {
-				throw new RuntimeException("ERROR: trying to place " + myPuzzle.toChar(n) + " at " + c + " which is occupied by " + myPuzzle.toChar(sols.get(c)));
+				throw new RuntimeException("ERROR: trying to place " + myPuzzle.symbolCodeToSymbol(n) + " at " + c + " which is occupied by " + myPuzzle.symbolCodeToSymbol(sols.get(c)));
 			} else {
 				if (reason != null) {
 					if (reasons.containsKey(c)) {
@@ -31,7 +31,7 @@ public class SolutionContainer {
 			}
 		} else {
 			if (trace) {
-				System.out.println("Put " + myPuzzle.toChar(n) + " at " + c + " (" + reason + ")");
+				System.out.println("Put " + myPuzzle.symbolCodeToSymbol(n) + " at " + c + " (" + reason + ")");
 			}
 			sols.put(c, n);
 			if (reason != null) {

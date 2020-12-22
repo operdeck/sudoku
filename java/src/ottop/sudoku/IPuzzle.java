@@ -1,34 +1,31 @@
 package ottop.sudoku;
 
+import javafx.scene.paint.Paint;
 import ottop.sudoku.group.AbstractGroup;
-
-import java.util.List;
 
 public interface IPuzzle {
     boolean isSolved();
     boolean isInconsistent();
     void resetState();
 
-    // better return String symbol
-    char toChar(int n); // TODO iffy conversion from internal representation
-
+    String symbolCodeToSymbol(int n); // TODO iffy conversion from internal representation
     boolean isOccupied(int y, int x); // TODO use Coord
-    char getValueAtCell(int y, int x);
+    String getSymbolAtCoordinates(int y, int x);
+    int getSymbolCodeAtCoordinates(int y, int x);
 
     int getWidth();
     int getHeight();
 
     // doMove interface better be: Coord coord, String symbol
-    IPuzzle doMove(int x, int y, char value);
+    IPuzzle doMove(int x, int y, String symbol);
     IPuzzle undoMove();
     boolean canUndo();
 
     AbstractGroup[] getGroups();
-    GroupIntersection[] getIntersections();
-
-    //PossibilitiesContainer getPossibilities(); // TODO by hint level
-    AbstractGroup[] getSquareGroups(); // TODO only for UI
+    GroupIntersection[] getIntersections(); // Used in some elimination algorithms
 
     String getName();
     String getSudokuType();
+
+    Paint getCellBackground(int x, int y);
 }

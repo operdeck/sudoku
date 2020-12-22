@@ -6,10 +6,11 @@ import ottop.sudoku.group.AbstractGroup;
 import java.util.*;
 
 public class PossibilitiesContainer {
-	// Map of cell to a set of possible values.
-	private Map<Coord, Set<Integer>> nonCollissionMap = new HashMap<> ();
+	// Map of cell to a set of possible values. The values are the
+	// internal representation of the cell symbols.
+	private final Map<Coord, Set<Integer>> nonCollissionMap = new HashMap<> ();
 
-	private boolean trace;
+	private final boolean trace;
 
 	public PossibilitiesContainer(AbstractGroup[] groups, boolean trace) {
 		this.trace = trace;
@@ -43,22 +44,23 @@ public class PossibilitiesContainer {
 		StringBuffer result = new StringBuffer();
 		Map<Coord, Set<Integer>> allPossibilities = getAllPossibilities();
 		for (Coord c : allPossibilities.keySet()) {
-			result.append("Possibilities at " + c + ":" + allPossibilities.get(c) + "\n");
+			result.append("Possibilities at " + c + ": [TODO internal rep] " + allPossibilities.get(c) + "\n");
 		}
 		return result.toString();
 	}
 
-	private Set<Integer> getPossibilities(Coord c, AbstractGroup[] groups) {
+	// TODO this assumes something about the range of internal values
+	private Set<Integer> getPossibilities(Coord coord, AbstractGroup[] groups) {
 		Set<Integer> s = new HashSet<>();
-		for (int n=1; n<=9; n++) {
+		for (int symbolCode=1; symbolCode<=9; symbolCode++) {
 			boolean isPossible = true;
 			for (AbstractGroup g : groups) {
-				if (!g.isPossibility(n, c)) {
+				if (!g.isPossibility(symbolCode, coord)) {
 					isPossible = false;
 					break;
 				}
 			}
-			if (isPossible) s.add(n);
+			if (isPossible) s.add(symbolCode);
 		}
 		return s;
 	}
@@ -67,32 +69,19 @@ public class PossibilitiesContainer {
 		return nonCollissionMap.get(c);
 	}
 	
-//	public boolean removePossibility(int digit, Coord c, String reason) {
-//		Set<Integer> set = nonCollissionMap.get(c);
-//		if (set != null) {
-//			boolean removed = set.remove(digit);
-//			if (removed) {
-//				System.out.println("Eliminate " + digit + " from possibilities at " + c + reason);
-//			}
-//			return removed;
-//		} else {
-//			return false;
-//		}
-//	}
-
-	public boolean removePossibility(int digit, Set<Coord> coords, String reason) {
+	public boolean removePossibility(int symbolCode, Set<Coord> coords, String reason) {
 		Set<Coord> removed = new TreeSet<>();
 		for (Coord c : coords) {
 			Set<Integer> set = nonCollissionMap.get(c);
 			if (set != null) {
-				if (set.remove(digit)) {
+				if (set.remove(symbolCode)) {
 					removed.add(c);
 				}
 			}
 		}
 		if (removed.size() > 0) {
 			if (trace) {
-				System.out.println("Eliminate " + digit + " from possibilities at " + removed + reason);
+				System.out.println("Eliminate [internal rep] " + symbolCode + " from possibilities at " + removed + reason);
 			}
 		}
 		return removed.size() > 0;
@@ -100,15 +89,15 @@ public class PossibilitiesContainer {
 	
 	public boolean removePossibilities(Set<Integer> possibilities, Coord c, String reason) {
 		Set<Integer> removed = new TreeSet<>();
-		for (int digit : possibilities) {
+		for (int symbolCode : possibilities) {
 			Set<Integer> set = nonCollissionMap.get(c);
 			if (set != null) {
-				if (set.remove(digit)) removed.add(digit);
+				if (set.remove(symbolCode)) removed.add(symbolCode);
 			}
 		}
 		if (removed.size() > 0) {
 			if (trace) {
-				System.out.println("Eliminate " + removed + " from possibilities at " + c + reason);
+				System.out.println("Eliminate [internal code] " + removed + " from possibilities at " + c + reason);
 			}
 		}
 		return removed.size() > 0;

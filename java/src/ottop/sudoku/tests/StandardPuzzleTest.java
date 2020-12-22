@@ -24,9 +24,9 @@ public class StandardPuzzleTest {
 		assertFalse(p.canUndo());
 		assertTrue(p.isOccupied(0,5));
 		assertTrue(p.isOccupied(2, 8));
-		assertEquals('1', p.getValueAtCell(2,0));
+		assertEquals("1", p.getSymbolAtCoordinates(2,0));
 		assertFalse(p.isOccupied(8, 8));
-		assertEquals(' ', p.getValueAtCell(8,8));
+		assertEquals(" ", p.getSymbolAtCoordinates(8,8));
 	}
 
 	@Test
@@ -34,6 +34,5 @@ public class StandardPuzzleTest {
 	{
 		IPuzzle p = PuzzleDB.Trouw_535;
 		assertEquals(27, p.getGroups().length);
-		assertEquals(9, p.getSquareGroups().length);
 	}
 }
