@@ -9,6 +9,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class StandardPuzzle implements IPuzzle {
+    public static String TYPE = "Standard";
+
     private String name;
     private char[][] board = new char[9][9]; // TODO get rid of char, some internal code is OK
 
@@ -26,6 +28,11 @@ public class StandardPuzzle implements IPuzzle {
         this.name = name;
         setRepresentation(sudokuRows); // Keep board etc
         resetState();
+
+        System.out.println("** internal state stuff **");
+        System.out.println(toInternalRepresentation);
+        System.out.println(fromInternalRepresentation);
+        System.out.println("***");
     }
 
     public void resetState() {
@@ -248,4 +255,6 @@ public class StandardPuzzle implements IPuzzle {
         return name;
     }
 
+    @Override
+    public String getSudokuType() { return TYPE; }
 }

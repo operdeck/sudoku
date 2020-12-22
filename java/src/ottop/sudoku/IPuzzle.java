@@ -30,4 +30,5 @@ public interface IPuzzle {
     AbstractGroup[] getSquareGroups(); // TODO only for UI
 
     String getName();
+    String getSudokuType();
 }

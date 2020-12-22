@@ -3,11 +3,24 @@ package ottop.sudoku;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class PuzzleDB {
+    public static IPuzzle emptyStandardPuzzle = new StandardPuzzle("Empty",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........");
+
     public static IPuzzle Parool_18nov = new StandardPuzzle("Parool_18nov",
             "........8",
             "..9..2.7.",
@@ -134,13 +147,24 @@ public class PuzzleDB {
 
     // TODO include some others from the puzzle book
 
-    public static String[] getPuzzles()
-    {
+    public static String[] getPuzzles() throws IllegalAccessException {
         Field[] allFields = PuzzleDB.class.getDeclaredFields();
+        List<String> puzzleNames = new ArrayList<>();
+        PuzzleDB db = new PuzzleDB();
         for (Field f: allFields) {
-            System.out.println("Type: " + f.getType());
-            System.out.println("Name: " + f.getName());
-            //System.out.println("Puzzle name: " + ((IPuzzle) f.).getName());
+            puzzleNames.add(((IPuzzle) f.get(db)).getName());
+        }
+        return puzzleNames.toArray(new String[0]);
+    }
+
+    public static IPuzzle getPuzzleByName(String name) throws IllegalAccessException {
+        Field[] allFields = PuzzleDB.class.getDeclaredFields();
+        PuzzleDB db = new PuzzleDB();
+        for (Field f: allFields) {
+            IPuzzle p = (IPuzzle) f.get(db);
+            if (name.equals(p.getName())) {
+                return p;
+            }
         }
         return null;
     }

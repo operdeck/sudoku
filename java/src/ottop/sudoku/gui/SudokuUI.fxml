@@ -42,7 +42,7 @@
             <Separator layoutY="133.0" prefWidth="177.0" />
             <ChoiceBox fx:id="typeDropdown" layoutX="5.0" layoutY="88.0" onAction="#typeAction" prefHeight="27.0" prefWidth="166.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" />
             <Button fx:id="buttonMoreHelp" layoutX="5.0" layoutY="286.0" mnemonicParsing="false" onAction="#moreHelpAction" text="More..." />
-            <ChoiceBox fx:id="cbPuzzleDB" layoutX="5.0" layoutY="13.0" prefHeight="27.0" prefWidth="166.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" />
+            <ChoiceBox fx:id="cbPuzzleDB" layoutX="5.0" layoutY="13.0" onAction="#puzzleSelectAction" prefHeight="27.0" prefWidth="166.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" />
          </children>
       </AnchorPane>
       <TextArea fx:id="notes" layoutX="5.0" layoutY="371.0" prefHeight="107.0" prefWidth="597.0" AnchorPane.bottomAnchor="53.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="371.0" />

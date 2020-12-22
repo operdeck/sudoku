@@ -1,7 +1,5 @@
 package ottop.sudoku.gui;
 
-import com.sun.javafx.collections.ObservableListWrapper;
-import javafx.collections.ObservableListBase;
 import javafx.event.ActionEvent;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
@@ -14,7 +12,6 @@ import javafx.scene.text.TextAlignment;
 import ottop.sudoku.*;
 import ottop.sudoku.group.AbstractGroup;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,7 +43,7 @@ public class Controller {
 
     public void digitClicked(ActionEvent actionEvent) {
         currentDigit = ((Button)actionEvent.getSource()).getText();
-        System.out.println("Button text: " + currentDigit);
+        //System.out.println("Button text: " + currentDigit);
     }
 
     public void clearClicked(ActionEvent actionEvent) {
@@ -83,57 +80,67 @@ public class Controller {
         if (currentDigit != null) {
             IPuzzle newPuzzle = myPuzzle.doMove(x, y, currentDigit.charAt(0));
             if (newPuzzle != null) {
-                myPuzzle = newPuzzle;
-
-                System.out.println("Undoing. Prev puzzle:");
-                System.out.println(myPuzzle);
-
-                drawPuzzleOnCanvas();
-
-                GraphicsContext gc = gameCanvas.getGraphicsContext2D();
-
-                // highlight last move
-                gc.setFill(Color.WHITE);
-                gc.setLineWidth(1);
-                gc.setStroke(Color.ORANGE);
-                gc.strokeText(currentDigit, getCellX(x + 0.5), getCellY(y + 0.5));
+                setPuzzle(newPuzzle, new Coord(x,y));
             }
         }
     }
 
     public void setPuzzle(IPuzzle initPuzzle) {
-        myPuzzle = initPuzzle;
-        drawPuzzleOnCanvas();
+        setPuzzle(initPuzzle, null);
     }
 
-    private void drawPuzzleOnCanvas() {
+    public void setPuzzle(IPuzzle initPuzzle, Coord highlight) {
+        myPuzzle = initPuzzle;
+        updateWholeDisplay(highlight);
+    }
+
+    private void updateWholeDisplay(Coord highlight) {
         GraphicsContext gc = gameCanvas.getGraphicsContext2D();
+
+        // List of puzzles
+        try {
+            String[] puzzles = PuzzleDB.getPuzzles();
+            cbPuzzleDB.getItems().setAll(puzzles);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        // Puzzle name and type
+        typeDropdown.getItems().setAll(new String[] {StandardPuzzle.TYPE, NRCPuzzle.TYPE});
+        typeDropdown.setValue(myPuzzle.getSudokuType());
+        cbPuzzleDB.setValue(myPuzzle.getName());
+        undoButton.setDisable(!myPuzzle.canUndo());
+
+        // Canvas
+        double canvasHeight = gameCanvas.getHeight();
+        double canvasWidth = gameCanvas.getWidth();
+
         gc.setFill(Color.WHITE);
         gc.setStroke(Color.BLUE);
         gc.setLineWidth(1);
+        gc.fillRect(0, 0, canvasWidth, canvasHeight);
+
         Font cellText = Font.font("Helvetica", 15);
         gc.setFont(cellText);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
-
-        typeDropdown.getItems().setAll(new String[] {"Standard", "NRC"});
-        typeDropdown.setValue("NRC");
-
-        double canvasHeight = gameCanvas.getHeight();
-        double canvasWidth = gameCanvas.getWidth();
-        gc.fillRect(0, 0, canvasWidth, canvasHeight);
-
-        // Filled cells
         for (int x=0; x<myPuzzle.getWidth(); x++) {
             for (int y=0; y<myPuzzle.getHeight(); y++) {
-                gc.setLineWidth(1);
+                gc.setStroke(Color.BLUE);
                 gc.strokeRect(getCellX(x), getCellY(y), getCellWidth(), getCellHeight());
                 if (myPuzzle.isOccupied(y, x)) {
+                    if (highlight != null && y== highlight.getRow() && x== highlight.getCol()) {
+                        // highlight last move
+                        gc.setStroke(Color.ORANGE);
+                    } else {
+                        gc.setStroke(Color.BLACK);
+                    }
                     gc.strokeText(String.valueOf(myPuzzle.getValueAtCell(y, x)),
                             getCellX(x+0.5), getCellY(y+0.5));
                 }
             }
         }
+        labelPosition.setText("");
 
         // Groups
         gc.setLineWidth(3);
@@ -144,19 +151,15 @@ public class Controller {
                     getCellHeight()*(g.getMaxY()-g.getMinY()));
         }
 
+        // Hints & help
         showPuzzleHints();
-
-        undoButton.setDisable(!myPuzzle.canUndo());
-
-        // TODO: populate puzzles dropdown
-        PuzzleDB.getPuzzles();
     }
 
     public void hintsAction(ActionEvent actionEvent) {
         if ((cbRadiation.isSelected() || cbNakedPairs.isSelected() || cbXWings.isSelected()) & !cbBasicElimination.isSelected()) {
             cbBasicElimination.setSelected(true);
         }
-        drawPuzzleOnCanvas();
+        updateWholeDisplay(null);
     }
 
     public void showPuzzleHints() {
@@ -182,16 +185,15 @@ public class Controller {
                 for (Coord c : optionsPerCell.keySet()) {
                     drawPossibilities(c, optionsPerCell.get(c));
                 }
+                SolutionContainer loners = sv.getLoneNumbers();
+                SolutionContainer unique = sv.getUniqueValues();
+                notes.setText("Lone numbers: " + loners.size() + " " + loners +"\n");
+                notes.appendText("Unique values: " + unique.size() + " " + unique +"\n");
+            } else {
+                notes.setText("");
             }
-
-            SolutionContainer loners = sv.getLoneNumbers();
-            SolutionContainer unique = sv.getUniqueValues();
-            notes.setText("Lone numbers: " + loners.size() + " " + loners +"\n");
-            notes.appendText("Unique values: " + unique.size() + " " + unique +"\n");
         }
     }
-
-    // https://docs.oracle.com/javase/8/javafx/api/javafx/scene/canvas/GraphicsContext.html#setTextAlign-javafx.scene.text.TextAlignment-
 
     private void drawPossibilities(Coord c, Set<Integer> values) {
         GraphicsContext gc = gameCanvas.getGraphicsContext2D();
@@ -220,13 +222,12 @@ public class Controller {
         IPuzzle prevPuzzle = myPuzzle.undoMove();
         System.out.println("Undo.." + prevPuzzle);
         if (prevPuzzle != null) {
-            myPuzzle = prevPuzzle;
-            drawPuzzleOnCanvas();
+            setPuzzle(prevPuzzle);
         }
     }
 
     public void typeAction(ActionEvent actionEvent) {
-        System.out.println("Type..." + typeDropdown.getValue());
+        //System.out.println("Type..." + typeDropdown.getValue());
     }
 
     public void canvasMouseMove(MouseEvent mouseEvent) {
@@ -236,6 +237,19 @@ public class Controller {
             if (y>=0 && y<=9) {
                 labelPosition.setText(""+new Coord(x,y));
             }
+        }
+    }
+
+    public void puzzleSelectAction(ActionEvent actionEvent) {
+        String puzzleName = String.valueOf(cbPuzzleDB.getValue());
+        IPuzzle p;
+        try {
+            p = PuzzleDB.getPuzzleByName(puzzleName);
+            if (p != null) {
+                setPuzzle(p);
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
     }
 }

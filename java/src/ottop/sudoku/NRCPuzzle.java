@@ -4,11 +4,8 @@ import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.group.SquareGroup;
 
 public class NRCPuzzle extends StandardPuzzle {
+	public static String TYPE = "NRC";
 
-	public NRCPuzzle(String[] mySudoku) {
-		super(mySudoku);
-	}
-	
 	public NRCPuzzle(String name, String[] mySudoku) {
 		super(name, mySudoku);
 	}
@@ -42,10 +39,14 @@ public class NRCPuzzle extends StandardPuzzle {
 		}
 	}
 
+	@Override
 	protected IPuzzle newInstance(String name, String[] brd) {
 		NRCPuzzle p = new NRCPuzzle(name, brd);
 		p.previousPuzzle = this;
 		return p;
 
 	}
+
+	@Override
+	public String getSudokuType() { return TYPE; }
 }

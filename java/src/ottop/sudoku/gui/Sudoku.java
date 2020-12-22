@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import ottop.sudoku.IPuzzle;
 import ottop.sudoku.NRCPuzzle;
+import ottop.sudoku.PuzzleDB;
 
 public class Sudoku extends Application {
 
@@ -22,26 +23,11 @@ public class Sudoku extends Application {
         Parent root = fxmlLoader.load(getClass().getResource("SudokuUI.fxml"));
 
         myController = Controller.theController;
-        myController.setPuzzle(initPuzzle());
+        myController.setPuzzle(PuzzleDB.emptyStandardPuzzle);
         myController.showPuzzleHints();
 
         primaryStage.setTitle("U-Kudos");
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
-    }
-
-    private IPuzzle initPuzzle() {
-        IPuzzle myPuzzle = new NRCPuzzle("NRC_5dec14", new String[] {
-                "....65...",
-                ".......6.",
-                "1......78",
-                ".........",
-                "..27.....",
-                ".3..9...1",
-                "..6..45..",
-                ".8...2...",
-                "........." });
-
-        return myPuzzle;
     }
 }
