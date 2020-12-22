@@ -11,10 +11,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
-import ottop.sudoku.Coord;
-import ottop.sudoku.IPuzzle;
-import ottop.sudoku.SolutionContainer;
-import ottop.sudoku.SudokuSolver;
+import ottop.sudoku.*;
 import ottop.sudoku.group.AbstractGroup;
 
 import java.util.Arrays;
@@ -38,6 +35,7 @@ public class Controller {
     public Button buttonMoreHelp;
     public TextArea notes;
     public Label labelPosition;
+    public ChoiceBox cbPuzzleDB;
 
     private IPuzzle myPuzzle;
     private String currentDigit = null;
@@ -149,6 +147,9 @@ public class Controller {
         showPuzzleHints();
 
         undoButton.setDisable(!myPuzzle.canUndo());
+
+        // TODO: populate puzzles dropdown
+        PuzzleDB.getPuzzles();
     }
 
     public void hintsAction(ActionEvent actionEvent) {

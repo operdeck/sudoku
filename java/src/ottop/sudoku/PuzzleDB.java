@@ -2,6 +2,8 @@ package ottop.sudoku;
 
 import org.junit.Test;
 
+import java.lang.reflect.Field;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -132,4 +134,14 @@ public class PuzzleDB {
 
     // TODO include some others from the puzzle book
 
+    public static String[] getPuzzles()
+    {
+        Field[] allFields = PuzzleDB.class.getDeclaredFields();
+        for (Field f: allFields) {
+            System.out.println("Type: " + f.getType());
+            System.out.println("Name: " + f.getName());
+            //System.out.println("Puzzle name: " + ((IPuzzle) f.).getName());
+        }
+        return null;
+    }
 }
