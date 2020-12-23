@@ -1,10 +1,29 @@
 package ottop.sudoku;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // This is specific to 9x9 boards
 public class Coord implements Comparable<Coord>{
+	private Pattern pattern = Pattern.compile("^r(\\d+)c(\\d+)$", Pattern.CASE_INSENSITIVE);
+
+	// must be of form r4c8
+	public Coord(String s) {
+		Matcher matcher = pattern.matcher(s);
+		boolean matchFound = matcher.find();
+		if(matchFound) {
+			int y = Integer.parseInt(matcher.group(1))-1;
+			int x = Integer.parseInt(matcher.group(2))-1;
+			coord = getKey(x,y);
+		} else {
+			throw new IllegalArgumentException("Not a valid coordinate: " + s);
+		}
+
+	}
+
 	public Coord(int x, int y) {
+		if (x<0 || y<0) throw new IllegalArgumentException("Coordinates should be >= 0");
 		coord = getKey(x, y);
 	}
 
@@ -49,12 +68,11 @@ public class Coord implements Comparable<Coord>{
 		return coord - o.coord;
 	}
 
-	// why not return int?
-	public Integer getRow() {
+	public Integer getY() {
 		return coord / 9;
 	}
 
-	public Integer getCol() {
+	public Integer getX() {
 		return coord % 9;
 	}
 	

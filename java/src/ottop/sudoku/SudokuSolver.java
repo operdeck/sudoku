@@ -42,16 +42,12 @@ public class SudokuSolver {
         possibilities = new PossibilitiesContainer(p.getGroups(), trace);
     }
 
-    // Do one elimination step taking account the flags. Returns true if anything
-    // has been updated.
-    public boolean doEliminationStep() {
-        return false;
-    }
-
     public boolean eliminateByRadiationFromIntersections() {
         boolean updated = false;
+        // TODO maybe not even need to explicitly create these intersections
+        Set<GroupIntersection> groupIntersections = GroupIntersection.createGroupIntersections(myPuzzle.getGroups());
 
-        for (GroupIntersection a : myPuzzle.getIntersections()) {
+        for (GroupIntersection a : groupIntersections) {
             Set<Integer> pa = possibilities.getPossibilities(a.getIntersection());
             for (int digit : Digits.all) {
                 if (pa.contains(digit)) {
@@ -60,7 +56,7 @@ public class SudokuSolver {
                     @SuppressWarnings("unchecked")
                     Set<Integer>[] pr = new Set[2];
                     for (int i=0; i<2; i++) {
-                        r[i] = new HashSet<Coord>(a.getIntersectionGroup(i).getCoords());
+                        r[i] = new HashSet<>(a.getIntersectionGroup(i).getCoords());
                         r[i].removeAll(a.getIntersection());
                         pr[i] = possibilities.getPossibilities(r[i]);
                     }
@@ -86,7 +82,7 @@ public class SudokuSolver {
         boolean updated = false;
 
         for (AbstractGroup g : myPuzzle.getGroups()) {
-            if (g.eliminateNakedPairs(myPuzzle, possibilities)) updated = true;
+            if (g.eliminateNakedPairs(possibilities)) updated = true;
         }
 
         return updated;
@@ -149,12 +145,18 @@ public class SudokuSolver {
         return solve(EliminationMethods.SMARTEST);
     }
 
-    public boolean solve(EliminationMethods level) {
+    public Map.Entry<Coord, Integer> nextMove() {
+        return nextMove(EliminationMethods.SMARTEST);
+    }
+
+    public Map.Entry<Coord, Integer> nextMove(EliminationMethods level) {
+        Map.Entry<Coord, Integer> nextMove = null;
+
         if ((level.getLevelCode() & EliminationMethods.BASICRADIATION.getLevelCode()) != 0) {
             if(trace) System.out.println("Eliminate with BASIC radiation");
         }
 
-        while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
+        if (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
             possibilities = new PossibilitiesContainer(myPuzzle.getGroups(), trace);
 
             if ((level.getLevelCode() & EliminationMethods.NAKEDPAIRS.getLevelCode()) != 0) {
@@ -177,14 +179,20 @@ public class SudokuSolver {
             }
             Iterator<Map.Entry<Coord, Integer>> it = sols.getSolutions().entrySet().iterator();
             if (it.hasNext()) {
-                Map.Entry<Coord, Integer> nextMove = it.next();
+                nextMove = it.next();
+            }
+        }
+        return nextMove;
+    }
 
+    public boolean solve(EliminationMethods level) {
+        while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
+            Map.Entry<Coord, Integer> nextMove = nextMove(level);
+            if (nextMove != null) {
                 if (trace) {
                     System.out.println("Do move: " + nextMove.getValue() + " at " + nextMove.getKey());
                 }
-
-                IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey().getCol(),
-                        nextMove.getKey().getRow(),
+                IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey(),
                         myPuzzle.symbolCodeToSymbol(nextMove.getValue().intValue()));
                 myPuzzle = nextPuzzle;
                 possibilities = new PossibilitiesContainer(nextPuzzle.getGroups(), trace);
@@ -193,14 +201,15 @@ public class SudokuSolver {
             }
         }
         //if (myPuzzle.isSolved()) System.out.println("Solved: " + myPuzzle.getName());
+        //System.out.println(myPuzzle);
         return myPuzzle.isSolved();
     }
 
+    // TODO: why??
     public IPuzzle getPuzzle()
     {
         return myPuzzle;
     }
-
 
     private Set<AbstractGroup> toRowGroups(Set<Integer> rowset) {
         Set<AbstractGroup> result = new HashSet<>();

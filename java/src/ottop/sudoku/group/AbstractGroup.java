@@ -7,9 +7,14 @@ import java.util.Map.Entry;
 
 public abstract class AbstractGroup {
 	// TODO this all has a strong 9x9 dependency
-	private boolean[] hasSymbolCode = new boolean[10]; // map that tells which symbols are currently contained
+	protected static int N_SYMBOLS = 10; // including "empty"
+	protected static int GROUP_SIZE = 9;
+	protected static int EMPTY_SYMBOLCODE = 0; // agreement with "Puzzle": symbol code 0 means empty
+
+	private boolean[] hasSymbolCode = new boolean[N_SYMBOLS]; // map that tells which symbols are currently contained
 	private Map<Coord, Integer> coords; // the cell coordinates contained in this group, mapped to internal index (0..9)
-	private int[] groupValues = new int[9]; // current cell state
+	private int[] groupValues = new int[GROUP_SIZE]; // current cell state
+
 	protected int startX;
 	protected int startY;
 	private String groupID;
@@ -18,16 +23,15 @@ public abstract class AbstractGroup {
 		this.startX = startX;
 		this.startY = startY;
 		this.groupID = id;
-		for (int i=0; i<9; i++) {
-			groupValues[i] = myPuzzle.getSymbolCodeAtCoordinates(startY+internalIndexToRelativeY(i),
-					startX+internalIndexToRelativeX(i));
-			if (groupValues[i] != 0) {
+		for (int i=0; i<GROUP_SIZE; i++) {
+			groupValues[i] = myPuzzle.getSymbolCodeAtCoordinates(new Coord(startX+internalIndexToRelativeX(i),startY+internalIndexToRelativeY(i)));
+			if (groupValues[i] != EMPTY_SYMBOLCODE) {
 				hasSymbolCode[groupValues[i]] = true;
 			}
 		}
 		
 		coords = new HashMap<>();
-		for (int internalIndex=0; internalIndex<9; internalIndex++) {
+		for (int internalIndex=0; internalIndex<GROUP_SIZE; internalIndex++) {
 			int absX = startX + internalIndexToRelativeX(internalIndex);
 			int absY = startY + internalIndexToRelativeY(internalIndex);
 			coords.put(new Coord(absX, absY), internalIndex);
@@ -44,7 +48,7 @@ public abstract class AbstractGroup {
 	private boolean isOccupied(Coord c) {
 		Integer val = coords.get(c);
 		if (val == null) return false;
-		return groupValues[val] != 0;
+		return groupValues[val] != EMPTY_SYMBOLCODE;
 	}
 	
 	public boolean isPossibility(int symbolCode, Coord c) {
@@ -56,7 +60,7 @@ public abstract class AbstractGroup {
 	}
 	
 	private Integer getUniquePossibility(PossibilitiesContainer cache,
-										 SolutionContainer sols, Coord myCell) {
+										 Coord myCell) {
 		Set<Integer> remainingPossibilities = new HashSet<>(cache.getPossibilities(myCell));
 		for (Coord otherCell : coords.keySet()) {
 			if (otherCell != myCell) {
@@ -96,7 +100,7 @@ public abstract class AbstractGroup {
 			Set<Integer> cellPossibilities = poss.getPossibilities(myCell);
 			if (cellPossibilities != null) {
 				if (cellPossibilities.size() >= 1) {
-					Integer uniquePossibility = getUniquePossibility(poss, sols, myCell);
+					Integer uniquePossibility = getUniquePossibility(poss, myCell);
 					if (uniquePossibility != null) {
 						sols.addSolution(myCell, uniquePossibility, groupID);
 						found = true;
@@ -108,16 +112,21 @@ public abstract class AbstractGroup {
 	}
 	
 	public boolean solved() {
-		for (int n : Digits.all) if (!hasSymbolCode[n]) return false;
-		return true;
+		boolean isSolved = true;
+		for (int n : Digits.all) {
+			if (!hasSymbolCode[n]) {
+				isSolved = false;
+				break;
+			}
+		}
+		return isSolved;
 	}
 
 	public Set<Coord> getCoords() {
 		return coords.keySet();
 	}
 
-	public boolean eliminateNakedPairs(IPuzzle p,
-									   PossibilitiesContainer cache) {
+	public boolean eliminateNakedPairs(PossibilitiesContainer cache) {
 		
 		boolean result = false;
 		
@@ -170,7 +179,7 @@ public abstract class AbstractGroup {
 	}
 
 	private void combineNakedPairs(Map<Set<Integer>, Set<Coord>> map) {
-		final int range = (1 << 9); // range of possibilities for 9 digits: 2^9
+		final int range = (1 << GROUP_SIZE); // range of possibilities for 9 digits: 2^9
 		final int mask = range - 1;
 		int groupFillSize = 0;
 		for (boolean b : hasSymbolCode) {
@@ -207,7 +216,7 @@ public abstract class AbstractGroup {
 		    
 		    // Only add the coordinates if the size of the set of coordinates leaves
 		    // at least 1 unfilled cell in this group
-		    if (coordinates.size() > 1 && coordinates.size() < (9 - groupFillSize)) {
+		    if (coordinates.size() > 1 && coordinates.size() < (GROUP_SIZE - groupFillSize)) {
 			    if (getBitSetSize(possibilitiesAsBitSet) == coordinates.size()) {
 		    		map.put(fromBitSet(possibilitiesAsBitSet), coordinates);
 			    }
@@ -251,7 +260,7 @@ public abstract class AbstractGroup {
 		
 		for (Coord c : coords.keySet()) {
 			if (cache.getPossibilities(c).contains(digit)) {
-				set.add(c.getRow());
+				set.add(c.getY());
 			}
 		}
 		
@@ -263,7 +272,7 @@ public abstract class AbstractGroup {
 		
 		for (Coord c : coords.keySet()) {
 			if (cache.getPossibilities(c).contains(digit)) {
-				set.add(c.getCol());
+				set.add(c.getX());
 			}
 		}
 		
@@ -275,18 +284,34 @@ public abstract class AbstractGroup {
 		return groupID;
 	}
 
-	public double getMinX() {
-		return startX;
+	public boolean isInconsistent()
+	{
+		boolean isInconsistent = false;
+		int[] symbolCodeCount = new int[N_SYMBOLS];
+		for (int i=0; i<GROUP_SIZE; i++) {
+			symbolCodeCount[groupValues[i]] += 1;
+		}
+		for (int j=1; j<N_SYMBOLS; j++) {
+			if (symbolCodeCount[j] > 1) {
+				isInconsistent = true;
+				break;
+			}
+		}
+		return isInconsistent;
 	}
 
-	public double getMinY() {
-		return startY;
-	}
-	public double getMaxX() {
-		return startX+3;
-	}
-
-	public double getMaxY() {
-		return startY+3;
-	}
+//	public double getMinX() {
+//		return startX;
+//	}
+//
+//	public double getMinY() {
+//		return startY;
+//	}
+//	public double getMaxX() {
+//		return startX+3;
+//	}
+//
+//	public double getMaxY() {
+//		return startY+3;
+//	}
 }

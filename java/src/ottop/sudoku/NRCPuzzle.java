@@ -39,8 +39,7 @@ public class NRCPuzzle extends StandardPuzzle {
 		for (int y=0; y<2; y++) {
 			for (int x=0; x<2; x++) {
 				AbstractGroup newGrp = new SquareGroup(x*4+1, y*4+1, this, "NRC Group " + (++cnt));
-				addGroup(newGrp);
-//				System.out.println(newGrp);
+				groups.add(newGrp);
 			}
 		}
 	}

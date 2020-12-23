@@ -2,6 +2,7 @@ package ottop.sudoku;
 
 import ottop.sudoku.group.AbstractGroup;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -16,14 +17,27 @@ public class GroupIntersection {
 		grps[1] = b;
 	}
 
+	public static Set<GroupIntersection> createGroupIntersections(AbstractGroup[] groups) {
+		Set<GroupIntersection> intersections = new LinkedHashSet<>();
+		for (AbstractGroup a:groups) {
+			for (AbstractGroup b:groups) {
+				if (a != b) {
+					GroupIntersection overlap = new GroupIntersection(a, b);
+					// Intersections of 1 don't count. These would be seen as "lone values" anyway.
+					// TODO: if all elements of the intersection are occupied skip it also
+					if (overlap.intersection.size() > 1) {
+						intersections.add(overlap);
+					}
+				}
+			}
+		}
+		return intersections;
+	}
+
 	public AbstractGroup getIntersectionGroup(int i) {
 		return grps[i];
 	}
 
-	public boolean isEmpty() {
-		return intersection.size() <= 1; // consider an area of only one cell empty as well
-	}
-	
 	@Override
 	public String toString() {
 		return intersection.toString();

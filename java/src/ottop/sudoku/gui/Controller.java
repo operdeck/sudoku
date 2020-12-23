@@ -10,7 +10,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import ottop.sudoku.*;
-import ottop.sudoku.group.AbstractGroup;
 
 import java.util.Map;
 import java.util.Set;
@@ -78,9 +77,10 @@ public class Controller {
         int y = (int) Math.floor(myPuzzle.getHeight()*mouseEvent.getY()/gameCanvas.getHeight());
 
         if (null != currentCellSymbol) {
-            IPuzzle newPuzzle = myPuzzle.doMove(x, y, currentCellSymbol);
+            Coord c = new Coord(x, y);
+            IPuzzle newPuzzle = myPuzzle.doMove(c, currentCellSymbol);
             if (newPuzzle != null) {
-                setPuzzle(newPuzzle, new Coord(x,y));
+                setPuzzle(newPuzzle, c);
             }
         }
     }
@@ -136,16 +136,17 @@ public class Controller {
         gc.setTextBaseline(VPos.CENTER);
         for (int x=0; x<myPuzzle.getWidth(); x++) {
             for (int y=0; y<myPuzzle.getHeight(); y++) {
+                Coord c = new Coord(x,y);
                 gc.setStroke(Color.BLUE);
                 gc.strokeRect(getCellX(x), getCellY(y), getCellWidth(), getCellHeight());
-                if (myPuzzle.isOccupied(y, x)) {
-                    if (highlight != null && y== highlight.getRow() && x== highlight.getCol()) {
+                if (myPuzzle.isOccupied(c)) {
+                    if (highlight != null && y== highlight.getY() && x== highlight.getX()) {
                         // highlight last move
                         gc.setStroke(Color.ORANGE);
                     } else {
                         gc.setStroke(Color.BLACK);
                     }
-                    gc.strokeText(String.valueOf(myPuzzle.getSymbolAtCoordinates(y, x)),
+                    gc.strokeText(String.valueOf(myPuzzle.getSymbolAtCoordinates(c)),
                             getCellX(x+0.5), getCellY(y+0.5));
                 }
             }
@@ -215,8 +216,8 @@ public class Controller {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
 
-        int x = c.getCol();
-        int y = c.getRow();
+        int x = c.getX();
+        int y = c.getY();
         for (int i : values) {
             int subrow = (i-1) / 3 - 1;
             int subcol = (i-1) % 3 - 1;

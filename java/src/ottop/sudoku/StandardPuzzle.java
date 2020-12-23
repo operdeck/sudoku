@@ -8,23 +8,21 @@ import ottop.sudoku.group.RowGroup;
 import ottop.sudoku.group.SquareGroup;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 // TODO create abstract class out of this
 public class StandardPuzzle implements IPuzzle {
     public static String TYPE = "Standard";
 
-    private String name;
+    private final String name;
 
     // Below is specific to 9x9 puzzle
     private int[][] board = new int[9][9]; //[x][y]
-    private List<String> cellValues =
-            Arrays.asList(new String[]{" ","1","2","3","4","5","6","7","8","9"});
+    private final List<String> possibleSymbols =
+            Arrays.asList(" ","1","2","3","4","5","6","7","8","9");
 
     // State is in these properties:
     protected IPuzzle previousPuzzle = null;
-    private List<AbstractGroup> groups;
-    private Set<GroupIntersection> intersections;
+    protected List<AbstractGroup> groups;
 
     protected StandardPuzzle(String name, int[][] board) {
         this.name = name;
@@ -40,7 +38,6 @@ public class StandardPuzzle implements IPuzzle {
 
     public void resetState() {
         initGroups(); // Init groups
-        initGroupIntersections();
     }
 
     public StandardPuzzle(String[] sudokuRows) {
@@ -83,26 +80,12 @@ public class StandardPuzzle implements IPuzzle {
         if (name != null && name.length() > 0) result.append(name).append(":\n");
         for (int y=0; y<9; y++) {
             for (int x=0; x<9; x++) {
-                result.append(cellValues.get(board[x][y]));
+                result.append(possibleSymbols.get(board[x][y]));
             }
             result.append("\n");
         }
 
         return result.toString();
-    }
-
-    private void initGroupIntersections() {
-        intersections = new LinkedHashSet<>();
-        for (AbstractGroup a:groups) {
-            for (AbstractGroup b:groups) {
-                if (a != b) {
-                    GroupIntersection overlap = new GroupIntersection(a, b);
-                    if (!overlap.isEmpty()) {
-                        intersections.add(overlap);
-                    }
-                }
-            }
-        }
     }
 
     protected void initGroups() {
@@ -111,17 +94,13 @@ public class StandardPuzzle implements IPuzzle {
         int cnt=0;
         for (int y=0; y<3; y++) {
             for (int x=0; x<3; x++) {
-                addGroup(new SquareGroup(x*3, y*3, this, "Group "+(++cnt)));
+                groups.add(new SquareGroup(x*3, y*3, this, "Group "+(++cnt)));
             }
         }
         for (int i=0; i<9;i++) {
-            addGroup(new RowGroup(0, i, this, "Row "+(1+i)));
-            addGroup(new ColumnGroup(i, 0, this, "Column "+(1+i)));
+            groups.add(new RowGroup(0, i, this, "Row "+(1+i)));
+            groups.add(new ColumnGroup(i, 0, this, "Column "+(1+i)));
         }
-    }
-
-    protected void addGroup(AbstractGroup g) {
-        groups.add(g);
     }
 
     @Override
@@ -133,29 +112,29 @@ public class StandardPuzzle implements IPuzzle {
         return isSolved;
     }
 
-    // TODO rename and use Coord as argument
-    // TODO do we really need to expose this? - Groups use this
-    public int getSymbolCodeAtCoordinates(int y, int x) {
-        return board[x][y];
+    @Override
+    public int getSymbolCodeAtCoordinates(Coord coord) {
+        return board[coord.getX()][coord.getY()];
     }
 
+    @Override
     public String symbolCodeToSymbol(int i) {
-        return cellValues.get(i);
+        return possibleSymbols.get(i);
     }
 
-    public int cellSymbolToIndex(String symbol) {
-        int idx = Math.max(0, cellValues.indexOf(symbol)); // return 0 if not found
+    protected int cellSymbolToIndex(String symbol) {
+        int idx = Math.max(0, possibleSymbols.indexOf(symbol)); // return 0 if not found
         return idx;
     }
 
-    // TODO use Coord as argument
-    public String getSymbolAtCoordinates(int y, int x) {
-        return cellValues.get(board[x][y]);
+    @Override
+    public String getSymbolAtCoordinates(Coord coord) {
+        return possibleSymbols.get(board[coord.getX()][coord.getY()]);
     }
 
-    // TODO use Coord as argument and get rid of y/x
-    public boolean isOccupied(int y, int x) {
-        return board[x][y] != 0;
+    @Override
+    public boolean isOccupied(Coord coord) {
+        return board[coord.getX()][coord.getY()] != 0;
     }
 
     @Override
@@ -165,12 +144,12 @@ public class StandardPuzzle implements IPuzzle {
     public int getHeight() { return 9; }
 
     @Override
-    public IPuzzle doMove(int xNew, int yNew, String symbol) { // x, y start at 0
+    public IPuzzle doMove(Coord coord, String symbol) { // x, y start at 0
         //if (isOccupied(yNew, xNew)) return null;
         int[][] newBoard = new int[9][9];
         for (int x=0; x<getWidth(); x++) {
             for (int y=0; y<getHeight(); y++) {
-                if (x==xNew && y==yNew) {
+                if (x==coord.getX() && y==coord.getY()) {
                     newBoard[x][y] = cellSymbolToIndex(symbol);
                 } else {
                     newBoard[x][y] = board[x][y];
@@ -200,17 +179,19 @@ public class StandardPuzzle implements IPuzzle {
 
     @Override
     public boolean isInconsistent() {
-        return false;
+        boolean isInconsistent = false;
+        for (AbstractGroup g:groups) {
+            if (g.isInconsistent()) {
+                isInconsistent = true;
+                break;
+            }
+        }
+        return isInconsistent;
     }
 
     @Override
     public AbstractGroup[] getGroups() {
         return groups.toArray(new AbstractGroup[0]);
-    }
-
-    @Override
-    public GroupIntersection[] getIntersections() {
-        return intersections.toArray(new GroupIntersection[0]);
     }
 
     @Override
