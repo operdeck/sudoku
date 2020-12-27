@@ -3,11 +3,14 @@ package ottop.sudoku;
 import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.group.ColumnGroup;
 import ottop.sudoku.group.RowGroup;
+import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.*;
 
-//http://www.extremesudoku.info/sudoku.html
-//http://en.wikipedia.org/wiki/List_of_Sudoku_terms_and_jargon
+// http://www.extremesudoku.info/sudoku.html
+// http://en.wikipedia.org/wiki/List_of_Sudoku_terms_and_jargon
+// https://www.sudokuessentials.com/x-wing.html
+// https://www.extremesudoku.info/
 
 public class SudokuSolver {
     private PossibilitiesContainer possibilities;
@@ -18,15 +21,13 @@ public class SudokuSolver {
         BASICRADIATION (1),
         NAKEDPAIRS  (2),
         INTERSECTION (4),
-        XWINGS   (8),
-        SIMPLEST (1),
-        SMARTEST (15);
+        XWINGS   (8);
 
         private final int levelCode;
         EliminationMethods(int levelCode) {
             this.levelCode = levelCode;
         }
-        int getLevelCode() {
+        public int code() {
             return levelCode;
         }
     }
@@ -45,31 +46,33 @@ public class SudokuSolver {
     public boolean eliminateByRadiationFromIntersections() {
         boolean updated = false;
         // TODO maybe not even need to explicitly create these intersections
-        Set<GroupIntersection> groupIntersections = GroupIntersection.createGroupIntersections(myPuzzle.getGroups());
+        Set<GroupIntersection> groupIntersections =
+                GroupIntersection.createGroupIntersections(myPuzzle.getGroups());
 
-        for (GroupIntersection a : groupIntersections) {
-            Set<Integer> pa = possibilities.getPossibilities(a.getIntersection());
-            for (int digit : Digits.all) {
-                if (pa.contains(digit)) {
+        for (GroupIntersection intersection : groupIntersections) {
+            Set<Integer> possibilitiesAtGroupIntersection =
+                    possibilities.getPossibilities(intersection.getIntersection());
+            for (int symbolCode : Digits.all) {
+                if (possibilitiesAtGroupIntersection.contains(symbolCode)) {
                     @SuppressWarnings("unchecked")
                     Set<Coord>[] r = new Set[2];
                     @SuppressWarnings("unchecked")
                     Set<Integer>[] pr = new Set[2];
                     for (int i=0; i<2; i++) {
-                        r[i] = new HashSet<>(a.getIntersectionGroup(i).getCoords());
-                        r[i].removeAll(a.getIntersection());
+                        r[i] = new HashSet<>(intersection.getIntersectionGroup(i).getCoords());
+                        r[i].removeAll(intersection.getIntersection());
                         pr[i] = possibilities.getPossibilities(r[i]);
                     }
                     for (int i=0; i<2; i++) {
-                        if (!pr[i].contains(digit)) {
+                        if (!pr[i].contains(symbolCode)) {
                             // If 'digit' is not possible anywhere else in this group, then it
                             // has to be in the intersection. Which means it cannot be
                             // anywhere else in the other group either.
-                            if (possibilities.removePossibility(digit, r[1-i],
-                                    " (in " + a.getIntersectionGroup(1-i) + ") because " +
-                                            myPuzzle.symbolCodeToSymbol(digit) + " has to be in " +
-                                            a.getIntersectionGroup(i) + " in one of " +
-                                            a + " (Intersection Radiation)")) updated = true;;
+                            if (possibilities.removePossibility(symbolCode, r[1-i],
+                                    " (in " + intersection.getIntersectionGroup(1-i) + ") because " +
+                                            myPuzzle.symbolCodeToSymbol(symbolCode) + " has to be in " +
+                                            intersection.getIntersectionGroup(i) + " in one of " +
+                                            intersection + " (Intersection Radiation)")) updated = true;;
                         }
                     }
                 }
@@ -137,55 +140,73 @@ public class SudokuSolver {
         return updated;
     }
 
+    public void eliminate(int level) {
+        if ((level & EliminationMethods.BASICRADIATION.code()) != 0) {
+            if(trace) System.out.println("Eliminate with BASIC radiation");
+        }
+        if ((level & EliminationMethods.NAKEDPAIRS.code()) != 0) {
+            if (trace) System.out.println("Eliminate naked pairs");
+            eliminateNakedPairs();
+        }
+        if ((level & EliminationMethods.INTERSECTION.code()) != 0) {
+            if (trace) System.out.println("Eliminate intersections");
+            eliminateByRadiationFromIntersections();
+        }
+        if ((level & EliminationMethods.XWINGS.code()) != 0) {
+            if (trace) System.out.println("Eliminate XWings");
+            eliminateByXWings();
+        }
+    }
+
     public boolean solveSimplest() {
-        return solve(EliminationMethods.BASICRADIATION);
+        return solve(EliminationMethods.BASICRADIATION.code());
     }
 
     public boolean solve() {
-        return solve(EliminationMethods.SMARTEST);
+        return solve(EliminationMethods.BASICRADIATION.code() +
+                EliminationMethods.NAKEDPAIRS.code() +
+                EliminationMethods.INTERSECTION.code() +
+                EliminationMethods.XWINGS.code());
     }
 
     public Map.Entry<Coord, Integer> nextMove() {
-        return nextMove(EliminationMethods.SMARTEST);
+        return nextMove(EliminationMethods.BASICRADIATION.code() +
+                EliminationMethods.NAKEDPAIRS.code() +
+                EliminationMethods.INTERSECTION.code() +
+                EliminationMethods.XWINGS.code());
     }
 
-    public Map.Entry<Coord, Integer> nextMove(EliminationMethods level) {
+    public Map.Entry<Coord, Integer> nextMove(int level) {
         Map.Entry<Coord, Integer> nextMove = null;
+        possibilities = new PossibilitiesContainer(myPuzzle.getGroups(), trace);
 
-        if ((level.getLevelCode() & EliminationMethods.BASICRADIATION.getLevelCode()) != 0) {
-            if(trace) System.out.println("Eliminate with BASIC radiation");
-        }
+        eliminate(level);
 
         if (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
-            possibilities = new PossibilitiesContainer(myPuzzle.getGroups(), trace);
-
-            if ((level.getLevelCode() & EliminationMethods.NAKEDPAIRS.getLevelCode()) != 0) {
-                if(trace) System.out.println("Eliminate naked pairs");
-                eliminateNakedPairs();
-            }
-            if ((level.getLevelCode() & EliminationMethods.INTERSECTION.getLevelCode()) != 0) {
-                if(trace) System.out.println("Eliminate intersections");
-                eliminateByRadiationFromIntersections();
-            }
-            if ((level.getLevelCode() & EliminationMethods.XWINGS.getLevelCode()) != 0) {
-                if(trace) System.out.println("Eliminate XWings");
-                eliminateByXWings();
-            }
-
             SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
+            // Lone numbers first
             for (AbstractGroup g : myPuzzle.getGroups()) {
                 g.addLoneNumbersToSolution(possibilities, sols);
-                g.addUniqueValuesToSolution(possibilities, sols);
             }
             Iterator<Map.Entry<Coord, Integer>> it = sols.getSolutions().entrySet().iterator();
             if (it.hasNext()) {
                 nextMove = it.next();
             }
+            if (nextMove == null) {
+                // Then unique values
+                for (AbstractGroup g : myPuzzle.getGroups()) {
+                    g.addUniqueValuesToSolution(possibilities, sols);
+                }
+                it = sols.getSolutions().entrySet().iterator();
+                if (it.hasNext()) {
+                    nextMove = it.next();
+                }
+            }
         }
         return nextMove;
     }
 
-    public boolean solve(EliminationMethods level) {
+    public boolean solve(int level) {
         while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
             Map.Entry<Coord, Integer> nextMove = nextMove(level);
             if (nextMove != null) {
@@ -253,11 +274,20 @@ public class SudokuSolver {
         return sols;
     }
 
-    public Map<Coord, Set<Integer>> getAllPossibilities() {
+    public int getNumberOfMoves() {
+        SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
+        for (AbstractGroup g : myPuzzle.getGroups()) {
+            g.addLoneNumbersToSolution(possibilities, sols);
+            g.addUniqueValuesToSolution(possibilities, sols);
+        }
+        return sols.size();
+    }
+
+    public Map<Coord, Set<Integer>> getAllPotentialPossibilities() {
         return possibilities.getAllPossibilities();
     }
 
-    public int getNumberOfPossibilities()
+    public int getNumberOfPotentialPossibilities()
     {
         Map<Coord, Set<Integer>> p = possibilities.getAllPossibilities();
         int result = 0;

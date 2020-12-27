@@ -1,6 +1,8 @@
-package ottop.sudoku;
+package ottop.sudoku.puzzle;
 
-public class SudokuLetterPuzzle extends StandardPuzzle {
+import ottop.sudoku.puzzle.Standard9x9Puzzle;
+
+public class SudokuLetterPuzzle extends Standard9x9Puzzle {
     public static String TYPE = "Letters";
 
     public SudokuLetterPuzzle(String name, String[] sudokuRows) {

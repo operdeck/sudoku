@@ -27,6 +27,7 @@
             <Button mnemonicParsing="false" onAction="#digitClicked" text="9" />
             <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="2.0" />
             <Button fx:id="clearButton" mnemonicParsing="false" onAction="#clearClicked" text="Clear" />
+            <Button fx:id="nextMoveButton" mnemonicParsing="false" onAction="#doNextMove" text="Next Move" />
             <Button fx:id="undoButton" mnemonicParsing="false" onAction="#undoAction" text="Undo" />
         </items>
       </ToolBar>

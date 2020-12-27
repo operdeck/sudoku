@@ -1,11 +1,11 @@
 package ottop.sudoku.group;
 
 
-import ottop.sudoku.StandardPuzzle;
+import ottop.sudoku.puzzle.Standard9x9Puzzle;
 
 public class SquareGroup extends AbstractGroup {
 
-	public SquareGroup(int startX, int startY, StandardPuzzle myPuzzle, String id) {
+	public SquareGroup(int startX, int startY, Standard9x9Puzzle myPuzzle, String id) {
 		super(startX, startY, myPuzzle, id);
 	}
 

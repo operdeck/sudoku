@@ -1,6 +1,7 @@
 package ottop.sudoku.group;
 
 import ottop.sudoku.*;
+import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.*;
 import java.util.Map.Entry;

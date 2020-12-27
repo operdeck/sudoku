@@ -2,6 +2,8 @@ package ottop.sudoku.tests;
 
 import org.junit.Test;
 import ottop.sudoku.*;
+import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.Standard9x9Puzzle;
 
 import java.util.Map;
 
@@ -10,7 +12,7 @@ import static org.junit.Assert.*;
 public class StandardPuzzleTest {
 	@Test
 	public void checkBoard() {
-		StandardPuzzle p = new StandardPuzzle(
+		Standard9x9Puzzle p = new Standard9x9Puzzle("Test",
 				"....65...",
 				".......6.",
 				"1......78",
@@ -25,6 +27,8 @@ public class StandardPuzzleTest {
 		assertEquals(9, p.getWidth());
 		assertFalse(p.canUndo());
 
+		assertEquals("4", p.symbolCodeToSymbol(4));
+
 		assertTrue(p.isOccupied(new Coord("r6c2")));
 		assertTrue(p.isOccupied(new Coord("r1c6")));
 		assertTrue(p.isOccupied(new Coord("r3c9")));
@@ -35,7 +39,7 @@ public class StandardPuzzleTest {
 
 	@Test
 	public void checkState() {
-		StandardPuzzle p = new StandardPuzzle( "Bad puzzle",
+		Standard9x9Puzzle p = new Standard9x9Puzzle( "Bad puzzle",
 				"123456789",
 				"123456789",
 				"123456789",
@@ -48,7 +52,7 @@ public class StandardPuzzleTest {
 		assertFalse(p.isSolved());
 		assertTrue(p.isInconsistent());
 
-		StandardPuzzle p2 = new StandardPuzzle( "Solved puzzle",
+		Standard9x9Puzzle p2 = new Standard9x9Puzzle( "Solved puzzle",
 				"827154396",
 				"965327148",
 				"341689752",
@@ -75,17 +79,17 @@ public class StandardPuzzleTest {
 		IPuzzle p = PuzzleDB.Trouw_535;
 		SudokuSolver s = new SudokuSolver(p, false);
 
-		assertFalse(p.isOccupied(new Coord(1,7)));
+		assertFalse(p.isOccupied(new Coord("r1c2")));
 		assertFalse(p.canUndo());
 
 		Map.Entry<Coord, Integer> move = s.nextMove();
 		assertNotNull(move);
 
-		assertEquals("5", p.symbolCodeToSymbol(move.getValue()));
-		assertEquals("r8c2", move.getKey().toString());
+		assertEquals("6", p.symbolCodeToSymbol(move.getValue()));
+		assertEquals("r1c2", move.getKey().toString());
 
-		IPuzzle nextPuzzle = p.doMove(move.getKey(), "5");
+		IPuzzle nextPuzzle = p.doMove(new Coord("r1c2"), "6");
 		assertTrue(nextPuzzle.canUndo());
-		assertTrue(nextPuzzle.isOccupied(new Coord(1,7)));
+		assertTrue(nextPuzzle.isOccupied(new Coord("r1c2")));
 	}
 }

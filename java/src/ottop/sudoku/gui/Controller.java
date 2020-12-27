@@ -10,6 +10,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import ottop.sudoku.*;
+import ottop.sudoku.puzzle.*;
 
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,7 @@ public class Controller {
     public TextArea notes;
     public Label labelPosition;
     public ChoiceBox cbPuzzleDB;
+    public Button nextMoveButton;
 
     private IPuzzle myPuzzle;
     private String currentCellSymbol = null;
@@ -52,39 +54,6 @@ public class Controller {
     // TODO: support arrow keys move around in canvas
     // TODO: also support pressing keys 1-9
 
-    private double getCellWidth() {
-        double canvasWidth = gameCanvas.getWidth();
-        double cellWidth = (canvasWidth-10)/myPuzzle.getWidth();
-        return(cellWidth);
-    }
-
-    private double getCellHeight() {
-        double canvasHeight = gameCanvas.getHeight();
-        double cellHeight = (canvasHeight-10)/myPuzzle.getHeight();
-        return(cellHeight);
-    }
-
-    private double getCellX(double x) {
-        return(5+x*getCellWidth());
-    }
-
-    private double getCellY(double y) {
-        return(5+y*getCellHeight());
-    }
-
-    public void canvasMouseClick(MouseEvent mouseEvent) {
-        int x = (int) Math.floor(myPuzzle.getWidth()*mouseEvent.getX()/gameCanvas.getWidth());
-        int y = (int) Math.floor(myPuzzle.getHeight()*mouseEvent.getY()/gameCanvas.getHeight());
-
-        if (null != currentCellSymbol) {
-            Coord c = new Coord(x, y);
-            IPuzzle newPuzzle = myPuzzle.doMove(c, currentCellSymbol);
-            if (newPuzzle != null) {
-                setPuzzle(newPuzzle, c);
-            }
-        }
-    }
-
     public void setPuzzle(IPuzzle initPuzzle) {
         setPuzzle(initPuzzle, null);
     }
@@ -95,7 +64,6 @@ public class Controller {
     }
 
     private void updateWholeDisplay(Coord highlight) {
-        GraphicsContext gc = gameCanvas.getGraphicsContext2D();
 
         // List of puzzles
         try {
@@ -106,62 +74,16 @@ public class Controller {
         }
 
         // Puzzle name and type
-        typeDropdown.getItems().setAll(new String[] {StandardPuzzle.TYPE, NRCPuzzle.TYPE, SudokuLetterPuzzle.TYPE, Sudoku10x10Puzzle.TYPE});
+        typeDropdown.getItems().setAll(new String[] {Standard9x9Puzzle.TYPE, NRCPuzzle.TYPE, SudokuLetterPuzzle.TYPE, Sudoku10x10Puzzle.TYPE});
         typeDropdown.setValue(myPuzzle.getSudokuType());
         cbPuzzleDB.setValue(myPuzzle.getName());
         undoButton.setDisable(!myPuzzle.canUndo());
 
-        // Canvas
-        double canvasHeight = gameCanvas.getHeight();
-        double canvasWidth = gameCanvas.getWidth();
+        // Puzzle itself
+        myPuzzle.drawPuzzleOnCanvas(gameCanvas, highlight);
 
-        // Big white background
-        gc.setFill(Color.WHITE);
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(1);
-        gc.fillRect(0, 0, canvasWidth, canvasHeight);
-
-        // Background of individual cells
-        for (int x=0; x<myPuzzle.getWidth(); x++) {
-            for (int y = 0; y < myPuzzle.getHeight(); y++) {
-                gc.setFill(myPuzzle.getCellBackground(x, y));
-                gc.fillRect(getCellX(x), getCellY(y), getCellWidth(), getCellHeight());
-            }
-        }
-
-        // Symbols
-        Font cellText = Font.font("Helvetica", 15);
-        gc.setFont(cellText);
-        gc.setTextAlign(TextAlignment.CENTER);
-        gc.setTextBaseline(VPos.CENTER);
-        for (int x=0; x<myPuzzle.getWidth(); x++) {
-            for (int y=0; y<myPuzzle.getHeight(); y++) {
-                Coord c = new Coord(x,y);
-                gc.setStroke(Color.BLUE);
-                gc.strokeRect(getCellX(x), getCellY(y), getCellWidth(), getCellHeight());
-                if (myPuzzle.isOccupied(c)) {
-                    if (highlight != null && y== highlight.getY() && x== highlight.getX()) {
-                        // highlight last move
-                        gc.setStroke(Color.ORANGE);
-                    } else {
-                        gc.setStroke(Color.BLACK);
-                    }
-                    gc.strokeText(String.valueOf(myPuzzle.getSymbolAtCoordinates(c)),
-                            getCellX(x+0.5), getCellY(y+0.5));
-                }
-            }
-        }
+        // Cursor
         labelPosition.setText("");
-
-        // Big square groups
-        // TODO this is currently specific for 9x9
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(3);
-        for (int x=0; x<3; x++) {
-            for (int y = 0; y<3; y++) {
-                gc.strokeRect(getCellX(x*3), getCellY(y*3), 3*getCellWidth(), 3*getCellHeight());
-            }
-        }
 
         // Hints & help
         showPuzzleHints();
@@ -175,6 +97,7 @@ public class Controller {
     }
 
     public void showPuzzleHints() {
+        nextMoveButton.setDisable(!cbBasicElimination.isSelected());
         if (myPuzzle.isSolved()) {
             tbNotes.setText("Complete");
         } else if (myPuzzle.isInconsistent()) {
@@ -193,9 +116,9 @@ public class Controller {
             }
 
             if (cbBasicElimination.isSelected()) {
-                Map<Coord, Set<Integer>> optionsPerCell = sv.getAllPossibilities();
+                Map<Coord, Set<Integer>> optionsPerCell = sv.getAllPotentialPossibilities();
                 for (Coord c : optionsPerCell.keySet()) {
-                    drawPossibilities(c, optionsPerCell.get(c));
+                    myPuzzle.drawPossibilities(gameCanvas, c, optionsPerCell.get(c));
                 }
                 SolutionContainer loners = sv.getLoneNumbers();
                 SolutionContainer unique = sv.getUniqueValues();
@@ -204,25 +127,6 @@ public class Controller {
             } else {
                 notes.setText("");
             }
-        }
-    }
-
-    private void drawPossibilities(Coord c, Set<Integer> values) {
-        GraphicsContext gc = gameCanvas.getGraphicsContext2D();
-        gc.setStroke(Color.DARKGRAY);
-        gc.setLineWidth(1);
-        Font smallText = Font.font("Helvetica", 8);
-        gc.setFont(smallText);
-        gc.setTextAlign(TextAlignment.CENTER);
-        gc.setTextBaseline(VPos.CENTER);
-
-        int x = c.getX();
-        int y = c.getY();
-        for (int i : values) {
-            int subrow = (i-1) / 3 - 1;
-            int subcol = (i-1) % 3 - 1;
-            gc.strokeText(String.valueOf(i),
-                    getCellX(x+0.5+(subcol*0.3)), getCellY(y+0.5+(subrow*0.3)));
         }
     }
 
@@ -263,6 +167,44 @@ public class Controller {
                 }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    public void canvasMouseClick(MouseEvent mouseEvent) {
+        int x = (int) Math.floor(myPuzzle.getWidth()*mouseEvent.getX()/gameCanvas.getWidth());
+        int y = (int) Math.floor(myPuzzle.getHeight()*mouseEvent.getY()/gameCanvas.getHeight());
+
+        if (null != currentCellSymbol) {
+            Coord coord = new Coord(x, y);
+            IPuzzle newPuzzle = myPuzzle.doMove(coord, currentCellSymbol);
+            if (newPuzzle != null) {
+                setPuzzle(newPuzzle, coord);
+            }
+        }
+    }
+
+    public void doNextMove(ActionEvent actionEvent) {
+        SudokuSolver sv = new SudokuSolver(myPuzzle);
+        int level = 0;
+        if (cbBasicElimination.isSelected()) {
+            level += SudokuSolver.EliminationMethods.BASICRADIATION.code();
+        }
+        if (cbRadiation.isSelected()) {
+            level += SudokuSolver.EliminationMethods.INTERSECTION.code();
+        }
+        if (cbNakedPairs.isSelected()) {
+            level += SudokuSolver.EliminationMethods.NAKEDPAIRS.code();
+        }
+        if (cbXWings.isSelected()) {
+            level += SudokuSolver.EliminationMethods.XWINGS.code();
+        }
+        Map.Entry<Coord, Integer> move = sv.nextMove(level);
+        if (move != null) {
+            Coord coord = move.getKey();
+            IPuzzle newPuzzle = myPuzzle.doMove(coord, myPuzzle.symbolCodeToSymbol(move.getValue()));
+            if (newPuzzle != null) {
+                setPuzzle(newPuzzle, coord);
             }
         }
     }

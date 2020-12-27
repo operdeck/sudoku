@@ -3,6 +3,9 @@ package ottop.sudoku.tests;
 import org.junit.Before;
 import org.junit.Test;
 import ottop.sudoku.*;
+import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.NRCPuzzle;
+import ottop.sudoku.puzzle.Standard9x9Puzzle;
 
 import static org.junit.Assert.*;
 
@@ -12,7 +15,7 @@ public class SudokuSolverTest {
     @Before
     public void setUp()
     {
-        IPuzzle p = new NRCPuzzle(
+        IPuzzle p = new NRCPuzzle("Test",
                 "....65...",
                 ".......6.",
                 "1......78",
@@ -28,8 +31,8 @@ public class SudokuSolverTest {
     @Test
     public void testBasicElimination()
     {
-        assertEquals(65, solver.getAllPossibilities().size()); // is just empty squares
-        assertEquals(311, solver.getNumberOfPossibilities());
+        assertEquals(65, solver.getAllPotentialPossibilities().size()); // is just empty squares
+        assertEquals(311, solver.getNumberOfPotentialPossibilities());
 
         SolutionContainer loneNumbers = solver.getLoneNumbers();
         assertEquals(1, loneNumbers.size());
@@ -43,8 +46,8 @@ public class SudokuSolverTest {
     {
         solver.eliminateByRadiationFromIntersections();
 
-        assertEquals(65, solver.getAllPossibilities().size()); // empty cells remain the same
-        assertEquals(261, solver.getNumberOfPossibilities()); // possibilities strongly reduced
+        assertEquals(65, solver.getAllPotentialPossibilities().size()); // empty cells remain the same
+        assertEquals(261, solver.getNumberOfPotentialPossibilities()); // possibilities strongly reduced
 
         SolutionContainer loneNumbers = solver.getLoneNumbers();
         assertEquals(1, loneNumbers.size());
@@ -58,8 +61,8 @@ public class SudokuSolverTest {
     {
         solver.eliminateNakedPairs();
 
-        assertEquals(65, solver.getAllPossibilities().size()); // empty cells remain the same
-        assertEquals(266, solver.getNumberOfPossibilities()); // possibilities strongly reduced
+        assertEquals(65, solver.getAllPotentialPossibilities().size()); // empty cells remain the same
+        assertEquals(266, solver.getNumberOfPotentialPossibilities()); // possibilities strongly reduced
 
         SolutionContainer loneNumbers = solver.getLoneNumbers();
         assertEquals(9, loneNumbers.size());
@@ -74,8 +77,8 @@ public class SudokuSolverTest {
         solver.eliminateByRadiationFromIntersections();
         solver.eliminateNakedPairs();
 
-        assertEquals(65, solver.getAllPossibilities().size()); // empty cells remain the same
-        assertEquals(157, solver.getNumberOfPossibilities()); // possibilities strongly reduced
+        assertEquals(65, solver.getAllPotentialPossibilities().size()); // empty cells remain the same
+        assertEquals(157, solver.getNumberOfPotentialPossibilities()); // possibilities strongly reduced
 
         SolutionContainer loneNumbers = solver.getLoneNumbers();
         assertEquals(27, loneNumbers.size());
@@ -89,7 +92,7 @@ public class SudokuSolverTest {
     {
         assertTrue(solver.solveSimplest());
 
-        assertEquals( ""+
+        assertEquals( "Test:\n"+
                 "748165392\n" +
                 "329478165\n" +
                 "165329478\n" +
@@ -115,19 +118,59 @@ public class SudokuSolverTest {
     @Test
     public void testCantSolveWithJustBasicRadiation() {
         solver = new SudokuSolver(PuzzleDB.Parool_18nov, false);
-        assertFalse(solver.solve(SudokuSolver.EliminationMethods.BASICRADIATION));
+        assertFalse(solver.solve(SudokuSolver.EliminationMethods.BASICRADIATION.code()));
     }
 
     @Test
     public void testNeedSomeSmarterSolution() {
         solver = new SudokuSolver(PuzzleDB.Parool_18nov, false);
-        assertTrue(solver.solve(SudokuSolver.EliminationMethods.INTERSECTION)); // some others work as well
+        assertTrue(solver.solve(SudokuSolver.EliminationMethods.INTERSECTION.code())); // some others work as well
+    }
+
+    @Test
+    public void testNakedPairs() {
+        IPuzzle p = new Standard9x9Puzzle("https://www.sudokuessentials.com/support-files/sudoku-very-hard-1.pdf",
+                ".374816.9",
+                ".9..27.38",
+                "8..3.9...",
+                ".19873.6.",
+                "78...2.93",
+                "...9.487.",
+                "...295..6",
+                "...1369..",
+                "962748315");
+        solver = new SudokuSolver(p, false);
+        solver.eliminateByRadiationFromIntersections();
+        assertEquals(0, solver.getNumberOfMoves());
+
+        solver.eliminateNakedPairs();
+        assertEquals(2, solver.getNumberOfMoves());
+    }
+
+    @Test
+    public void testXWings() {
+        IPuzzle p = new Standard9x9Puzzle("https://www.sudokuessentials.com/x-wing.html",
+                ".374816.9",
+                ".9..27.38",
+                "8..3.9...",
+                ".19873.6.",
+                "78...2.93",
+                "...9.487.",
+                "...295.86",
+                "..81369..",
+                "962748315");
+        solver = new SudokuSolver(p, false);
+        solver.eliminateByRadiationFromIntersections();
+        solver.eliminateNakedPairs();
+        assertEquals(0, solver.getNumberOfMoves());
+
+        solver.eliminateByXWings();
+        assertEquals(2, solver.getNumberOfMoves());
     }
 
     @Test
     public void testUnsolvable() {
         solver = new SudokuSolver(PuzzleDB.unsolvable, false);
-        // TODO: this gives an exception
         assertFalse(solver.solve());
     }
 

@@ -1,5 +1,7 @@
 package ottop.sudoku;
 
+import ottop.sudoku.puzzle.IPuzzle;
+
 import java.util.*;
 
 /** Container of an array of digits placed in cells, as a solution

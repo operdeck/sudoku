@@ -5,8 +5,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import ottop.sudoku.IPuzzle;
-import ottop.sudoku.NRCPuzzle;
 import ottop.sudoku.PuzzleDB;
 
 public class Sudoku extends Application {

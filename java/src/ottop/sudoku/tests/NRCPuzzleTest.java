@@ -2,6 +2,7 @@ package ottop.sudoku.tests;
 
 import org.junit.Test;
 import ottop.sudoku.*;
+import ottop.sudoku.puzzle.IPuzzle;
 
 import static org.junit.Assert.*;
 

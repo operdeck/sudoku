@@ -2,6 +2,9 @@ package ottop.sudoku;
 
 // As computer security expert Ben Laurie has stated, ui.Sudoku is "a denial of service attack on human intellect"
 
+import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.NRCPuzzle;
+
 public class Sudoku {
 
 	public static void main(String[] args) {
