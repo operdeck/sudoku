@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
@@ -11,37 +12,36 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="531.0" prefWidth="568.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ottop.sudoku.gui.Controller">
+<AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="531.0" prefWidth="614.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ottop.sudoku.gui.Controller">
    <children>
-      <ButtonBar fx:id="digitButtonBar" layoutX="513.5" layoutY="342.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
-      <ToolBar layoutX="14.0" layoutY="329.0" prefHeight="40.0" prefWidth="558.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0">
+      <ToolBar layoutX="5.0" layoutY="329.0" prefHeight="39.0" prefWidth="604.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0">
         <items>
-          <Button mnemonicParsing="false" onAction="#digitClicked" text="1" />
-            <Button mnemonicParsing="false" onAction="#digitClicked" text="2" />
-            <Button mnemonicParsing="false" onAction="#digitClicked" text="3" />
-            <Button mnemonicParsing="false" onAction="#digitClicked" text="4" />
-            <Button mnemonicParsing="false" onAction="#digitClicked" text="5" />
-            <Button mnemonicParsing="false" onAction="#digitClicked" text="6" />
-            <Button mnemonicParsing="false" onAction="#digitClicked" text="7" />
-            <Button mnemonicParsing="false" onAction="#digitClicked" text="8" />
-            <Button mnemonicParsing="false" onAction="#digitClicked" text="9" />
-            <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="2.0" />
+            <ButtonBar fx:id="digitButtonBar" buttonMinWidth="20.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="21.0" prefWidth="350.0">
+               <buttons>
+                <Button mnemonicParsing="false" onAction="#symbolClicked" text="1" />
+                  <Button mnemonicParsing="false" onAction="#symbolClicked" text="2" />
+                  <Button minWidth="32.0" mnemonicParsing="false" onAction="#symbolClicked" prefHeight="27.0" text="3" />
+               </buttons>
+               <padding>
+                  <Insets left="5.0" right="5.0" />
+               </padding>
+            </ButtonBar>
+            <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="1.0" />
             <Button fx:id="clearButton" mnemonicParsing="false" onAction="#clearClicked" text="Clear" />
             <Button fx:id="nextMoveButton" mnemonicParsing="false" onAction="#doNextMove" text="Next Move" />
             <Button fx:id="undoButton" mnemonicParsing="false" onAction="#undoAction" text="Undo" />
         </items>
       </ToolBar>
-      <Canvas fx:id="gameCanvas" height="350.0" layoutX="20.0" layoutY="14.0" onMouseClicked="#canvasMouseClick" onMouseMoved="#canvasMouseMove" width="350.0" AnchorPane.bottomAnchor="175.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="243.0" AnchorPane.topAnchor="5.0" />
-      <AnchorPane layoutX="417.0" layoutY="24.0" prefHeight="350.0" prefWidth="177.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+      <Canvas fx:id="gameCanvas" height="350.0" layoutX="20.0" layoutY="14.0" onKeyTyped="#keyTyped" onMouseClicked="#canvasMouseClick" onMouseMoved="#canvasMouseMove" width="350.0" AnchorPane.bottomAnchor="175.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="243.0" AnchorPane.topAnchor="5.0" />
+      <AnchorPane layoutX="367.0" layoutY="5.0" prefHeight="350.0" prefWidth="237.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
          <children>
-            <CheckBox fx:id="cbBasicElimination" layoutX="5.0" layoutY="182.0" mnemonicParsing="false" onAction="#hintsAction" text="Basic Elimination" />
+            <CheckBox fx:id="cbBasicElimination" layoutX="5.0" layoutY="182.0" mnemonicParsing="false" onAction="#hintsAction" text="Pencil marks" />
             <CheckBox fx:id="cbNakedPairs" layoutX="5.0" layoutY="232.0" mnemonicParsing="false" onAction="#hintsAction" text="Naked Pairs" />
             <CheckBox fx:id="cbXWings" layoutX="5.0" layoutY="257.0" mnemonicParsing="false" onAction="#hintsAction" text="X-Wings" />
             <CheckBox fx:id="cbRadiation" layoutX="5.0" layoutY="207.0" mnemonicParsing="false" onAction="#hintsAction" text="Radiation" />
             <Label fx:id="tbLevel" layoutX="5.0" layoutY="55.0" prefHeight="17.0" prefWidth="127.0" text="Difficulty: XXX" textFill="#12299e" />
             <Label layoutX="5.0" layoutY="151.0" text="Hints:" />
-            <Separator layoutY="133.0" prefWidth="177.0" />
-            <ChoiceBox fx:id="typeDropdown" layoutX="5.0" layoutY="88.0" onAction="#typeAction" prefHeight="27.0" prefWidth="166.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" />
+            <Separator layoutY="118.0" prefHeight="1.0" prefWidth="237.0" />
             <Button fx:id="buttonMoreHelp" layoutX="5.0" layoutY="286.0" mnemonicParsing="false" onAction="#moreHelpAction" text="More..." />
             <ChoiceBox fx:id="cbPuzzleDB" layoutX="5.0" layoutY="13.0" onAction="#puzzleSelectAction" prefHeight="27.0" prefWidth="166.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" />
          </children>

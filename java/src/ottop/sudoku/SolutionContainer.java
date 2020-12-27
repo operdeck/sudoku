@@ -8,21 +8,25 @@ import java.util.*;
  * for the next iteration of the puzzle solver.
  */
 public class SolutionContainer {
-	private Map<Coord, Integer> sols = new HashMap<Coord, Integer>();;
-	private Map<Coord, List<String>> reasons = new HashMap<Coord, List<String>>();
-	private IPuzzle myPuzzle;
-	private boolean trace;
+	private final Map<Coord, String> sols = new HashMap<>();;
+	private final Map<Coord, List<String>> reasons = new HashMap<>();
+	private final IPuzzle myPuzzle;
+	private final boolean trace;
 
 	public SolutionContainer(IPuzzle p, boolean trace) {
 		myPuzzle = p;
 		this.trace = trace;
 	}
 
-	public void addSolution(Coord c, int n, String reason) {
+	public void addSolution(Coord c, int symbolCode, String reason) {
+		String symbol = myPuzzle.symbolCodeToSymbol(symbolCode);
 		if (sols.containsKey(c)) {
-			if (sols.get(c) != n) {
-				throw new RuntimeException("ERROR: trying to place " + myPuzzle.symbolCodeToSymbol(n) + " at " + c + " which is occupied by " + myPuzzle.symbolCodeToSymbol(sols.get(c)));
+			if (sols.get(c) != symbol) {
+				throw new RuntimeException("ERROR: trying to place " +
+						symbol + " at " + c +
+						" which is occupied by " + sols.get(c));
 			} else {
+				// Same solution but another reason for it
 				if (reason != null) {
 					if (reasons.containsKey(c)) {
 						reasons.get(c).add(reason);
@@ -33,9 +37,9 @@ public class SolutionContainer {
 			}
 		} else {
 			if (trace) {
-				System.out.println("Put " + myPuzzle.symbolCodeToSymbol(n) + " at " + c + " (" + reason + ")");
+				System.out.println("Put " + symbol + " at " + c + " (" + reason + ")");
 			}
-			sols.put(c, n);
+			sols.put(c, symbol);
 			if (reason != null) {
 				reasons.put(c, new ArrayList<>(Collections.singleton(reason)));
 			}
@@ -46,13 +50,17 @@ public class SolutionContainer {
 		return sols.keySet().size();
 	}
 
-	public Map<Coord, Integer> getSolutions()
-	{
-		return sols;
+	public Map.Entry<Coord, String> getFirstMove() {
+		Map.Entry<Coord, String> result = null;
+		Iterator<Map.Entry<Coord, String>> it = sols.entrySet().iterator();
+		if (it.hasNext()) {
+			result = it.next();
+		}
+		return result;
 	}
 
 	public String toString() {
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		boolean isFirst = true;
 		result.append("(");
 		for (Coord c: sols.keySet()) {

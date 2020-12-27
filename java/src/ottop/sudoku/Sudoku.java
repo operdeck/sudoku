@@ -8,7 +8,7 @@ import ottop.sudoku.puzzle.NRCPuzzle;
 public class Sudoku {
 
 	public static void main(String[] args) {
-		IPuzzle p = new NRCPuzzle("NRC_5dec14", new String[] {
+		IPuzzle p = new NRCPuzzle("NRC_5dec14",
 				"....65...",
 				".......6.",
 				"1......78",
@@ -17,7 +17,7 @@ public class Sudoku {
 				".3..9...1",
 				"..6..45..",
 				".8...2...",
-				"........." });
+				"........." );
 
 //		p = new Puzzle("Puzzelbrein", new String[] {
 //				"358961274",

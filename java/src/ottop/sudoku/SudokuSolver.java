@@ -40,7 +40,7 @@ public class SudokuSolver {
         this.trace = trace;
         myPuzzle = p;
         p.resetState();
-        possibilities = new PossibilitiesContainer(p.getGroups(), trace);
+        possibilities = new PossibilitiesContainer(p, trace);
     }
 
     public boolean eliminateByRadiationFromIntersections() {
@@ -52,7 +52,7 @@ public class SudokuSolver {
         for (GroupIntersection intersection : groupIntersections) {
             Set<Integer> possibilitiesAtGroupIntersection =
                     possibilities.getPossibilities(intersection.getIntersection());
-            for (int symbolCode : Digits.all) {
+            for (int symbolCode=1; symbolCode<myPuzzle.getSymbolCodeRange(); symbolCode++) {
                 if (possibilitiesAtGroupIntersection.contains(symbolCode)) {
                     @SuppressWarnings("unchecked")
                     Set<Coord>[] r = new Set[2];
@@ -93,11 +93,11 @@ public class SudokuSolver {
 
     public boolean eliminateByXWings() {
         boolean updated = false;
-        for (int digit : Digits.all) {
-            // For each digit, figure out in which rows of each column it occurs. Then
+        for (int symbolCode=1; symbolCode<myPuzzle.getSymbolCodeRange(); symbolCode++) {
+            // For each symbolCode, figure out in which rows of each column it occurs. Then
             // get the set of columns that have the same row set. Same for rows x cols.
             // For those entries that have the same size of {columns} x {rows}, we now
-            // know that 'digit' has to be in (one or more of) the intersections of those,
+            // know that 'symbolCode' has to be in (one or more of) the intersections of those,
             // so it can be eliminated from the possibilities in each of those groups
             // outside of the intersections.
 
@@ -106,32 +106,32 @@ public class SudokuSolver {
                 Set<AbstractGroup> intersectingGroups = null;
                 if (g instanceof ColumnGroup) {
                     // list of rows intersecting with column g
-                    intersectingGroups = toRowGroups(g.getRowSet(digit, possibilities));
+                    intersectingGroups = toRowGroups(g.getRowSet(symbolCode, possibilities));
                 } else if (g instanceof RowGroup) {
                     // list of columns intersecting with row g
-                    intersectingGroups = toColumnGroups(g.getColSet(digit, possibilities));
+                    intersectingGroups = toColumnGroups(g.getColSet(symbolCode, possibilities));
                 }
                 if (intersectingGroups != null && !intersectingGroups.isEmpty()) {
-                    Set<AbstractGroup> grps = map.computeIfAbsent(intersectingGroups, k -> new HashSet<AbstractGroup>());
+                    Set<AbstractGroup> grps = map.computeIfAbsent(intersectingGroups, k -> new HashSet<>());
                     grps.add(g);
                 }
             }
 
             // Now, with this map, if the set of rows is of the same size as the set of
-            // columns that have identical row sets, eliminate 'digit' from other cells
+            // columns that have identical row sets, eliminate 'symbolCode' from other cells
             // in the rows. Same for col vs row.
             for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> entry : map.entrySet()) {
                 if (entry.getKey().size() > 1 &&
                         entry.getKey().size() == entry.getValue().size()) { // becomes * 2 now ??
                     for (AbstractGroup g : entry.getKey()) {
-                        // Eliminate 'digit' from this row 'g' except for the groups it intersects
+                        // Eliminate 'symbolCode' from this row 'g' except for the groups it intersects
                         Set<Coord> candidateRemovals = new TreeSet<Coord>();
                         candidateRemovals.addAll(g.getCoords());
                         for (AbstractGroup other : entry.getValue()) {
                             candidateRemovals.removeAll(other.getCoords());
                         }
-                        if (possibilities.removePossibility(digit, candidateRemovals,
-                                " of " + g + " because " + myPuzzle.symbolCodeToSymbol(digit) + " has to be in " +
+                        if (possibilities.removePossibility(symbolCode, candidateRemovals,
+                                " of " + g + " because " + myPuzzle.symbolCodeToSymbol(symbolCode) + " has to be in " +
                                         entry.getKey() + " X " + entry.getValue() + " (X-Wing)")) updated = true;
                     }
                 }
@@ -169,16 +169,16 @@ public class SudokuSolver {
                 EliminationMethods.XWINGS.code());
     }
 
-    public Map.Entry<Coord, Integer> nextMove() {
+    public Map.Entry<Coord, String> nextMove() {
         return nextMove(EliminationMethods.BASICRADIATION.code() +
                 EliminationMethods.NAKEDPAIRS.code() +
                 EliminationMethods.INTERSECTION.code() +
                 EliminationMethods.XWINGS.code());
     }
 
-    public Map.Entry<Coord, Integer> nextMove(int level) {
-        Map.Entry<Coord, Integer> nextMove = null;
-        possibilities = new PossibilitiesContainer(myPuzzle.getGroups(), trace);
+    public Map.Entry<Coord, String> nextMove(int level) {
+        Map.Entry<Coord, String> nextMove = null;
+        possibilities = new PossibilitiesContainer(myPuzzle, trace);
 
         eliminate(level);
 
@@ -188,19 +188,13 @@ public class SudokuSolver {
             for (AbstractGroup g : myPuzzle.getGroups()) {
                 g.addLoneNumbersToSolution(possibilities, sols);
             }
-            Iterator<Map.Entry<Coord, Integer>> it = sols.getSolutions().entrySet().iterator();
-            if (it.hasNext()) {
-                nextMove = it.next();
-            }
+            nextMove = sols.getFirstMove();
             if (nextMove == null) {
                 // Then unique values
                 for (AbstractGroup g : myPuzzle.getGroups()) {
                     g.addUniqueValuesToSolution(possibilities, sols);
                 }
-                it = sols.getSolutions().entrySet().iterator();
-                if (it.hasNext()) {
-                    nextMove = it.next();
-                }
+                nextMove = sols.getFirstMove();
             }
         }
         return nextMove;
@@ -208,21 +202,18 @@ public class SudokuSolver {
 
     public boolean solve(int level) {
         while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
-            Map.Entry<Coord, Integer> nextMove = nextMove(level);
+            Map.Entry<Coord, String> nextMove = nextMove(level);
             if (nextMove != null) {
                 if (trace) {
                     System.out.println("Do move: " + nextMove.getValue() + " at " + nextMove.getKey());
                 }
-                IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey(),
-                        myPuzzle.symbolCodeToSymbol(nextMove.getValue().intValue()));
+                IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
                 myPuzzle = nextPuzzle;
-                possibilities = new PossibilitiesContainer(nextPuzzle.getGroups(), trace);
+                possibilities = new PossibilitiesContainer(nextPuzzle, trace);
             } else {
                 return false;
             }
         }
-        //if (myPuzzle.isSolved()) System.out.println("Solved: " + myPuzzle.getName());
-        //System.out.println(myPuzzle);
         return myPuzzle.isSolved();
     }
 
@@ -284,12 +275,12 @@ public class SudokuSolver {
     }
 
     public Map<Coord, Set<Integer>> getAllPotentialPossibilities() {
-        return possibilities.getAllPossibilities();
+        return possibilities.getAllPossibilities(myPuzzle);
     }
 
     public int getNumberOfPotentialPossibilities()
     {
-        Map<Coord, Set<Integer>> p = possibilities.getAllPossibilities();
+        Map<Coord, Set<Integer>> p = possibilities.getAllPossibilities(myPuzzle);
         int result = 0;
         for (Coord c : p.keySet()) {
             result += p.get(c).size();

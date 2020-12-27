@@ -1,10 +1,10 @@
 package ottop.sudoku.tests;
 
 import org.junit.Test;
-import ottop.sudoku.*;
+import ottop.sudoku.PuzzleDB;
 import ottop.sudoku.puzzle.IPuzzle;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class NRCPuzzleTest {
 	@Test

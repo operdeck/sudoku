@@ -2,6 +2,7 @@ package ottop.sudoku;
 
 import org.jetbrains.annotations.NotNull;
 import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.*;
 
@@ -12,24 +13,20 @@ public class PossibilitiesContainer {
 
 	private final boolean trace;
 
-	public PossibilitiesContainer(AbstractGroup[] groups, boolean trace) {
+	public PossibilitiesContainer(IPuzzle p, boolean trace) {
 		this.trace = trace;
-		updateNonCollisions(groups);
-	}
 
-	// Create the map by simply walking through all cells and all cells in all groups
-	// so order is 9 x 9 x 9 x {nr of cells}
-	private void updateNonCollisions(AbstractGroup[] groups) {
-		for (Coord c : Coord.all) {
+		AbstractGroup[] groups = p.getGroups();
+		for (Coord c : p.getAllCells()) {
 			nonCollissionMap.put(c, getPossibilities(c, groups));
 		}
 	}
 
-	public Map<Coord, Set<Integer>> getAllPossibilities()
+	public Map<Coord, Set<Integer>> getAllPossibilities(IPuzzle puzzle)
 	{
 		Map<Coord, Set<Integer>> allPossibilities = new HashMap<>();
 
-		for (Coord c : Coord.all) {
+		for (Coord c : puzzle.getAllCells()) {
 			Set<Integer> p = nonCollissionMap.get(c);
 			if (p != null && !p.isEmpty()) {
 				allPossibilities.put(c, p);
@@ -41,11 +38,11 @@ public class PossibilitiesContainer {
 
 	public String toString()
 	{
-		StringBuffer result = new StringBuffer();
-		Map<Coord, Set<Integer>> allPossibilities = getAllPossibilities();
-		for (Coord c : allPossibilities.keySet()) {
-			result.append("Possibilities at " + c + ": [TODO internal rep] " + allPossibilities.get(c) + "\n");
-		}
+		StringBuffer result = new StringBuffer("Possibilities Container");
+//		Map<Coord, Set<Integer>> allPossibilities = getAllPossibilities();
+//		for (Coord c : allPossibilities.keySet()) {
+//			result.append("Possibilities at " + c + ": [TODO internal rep] " + allPossibilities.get(c) + "\n");
+//		}
 		return result.toString();
 	}
 

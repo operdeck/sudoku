@@ -1,15 +1,14 @@
 package ottop.sudoku.gui;
 
 import javafx.event.ActionEvent;
-import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
-import ottop.sudoku.*;
+import ottop.sudoku.Coord;
+import ottop.sudoku.PuzzleDB;
+import ottop.sudoku.SolutionContainer;
+import ottop.sudoku.SudokuSolver;
 import ottop.sudoku.puzzle.*;
 
 import java.util.Map;
@@ -21,14 +20,12 @@ public class Controller {
     public Button clearButton;
     public Canvas gameCanvas;
     public ButtonBar digitButtonBar;
-    public Label tbNotes;
     public Button undoButton;
     public CheckBox cbNakedPairs;
     public CheckBox cbXWings;
     public CheckBox cbRadiation;
     public Label tbLevel;
     public CheckBox cbBasicElimination;
-    public ChoiceBox typeDropdown;
     public Button buttonMoreHelp;
     public TextArea notes;
     public Label labelPosition;
@@ -42,9 +39,8 @@ public class Controller {
         theController = this;
     }
 
-    public void digitClicked(ActionEvent actionEvent) {
+    public void symbolClicked(ActionEvent actionEvent) {
         currentCellSymbol = ((Button)actionEvent.getSource()).getText();
-        //System.out.println("Button text: " + currentDigit);
     }
 
     public void clearClicked(ActionEvent actionEvent) {
@@ -74,10 +70,19 @@ public class Controller {
         }
 
         // Puzzle name and type
-        typeDropdown.getItems().setAll(new String[] {Standard9x9Puzzle.TYPE, NRCPuzzle.TYPE, SudokuLetterPuzzle.TYPE, Sudoku10x10Puzzle.TYPE});
-        typeDropdown.setValue(myPuzzle.getSudokuType());
         cbPuzzleDB.setValue(myPuzzle.getName());
         undoButton.setDisable(!myPuzzle.canUndo());
+
+        // Possible values
+        digitButtonBar.getButtons().removeAll(digitButtonBar.getButtons());
+        for (int symbolCode=1; symbolCode<myPuzzle.getSymbolCodeRange(); symbolCode++) {
+            Button symbolButton = new Button();
+            symbolButton.setText(myPuzzle.symbolCodeToSymbol(symbolCode));
+            symbolButton.setStyle("-fx-font-size:8; -fx-font-weight: bold");
+            symbolButton.setPrefSize((digitButtonBar.getPrefWidth() - digitButtonBar.getPadding().getLeft() - digitButtonBar.getPadding().getRight())/(myPuzzle.getSymbolCodeRange()-1), digitButtonBar.getPrefHeight());
+            symbolButton.setOnAction(actionEvent -> symbolClicked(actionEvent));
+            digitButtonBar.getButtons().add(symbolButton);
+        }
 
         // Puzzle itself
         myPuzzle.drawPuzzleOnCanvas(gameCanvas, highlight);
@@ -97,12 +102,14 @@ public class Controller {
     }
 
     public void showPuzzleHints() {
-        nextMoveButton.setDisable(!cbBasicElimination.isSelected());
-        if (myPuzzle.isSolved()) {
-            tbNotes.setText("Complete");
+       if (myPuzzle.isSolved()) {
+            notes.setText("Complete");
+            nextMoveButton.setDisable(true);
         } else if (myPuzzle.isInconsistent()) {
-            tbNotes.setText("Inconsistent");
+            notes.setText("Inconsistent");
+            nextMoveButton.setDisable(false);
         } else {
+            nextMoveButton.setDisable(false);
             SudokuSolver sv = new SudokuSolver(myPuzzle);
 
             if (cbRadiation.isSelected()) {
@@ -122,8 +129,8 @@ public class Controller {
                 }
                 SolutionContainer loners = sv.getLoneNumbers();
                 SolutionContainer unique = sv.getUniqueValues();
-                notes.setText("Lone numbers: " + loners.size() + " " + loners +"\n");
-                notes.appendText("Unique values: " + unique.size() + " " + unique +"\n");
+                notes.setText(loners.size() + " lone numbers: " +  loners +"\n");
+                notes.appendText(unique.size() + " unique values: " + unique +"\n");
             } else {
                 notes.setText("");
             }
@@ -136,14 +143,9 @@ public class Controller {
 
     public void undoAction(ActionEvent actionEvent) {
         IPuzzle prevPuzzle = myPuzzle.undoMove();
-        System.out.println("Undo.." + prevPuzzle);
         if (prevPuzzle != null) {
             setPuzzle(prevPuzzle);
         }
-    }
-
-    public void typeAction(ActionEvent actionEvent) {
-        //System.out.println("Type..." + typeDropdown.getValue());
     }
 
     public void canvasMouseMove(MouseEvent mouseEvent) {
@@ -199,13 +201,17 @@ public class Controller {
         if (cbXWings.isSelected()) {
             level += SudokuSolver.EliminationMethods.XWINGS.code();
         }
-        Map.Entry<Coord, Integer> move = sv.nextMove(level);
+        Map.Entry<Coord, String> move = sv.nextMove(level);
         if (move != null) {
             Coord coord = move.getKey();
-            IPuzzle newPuzzle = myPuzzle.doMove(coord, myPuzzle.symbolCodeToSymbol(move.getValue()));
+            IPuzzle newPuzzle = myPuzzle.doMove(coord, move.getValue());
             if (newPuzzle != null) {
                 setPuzzle(newPuzzle, coord);
             }
         }
+    }
+
+    public void keyTyped(KeyEvent keyEvent) {
+        System.out.println("Key: " + keyEvent);
     }
 }

@@ -1,8 +1,6 @@
 package ottop.sudoku.puzzle;
 
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Paint;
 import ottop.sudoku.Coord;
 import ottop.sudoku.group.AbstractGroup;
 
@@ -22,6 +20,7 @@ public interface IPuzzle {
 
     int getWidth();
     int getHeight();
+    Coord[] getAllCells();
 
     IPuzzle doMove(Coord coord, String symbol);
     IPuzzle undoMove();
@@ -30,7 +29,6 @@ public interface IPuzzle {
     AbstractGroup[] getGroups();
 
     String getName();
-    String getSudokuType();
 
     void drawPuzzleOnCanvas(Canvas canvas, Coord highlight);
     void drawPossibilities(Canvas canvas, Coord c, Set<Integer> values);

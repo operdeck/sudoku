@@ -4,7 +4,7 @@ import org.junit.Test;
 import ottop.sudoku.puzzle.IPuzzle;
 import ottop.sudoku.puzzle.Standard9x9Puzzle;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class GroupTests {
     @Test

@@ -2,7 +2,9 @@ package ottop.sudoku.tests;
 
 import org.junit.Before;
 import org.junit.Test;
-import ottop.sudoku.*;
+import ottop.sudoku.PuzzleDB;
+import ottop.sudoku.SolutionContainer;
+import ottop.sudoku.SudokuSolver;
 import ottop.sudoku.puzzle.IPuzzle;
 import ottop.sudoku.puzzle.NRCPuzzle;
 import ottop.sudoku.puzzle.Standard9x9Puzzle;
@@ -62,10 +64,10 @@ public class SudokuSolverTest {
         solver.eliminateNakedPairs();
 
         assertEquals(65, solver.getAllPotentialPossibilities().size()); // empty cells remain the same
-        assertEquals(266, solver.getNumberOfPotentialPossibilities()); // possibilities strongly reduced
+        assertEquals(264, solver.getNumberOfPotentialPossibilities()); // possibilities strongly reduced
 
         SolutionContainer loneNumbers = solver.getLoneNumbers();
-        assertEquals(9, loneNumbers.size());
+        assertEquals(10, loneNumbers.size());
 
         SolutionContainer uniqueValues = solver.getUniqueValues();
         assertEquals(13, uniqueValues.size()); // increased after this elimination step
@@ -190,8 +192,7 @@ public class SudokuSolverTest {
     public void testCharPuzzle()
     {
         solver = new SudokuSolver(PuzzleDB.EOC_dec14, false);
-        // TODO: I don't think we even want to solve this, but it gives an exception
-        assertFalse(solver.solve());
+        assertTrue(solver.solve());
     }
 
     @Test

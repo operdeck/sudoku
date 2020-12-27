@@ -1,15 +1,35 @@
 package ottop.sudoku;
 
-import ottop.sudoku.puzzle.IPuzzle;
-import ottop.sudoku.puzzle.NRCPuzzle;
-import ottop.sudoku.puzzle.Standard9x9Puzzle;
+import ottop.sudoku.puzzle.*;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PuzzleDB {
-    public static IPuzzle emptyStandardPuzzle = new Standard9x9Puzzle("Empty",
+    public static IPuzzle emptyStandardPuzzle = new Standard9x9Puzzle("Empty standard Sudoku",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........");
+
+    public static IPuzzle emptyNRCPuzzle = new NRCPuzzle("Empty NRC Sudoku",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........");
+
+    public static IPuzzle emptyLetterPuzzle = new SudokuLetterPuzzle("Empty Letter Sudoku", "CFHIPRSTU",
             ".........",
             ".........",
             ".........",
@@ -41,6 +61,18 @@ public class PuzzleDB {
             "1  5   8 ",
             "        3",
             "   1637 5");
+
+    public static IPuzzle puzzelbrein12_2020 = new Sudoku10x10Puzzle("Puzzelbrein 12/2020",
+            "10, , , ,6, , ,2,7, ",
+            " , , , , , , ,5, , ,",
+            " , , ,9, , , , ,3, ",
+            " , ,5,8, ,1, , , , ,",
+            " , , ,2, , , ,7, , 4",
+            " , , , ,10,8, ,1, ,3",
+            " , ,6, , , ,3, , ,10",
+            "3,8, , ,5,2,1, , , ,",
+            " , , , , , ,4, , ,8",
+            " ,2, ,4,, 6, ,9,5, ");
 
     public static IPuzzle www_extremesudoku_info_evil = new Standard9x9Puzzle("www_extremesudoku_info_evil",
             " 4  8 6  ",
@@ -143,8 +175,7 @@ public class PuzzleDB {
             "...13....",
             "9.2.48.1.");
 
-    // TODO: there is nothing standard about this one
-    public static IPuzzle EOC_dec14 = new Standard9x9Puzzle("Char puzzle",
+    public static IPuzzle EOC_dec14 = new SudokuLetterPuzzle("Char puzzle", "CFHIPRSTU",
             "SH..R...U",
             "...T.S..F",
             "..T.FHR..",

@@ -4,12 +4,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// This is specific to 9x9 boards
 public class Coord implements Comparable<Coord>{
-	private Pattern pattern = Pattern.compile("^r(\\d+)c(\\d+)$", Pattern.CASE_INSENSITIVE);
 
 	// must be of form r4c8
 	public Coord(String s) {
+		Pattern pattern = Pattern.compile("^r(\\d+)c(\\d+)$", Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(s);
 		boolean matchFound = matcher.find();
 		if(matchFound) {
@@ -28,21 +27,7 @@ public class Coord implements Comparable<Coord>{
 	}
 
 	// internal representation
-	private int coord;
-
-	static final List<Coord> all = new ArrayList<>();
-	
-	static {
-		for (int x=0; x<9; x++) {
-			for (int y=0; y<9; y++) {
-				all.add(new Coord(x, y));
-			}
-		}
-	}
-	
-	private int getKey(int x, int y) {
-		return x+y*9;
-	}
+	private final int coord;
 
 	@Override
 	public int hashCode() {
@@ -59,8 +44,8 @@ public class Coord implements Comparable<Coord>{
 
 	@Override
 	public String toString() {
-		int y = coord / 9;
-		int x = coord % 9;
+		int y = getY();
+		int x = getX();
 		return "r"+(y+1)+"c"+(x+1);
 	}
 
@@ -68,12 +53,17 @@ public class Coord implements Comparable<Coord>{
 		return coord - o.coord;
 	}
 
+	private final int MULTIPLIER = 1000;
+
+	private int getKey(int x, int y) {
+		return x+y*MULTIPLIER;
+	}
+
 	public Integer getY() {
-		return coord / 9;
+		return coord / MULTIPLIER;
 	}
 
 	public Integer getX() {
-		return coord % 9;
+		return coord % MULTIPLIER;
 	}
-	
 }

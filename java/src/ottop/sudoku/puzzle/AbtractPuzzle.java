@@ -10,19 +10,29 @@ import javafx.scene.text.TextAlignment;
 import ottop.sudoku.Coord;
 import ottop.sudoku.group.AbstractGroup;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 public abstract class AbtractPuzzle implements IPuzzle {
-    private final String name;
-    protected IPuzzle previousPuzzle = null;
-    protected List<AbstractGroup> groups;
-    protected int[][] board; // [x][y]
-    protected List<String> possibleSymbols;
+    final String name;
+    IPuzzle previousPuzzle = null;
+    List<AbstractGroup> groups;
+    int[][] board; // [x][y]
+    List<String> possibleSymbols;
+    Coord[] allCells;
 
     public AbtractPuzzle(String name) {
         this.name = name;
         board = new int[getWidth()][getHeight()];
+
+        List<Coord> cells = new ArrayList<>();
+        for (int x=0; x<getWidth(); x++) {
+            for (int y=0; y<getHeight(); y++) {
+                cells.add(new Coord(x, y));
+            }
+        }
+        this.allCells = cells.toArray(new Coord[0]);
     }
 
     @Override
@@ -46,7 +56,6 @@ public abstract class AbtractPuzzle implements IPuzzle {
         return result.toString();
     }
 
-
     @Override
     public boolean isSolved() {
         boolean isSolved = true;
@@ -59,7 +68,7 @@ public abstract class AbtractPuzzle implements IPuzzle {
     @Override
     public IPuzzle doMove(Coord coord, String symbol) { // x, y start at 0
         //if (isOccupied(yNew, xNew)) return null;
-        int[][] newBoard = new int[9][9];
+        int[][] newBoard = new int[getWidth()][getHeight()];
         for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
                 if (x == coord.getX() && y == coord.getY()) {
@@ -104,6 +113,9 @@ public abstract class AbtractPuzzle implements IPuzzle {
     public AbstractGroup[] getGroups() {
         return groups.toArray(new AbstractGroup[0]);
     }
+
+    @Override
+    public Coord[] getAllCells() { return allCells; };
 
     @Override
     public String getName() {
@@ -180,15 +192,7 @@ public abstract class AbtractPuzzle implements IPuzzle {
             }
         }
 
-        // Big square groups
-        // TODO this is currently specific for 9x9
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(3);
-        for (int x=0; x<3; x++) {
-            for (int y = 0; y<3; y++) {
-                gc.strokeRect(getCellX(canvas,x*3), getCellY(canvas,y*3), 3*getCellWidth(canvas), 3*getCellHeight(canvas));
-            }
-        }
+        drawGroupBoundaries(canvas, gc);
 
         // Highlight last move
         if (highlight != null) {
@@ -198,8 +202,18 @@ public abstract class AbtractPuzzle implements IPuzzle {
         }
     }
 
+    protected void drawGroupBoundaries(Canvas canvas, GraphicsContext gc) {
+        gc.setStroke(Color.BLUE);
+        gc.setLineWidth(3);
+        for (int x=0; x<3; x++) {
+            for (int y = 0; y<3; y++) {
+                gc.strokeRect(getCellX(canvas,x*3), getCellY(canvas,y*3), 3*getCellWidth(canvas), 3*getCellHeight(canvas));
+            }
+        }
+    }
+
     @Override
-    public void drawPossibilities(Canvas canvas, Coord c, Set<Integer> values) {
+    public void drawPossibilities(Canvas canvas, Coord c, Set<Integer> symbolCodes) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setStroke(Color.DARKGRAY);
         gc.setLineWidth(1);
@@ -210,37 +224,77 @@ public abstract class AbtractPuzzle implements IPuzzle {
 
         int x = c.getX();
         int y = c.getY();
-        for (int i : values) {
-            int subrow = (i-1) / 3 - 1;
-            int subcol = (i-1) % 3 - 1;
-            gc.strokeText(String.valueOf(i),
+        for (int symbolCode : symbolCodes) {
+            int subrow = (symbolCode-1) / 3 - 1;
+            int subcol = (symbolCode-1) % 3 - 1;
+            gc.strokeText(symbolCodeToSymbol(symbolCode),
                     getCellX(canvas,x+0.5+(subcol*0.3)), getCellY(canvas,y+0.5+(subrow*0.3)));
         }
     }
 
-    private double getCellX(Canvas canvas, double x) {
+    double getCellX(Canvas canvas, double x) {
         return(5+x*getCellWidth(canvas));
     }
 
-    private double getCellY(Canvas canvas, double y) {
+    double getCellY(Canvas canvas, double y) {
         return(5+y*getCellHeight(canvas));
     }
 
-    private double getCellWidth(Canvas canvas) {
+    double getCellWidth(Canvas canvas) {
         double canvasWidth = canvas.getWidth();
         double cellWidth = (canvasWidth-10)/getWidth();
         return(cellWidth);
     }
 
-    private double getCellHeight(Canvas canvas) {
+    double getCellHeight(Canvas canvas) {
         double canvasHeight = canvas.getHeight();
         double cellHeight = (canvasHeight-10)/getHeight();
         return(cellHeight);
     }
 
-
+    // TODO we could automatically detect overlapping groups
     protected Paint getCellBackground(int x, int y) {
         return Color.WHITE;
     }
+
+    protected int[][] readSingleCharBoard(String[] sudokuRows) {
+        if (sudokuRows.length != getHeight())
+            throw new IllegalArgumentException("Initialization must have " + getHeight() + " rows");
+
+        int[][] brd = new int[getWidth()][getHeight()];
+
+        for (int y=0; y<getHeight(); y++) {
+            String s = sudokuRows[y];
+            if (s.length() != getWidth())
+                throw new IllegalArgumentException("Initialization must have " + getWidth() + " chars for each row");
+            for (int x = 0; x<s.length(); x++) {
+                String symbol = s.substring(x, x+1);
+                brd[x][y] = symbolToSymbolCode(symbol);
+            }
+        }
+
+        return brd;
+    }
+
+    protected int[][] readCommaSeparatedBoard(String[] sudokuRows) {
+        if (sudokuRows.length != getHeight())
+            throw new IllegalArgumentException("Initialization must have " + getHeight() + " rows");
+
+        int[][] brd = new int[getWidth()][getHeight()];
+
+        for (int y=0; y<getHeight(); y++) {
+            String s = sudokuRows[y];
+            String[] aRow = s.split(",");
+            if (aRow.length != getWidth())
+                throw new IllegalArgumentException("Initialization must have " + getWidth() + " chars for each row");
+            for (int x = 0; x<getWidth(); x++) {
+                String symbol = aRow[x];
+                brd[x][y] = symbolToSymbolCode(symbol);
+            }
+        }
+
+        return brd;
+    }
+
 
 }

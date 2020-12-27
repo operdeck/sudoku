@@ -1,7 +1,9 @@
 package ottop.sudoku.tests;
 
 import org.junit.Test;
-import ottop.sudoku.*;
+import ottop.sudoku.Coord;
+import ottop.sudoku.PuzzleDB;
+import ottop.sudoku.SudokuSolver;
 import ottop.sudoku.puzzle.IPuzzle;
 import ottop.sudoku.puzzle.Standard9x9Puzzle;
 
@@ -79,17 +81,17 @@ public class StandardPuzzleTest {
 		IPuzzle p = PuzzleDB.Trouw_535;
 		SudokuSolver s = new SudokuSolver(p, false);
 
-		assertFalse(p.isOccupied(new Coord("r1c2")));
+		assertFalse(p.isOccupied(new Coord("r4c9")));
 		assertFalse(p.canUndo());
 
-		Map.Entry<Coord, Integer> move = s.nextMove();
+		Map.Entry<Coord, String> move = s.nextMove();
 		assertNotNull(move);
 
-		assertEquals("6", p.symbolCodeToSymbol(move.getValue()));
-		assertEquals("r1c2", move.getKey().toString());
+		assertEquals("8", move.getValue());
+		assertEquals("r4c9", move.getKey().toString());
 
-		IPuzzle nextPuzzle = p.doMove(new Coord("r1c2"), "6");
+		IPuzzle nextPuzzle = p.doMove(new Coord("r4c9"), "8");
 		assertTrue(nextPuzzle.canUndo());
-		assertTrue(nextPuzzle.isOccupied(new Coord("r1c2")));
+		assertTrue(nextPuzzle.isOccupied(new Coord("r4c9")));
 	}
 }

@@ -22,7 +22,6 @@ public class Sudoku extends Application {
 
         myController = Controller.theController;
         myController.setPuzzle(PuzzleDB.emptyStandardPuzzle);
-        myController.showPuzzleHints();
 
         primaryStage.setTitle("U-Kudos");
         primaryStage.setScene(new Scene(root));

@@ -6,14 +6,8 @@ import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.group.SquareGroup;
 
 public class NRCPuzzle extends Standard9x9Puzzle {
-	public static String TYPE = "NRC";
-
-	protected NRCPuzzle(String name, int[][] brd) {
-		super(name, brd);
-	}
-
-	public NRCPuzzle(String name, String[] mySudoku) {
-		super(name, mySudoku);
+	private NRCPuzzle(String name, String[] symbols, int[][] brd) {
+		super(name, symbols, brd);
 	}
 
 	public NRCPuzzle(String name,
@@ -22,7 +16,6 @@ public class NRCPuzzle extends Standard9x9Puzzle {
 				  String row7, String row8, String row9) {
 		super(name, row1,row2,row3,row4,row5,row6,row7,row8,row9);
 	}
-
 
 	@Override
 	public void initGroups() {
@@ -40,13 +33,10 @@ public class NRCPuzzle extends Standard9x9Puzzle {
 
 	@Override
 	protected IPuzzle newInstance(String name, int[][] brd) {
-		return new NRCPuzzle(name, brd);
+		return new NRCPuzzle(name, possibleSymbols.toArray(new String[0]), brd);
 	}
 
-	@Override
-	public String getSudokuType() { return TYPE; }
-
-	@Override
+    @Override
 	protected Paint getCellBackground(int x, int y) {
 		if (((x>=1 && x<=3) || (x>=5 && x<=7)) && ((y>=1 && y<=3) || (y>=5 && y<=7))) {
 			return Color.LIGHTGRAY;
