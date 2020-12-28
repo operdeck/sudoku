@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class GroupIntersection {
-	private Set<Coord> intersection;
+	private final Set<Coord> intersection;
 	private AbstractGroup[] grps = new AbstractGroup[2];
 	
 	public GroupIntersection(AbstractGroup a, AbstractGroup b) {

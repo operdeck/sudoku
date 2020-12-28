@@ -7,12 +7,10 @@ import ottop.sudoku.Coord;
 import ottop.sudoku.group.ColumnGroup;
 import ottop.sudoku.group.RectangularGroup;
 import ottop.sudoku.group.RowGroup;
-import ottop.sudoku.group.SquareGroup;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class Sudoku10x10Puzzle extends AbtractPuzzle {
+public class Sudoku10x10Puzzle extends AbstractPuzzle {
     public Sudoku10x10Puzzle(String name,
                              String row1, String row2,
                              String row3, String row4,
@@ -26,14 +24,14 @@ public class Sudoku10x10Puzzle extends AbtractPuzzle {
 
     protected Sudoku10x10Puzzle(String name, String[] symbols, int[][] board) {
         super(name);
-        possibleSymbols = Arrays.asList(symbols);
+        possibleSymbols = symbols;
         this.board = board;
         resetState();
     }
 
     protected Sudoku10x10Puzzle(String name, String[] symbols, String[] sudokuRows) {
         super(name);
-        possibleSymbols = Arrays.asList(symbols);
+        possibleSymbols = symbols;
         this.board = new int[10][10];
         this.board = readCommaSeparatedBoard(sudokuRows);
         resetState();
@@ -57,22 +55,7 @@ public class Sudoku10x10Puzzle extends AbtractPuzzle {
 
     @Override
     protected IPuzzle newInstance(String name, int[][] brd) {
-        return new Sudoku10x10Puzzle(name, possibleSymbols.toArray(new String[0]), brd);
-    }
-
-    @Override
-    public int getSymbolCodeRange() {
-        return 11;
-    }
-
-    @Override
-    public int getWidth() {
-        return 10;
-    }
-
-    @Override
-    public int getHeight() {
-        return 10;
+        return new Sudoku10x10Puzzle(name, possibleSymbols, brd);
     }
 
     // TODO: this can be fairly generic based on the Square or Rectangular groups
@@ -115,4 +98,12 @@ public class Sudoku10x10Puzzle extends AbtractPuzzle {
         }
         return result.toString();
     }
+
+    @Override
+    public int getWidth() { return 10; }
+
+    @Override
+    public int getHeight() { return 10; }
+
+
 }

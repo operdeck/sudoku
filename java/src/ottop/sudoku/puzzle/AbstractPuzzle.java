@@ -11,18 +11,19 @@ import ottop.sudoku.Coord;
 import ottop.sudoku.group.AbstractGroup;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public abstract class AbtractPuzzle implements IPuzzle {
+public abstract class AbstractPuzzle implements IPuzzle {
     final String name;
     IPuzzle previousPuzzle = null;
     List<AbstractGroup> groups;
     int[][] board; // [x][y]
-    List<String> possibleSymbols;
+    String[] possibleSymbols;
     Coord[] allCells;
 
-    public AbtractPuzzle(String name) {
+    public AbstractPuzzle(String name) {
         this.name = name;
         board = new int[getWidth()][getHeight()];
 
@@ -69,18 +70,16 @@ public abstract class AbtractPuzzle implements IPuzzle {
     public IPuzzle doMove(Coord coord, String symbol) { // x, y start at 0
         //if (isOccupied(yNew, xNew)) return null;
         int[][] newBoard = new int[getWidth()][getHeight()];
-        for (int x = 0; x < getWidth(); x++) {
-            for (int y = 0; y < getHeight(); y++) {
-                if (x == coord.getX() && y == coord.getY()) {
-                    newBoard[x][y] = symbolToSymbolCode(symbol);
-                } else {
-                    newBoard[x][y] = board[x][y];
-                }
+        for (Coord c: getAllCells()) {
+            if (c.equals(coord)) {
+                newBoard[c.getX()][c.getY()] = symbolToSymbolCode(symbol);
+            } else {
+                newBoard[c.getX()][c.getY()] = board[c.getX()][c.getY()];
             }
         }
 
         IPuzzle nextPuzzle = newInstance(this.name, newBoard);
-        ((AbtractPuzzle)nextPuzzle).previousPuzzle = this; // link new puzzle state to current
+        ((AbstractPuzzle)nextPuzzle).previousPuzzle = this; // link new puzzle state to current
 
         return nextPuzzle;
     }
@@ -123,6 +122,11 @@ public abstract class AbtractPuzzle implements IPuzzle {
     }
 
     @Override
+    public int getSymbolCodeRange() {
+        return possibleSymbols.length;
+    }
+
+    @Override
     public int getSymbolCodeAtCoordinates(Coord coord) {
         return board[coord.getX()][coord.getY()];
     }
@@ -139,12 +143,12 @@ public abstract class AbtractPuzzle implements IPuzzle {
 
     @Override
     public String symbolCodeToSymbol(int i) {
-        return possibleSymbols.get(i);
+        return possibleSymbols[i];
     }
 
     @Override
     public int symbolToSymbolCode(String symbol) {
-        int idx = Math.max(0, possibleSymbols.indexOf(symbol)); // return 0 if not found or empty
+        int idx = Math.max(0, Arrays.asList(possibleSymbols).indexOf(symbol)); // return 0 if not found or empty
         return idx;
     }
 
@@ -174,21 +178,19 @@ public abstract class AbtractPuzzle implements IPuzzle {
         gc.setFont(cellText);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
-        for (int x=0; x<getWidth(); x++) {
-            for (int y=0; y<getHeight(); y++) {
-                Coord c = new Coord(x,y);
-                gc.setStroke(Color.BLUE);
-                gc.strokeRect(getCellX(canvas, x), getCellY(canvas, y), getCellWidth(canvas), getCellHeight(canvas));
-                if (isOccupied(c)) {
-                    if (highlight != null && y== highlight.getY() && x== highlight.getX()) {
-                        // highlight last move
-                        gc.setStroke(Color.DARKGRAY);
-                    } else {
-                        gc.setStroke(Color.BLACK);
-                    }
-                    gc.strokeText(String.valueOf(getSymbolAtCoordinates(c)),
-                            getCellX(canvas,x+0.5), getCellY(canvas,y+0.5));
+
+        for (Coord c: getAllCells()) {
+            gc.setStroke(Color.BLUE);
+            gc.strokeRect(getCellX(canvas, c.getX()), getCellY(canvas, c.getY()), getCellWidth(canvas), getCellHeight(canvas));
+            if (isOccupied(c)) {
+                if (c.equals(highlight)) {
+                    // highlight last move
+                    gc.setStroke(Color.DARKGRAY);
+                } else {
+                    gc.setStroke(Color.BLACK);
                 }
+                gc.strokeText(String.valueOf(getSymbolAtCoordinates(c)),
+                        getCellX(canvas,c.getX()+0.5), getCellY(canvas,c.getY()+0.5));
             }
         }
 
@@ -295,6 +297,4 @@ public abstract class AbtractPuzzle implements IPuzzle {
 
         return brd;
     }
-
-
 }

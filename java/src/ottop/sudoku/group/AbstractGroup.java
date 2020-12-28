@@ -13,8 +13,27 @@ public abstract class AbstractGroup {
 	protected static int EMPTYSYMBOLCODE = 0; // 0 by definition, code for empty cell is 0
 
 	private final boolean[] hasSymbolCode; // map that tells which symbols are currently contained
-	private final Map<Coord, Integer> coords; // the cell coordinates contained in this group, mapped to internal index (0..9)
-	private final int[] groupValues; // current cell state
+	private final Map<Coord, Integer> coords; // the cell coordinates in this group, mapped to internal index
+	private final int[] groupSymbolCodes; // current cell state
+
+	/*
+	For a standard Sudoku:
+
+	Group has cells with internal index 0..8, mapped to (current) symbol codes via "groupSymbolCodes"
+	"coords" indicates where a coord is in this group: a map of Coord --> internal index
+	"hasSymbolCodes" indicates which symbol codes are currently in this group
+
+	So
+
+	Puzzle.symbolCodeToSymbol( groupSymbolCodes[coords[CELL]] ) gives the symbol at Coord CELL
+
+	and
+
+	groupSymbolCodes[i] = myPuzzle.getSymbolCodeAtCoordinates(
+	   new Coord(startX+internalIndexToRelativeX(i),
+	             startY+internalIndexToRelativeY(i)));
+
+	 */
 
 	protected int startX;
 	protected int startY;
@@ -26,12 +45,12 @@ public abstract class AbstractGroup {
 		this.groupID = id;
 		this.groupSize = myPuzzle.getSymbolCodeRange()-1;
 		this.hasSymbolCode = new boolean[myPuzzle.getSymbolCodeRange()];
-		this.groupValues = new int[this.groupSize];
+		this.groupSymbolCodes = new int[this.groupSize];
 
 		for (int i = 0; i< groupSize; i++) {
-			groupValues[i] = myPuzzle.getSymbolCodeAtCoordinates(new Coord(startX+internalIndexToRelativeX(i),startY+internalIndexToRelativeY(i)));
-			if (groupValues[i] != EMPTYSYMBOLCODE) {
-				hasSymbolCode[groupValues[i]] = true;
+			groupSymbolCodes[i] = myPuzzle.getSymbolCodeAtCoordinates(new Coord(startX+internalIndexToRelativeX(i),startY+internalIndexToRelativeY(i)));
+			if (groupSymbolCodes[i] != EMPTYSYMBOLCODE) {
+				hasSymbolCode[groupSymbolCodes[i]] = true;
 			}
 		}
 		
@@ -53,7 +72,7 @@ public abstract class AbstractGroup {
 	private boolean isOccupied(Coord c) {
 		Integer val = coords.get(c);
 		if (val == null) return false;
-		return groupValues[val] != EMPTYSYMBOLCODE;
+		return groupSymbolCodes[val] != EMPTYSYMBOLCODE;
 	}
 	
 	public boolean isPossibility(int symbolCode, Coord c) {
@@ -82,7 +101,7 @@ public abstract class AbstractGroup {
 		boolean found = false;
 
 		for (Coord myCell : coords.keySet()) {
-			if (coords.get(myCell) != null && groupValues[coords.get(myCell)] != 0) continue;
+			if (coords.get(myCell) != null && groupSymbolCodes[coords.get(myCell)] != 0) continue;
 			
 			Set<Integer> cellPossibilities = cache.getPossibilities(myCell);
 			if (cellPossibilities != null) {
@@ -100,7 +119,7 @@ public abstract class AbstractGroup {
 		boolean found = false;
 
 		for (Coord myCell : coords.keySet()) {
-			if (coords.get(myCell) != null && groupValues[coords.get(myCell)] != 0) continue;
+			if (coords.get(myCell) != null && groupSymbolCodes[coords.get(myCell)] != 0) continue;
 			
 			Set<Integer> cellPossibilities = poss.getPossibilities(myCell);
 			if (cellPossibilities != null) {
@@ -294,7 +313,7 @@ public abstract class AbstractGroup {
 		boolean isInconsistent = false;
 		int[] symbolCodeCount = new int[1+groupSize];
 		for (int i = 0; i< groupSize; i++) {
-			symbolCodeCount[groupValues[i]] += 1;
+			symbolCodeCount[groupSymbolCodes[i]] += 1;
 		}
 		for (int j = 1; j<=groupSize; j++) {
 			if (symbolCodeCount[j] > 1) {

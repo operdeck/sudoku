@@ -36,6 +36,7 @@ public class Coord implements Comparable<Coord>{
 
 	@Override
 	public boolean equals(Object obj) {
+		if (obj == null) return false;
 		if (obj instanceof Coord) {
 			return ((Coord)obj).coord == coord;
 		}

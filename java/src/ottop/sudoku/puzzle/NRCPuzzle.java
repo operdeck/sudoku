@@ -33,7 +33,7 @@ public class NRCPuzzle extends Standard9x9Puzzle {
 
 	@Override
 	protected IPuzzle newInstance(String name, int[][] brd) {
-		return new NRCPuzzle(name, possibleSymbols.toArray(new String[0]), brd);
+		return new NRCPuzzle(name, possibleSymbols, brd);
 	}
 
     @Override

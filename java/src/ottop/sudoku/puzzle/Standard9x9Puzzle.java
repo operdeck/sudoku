@@ -5,9 +5,8 @@ import ottop.sudoku.group.RowGroup;
 import ottop.sudoku.group.SquareGroup;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class Standard9x9Puzzle extends AbtractPuzzle {
+public class Standard9x9Puzzle extends AbstractPuzzle {
     public Standard9x9Puzzle(String name,
                              String row1, String row2, String row3,
                              String row4, String row5, String row6,
@@ -19,14 +18,14 @@ public class Standard9x9Puzzle extends AbtractPuzzle {
 
     protected Standard9x9Puzzle(String name, String[] symbols, int[][] board) {
         super(name);
-        possibleSymbols = Arrays.asList(symbols);
+        possibleSymbols = symbols;
         this.board = board;
         resetState();
     }
 
     protected Standard9x9Puzzle(String name, String[] symbols, String[] sudokuRows) {
         super(name);
-        possibleSymbols = Arrays.asList(symbols);
+        possibleSymbols = symbols;
         this.board = readSingleCharBoard(sudokuRows);
         resetState();
     }
@@ -46,9 +45,8 @@ public class Standard9x9Puzzle extends AbtractPuzzle {
         }
     }
 
-    @Override
-    public int getSymbolCodeRange() {
-        return 10;
+    protected IPuzzle newInstance(String name, int[][] brd) {
+        return new Standard9x9Puzzle(name, possibleSymbols, brd);
     }
 
     @Override
@@ -56,9 +54,4 @@ public class Standard9x9Puzzle extends AbtractPuzzle {
 
     @Override
     public int getHeight() { return 9; }
-
-    protected IPuzzle newInstance(String name, int[][] brd) {
-        return new Standard9x9Puzzle(name, possibleSymbols.toArray(new String[0]), brd);
-    }
-
 }

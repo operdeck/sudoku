@@ -22,8 +22,9 @@ public class SudokuLetterPuzzle extends Standard9x9Puzzle {
 
         return result.toArray(new String[0]);
     }
+
     @Override
     protected IPuzzle newInstance(String name, int[][] brd) {
-        return new SudokuLetterPuzzle(name, possibleSymbols.toArray(new String[0]), brd);
+        return new SudokuLetterPuzzle(name, possibleSymbols, brd);
     }
 }
