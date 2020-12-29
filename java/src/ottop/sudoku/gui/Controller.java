@@ -10,7 +10,7 @@ import ottop.sudoku.PuzzleDB;
 import ottop.sudoku.SolutionContainer;
 import ottop.sudoku.SudokuSolver;
 import ottop.sudoku.group.AbstractGroup;
-import ottop.sudoku.puzzle.*;
+import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.AbstractMap;
 import java.util.List;
@@ -45,7 +45,7 @@ public class Controller {
     }
 
     public void symbolClicked(ActionEvent actionEvent) {
-        currentCellSymbol = ((Button)actionEvent.getSource()).getText();
+        currentCellSymbol = ((Button) actionEvent.getSource()).getText();
     }
 
     // TODO: support arrow keys move around in canvas
@@ -76,11 +76,11 @@ public class Controller {
 
         // Possible values
         digitButtonBar.getButtons().removeAll(digitButtonBar.getButtons());
-        for (int symbolCode=1; symbolCode<myPuzzle.getSymbolCodeRange(); symbolCode++) {
+        for (int symbolCode = 1; symbolCode < myPuzzle.getSymbolCodeRange(); symbolCode++) {
             Button symbolButton = new Button();
             symbolButton.setText(myPuzzle.symbolCodeToSymbol(symbolCode));
             symbolButton.setStyle("-fx-font-size:8; -fx-font-weight: bold");
-            symbolButton.setPrefSize((digitButtonBar.getPrefWidth() - digitButtonBar.getPadding().getLeft() - digitButtonBar.getPadding().getRight())/(myPuzzle.getSymbolCodeRange()-1), digitButtonBar.getPrefHeight());
+            symbolButton.setPrefSize((digitButtonBar.getPrefWidth() - digitButtonBar.getPadding().getLeft() - digitButtonBar.getPadding().getRight()) / (myPuzzle.getSymbolCodeRange() - 1), digitButtonBar.getPrefHeight());
             symbolButton.setOnAction(actionEvent -> symbolClicked(actionEvent));
             digitButtonBar.getButtons().add(symbolButton);
         }
@@ -106,7 +106,7 @@ public class Controller {
         currentPencilMarks = null;
         currentSolutions = null;
 
-       if (myPuzzle.isSolved()) {
+        if (myPuzzle.isSolved()) {
             notes.setText("Complete");
             nextMoveButton.setDisable(true);
         } else if (myPuzzle.isInconsistent()) {
@@ -136,8 +136,8 @@ public class Controller {
 
                 // TODO: keep this solution container too - preferably just one
                 currentSolutions = sv.getMoves();
-                notes.setText("Lone numbers: " +  currentSolutions.getLoneSymbols() +"\n");
-                notes.appendText("Unique values: " + currentSolutions.getUniqueSymbols() +"\n");
+                notes.setText("Lone numbers: " + currentSolutions.getLoneSymbols() + "\n");
+                notes.appendText("Unique values: " + currentSolutions.getUniqueSymbols() + "\n");
             } else {
                 notes.setText("");
             }
@@ -157,11 +157,11 @@ public class Controller {
     }
 
     public void canvasMouseMove(MouseEvent mouseEvent) {
-        int x = (int) Math.floor(myPuzzle.getWidth()*mouseEvent.getX()/gameCanvas.getWidth());
-        int y = (int) Math.floor(myPuzzle.getHeight()*mouseEvent.getY()/gameCanvas.getHeight());
-        if (x>=0 && x <=9) {
-            if (y>=0 && y<=9) {
-                labelPosition.setText(""+new Coord(x,y));
+        int x = (int) Math.floor(myPuzzle.getWidth() * mouseEvent.getX() / gameCanvas.getWidth());
+        int y = (int) Math.floor(myPuzzle.getHeight() * mouseEvent.getY() / gameCanvas.getHeight());
+        if (x >= 0 && x <= 9) {
+            if (y >= 0 && y <= 9) {
+                labelPosition.setText("" + new Coord(x, y));
             }
         }
     }
@@ -182,8 +182,8 @@ public class Controller {
     }
 
     public void canvasMouseClick(MouseEvent mouseEvent) {
-        int x = (int) Math.floor(myPuzzle.getWidth()*mouseEvent.getX()/gameCanvas.getWidth());
-        int y = (int) Math.floor(myPuzzle.getHeight()*mouseEvent.getY()/gameCanvas.getHeight());
+        int x = (int) Math.floor(myPuzzle.getWidth() * mouseEvent.getX() / gameCanvas.getWidth());
+        int y = (int) Math.floor(myPuzzle.getHeight() * mouseEvent.getY() / gameCanvas.getHeight());
         Coord coord = new Coord(x, y);
 
         if (null != currentCellSymbol) {
@@ -204,7 +204,7 @@ public class Controller {
                 // TODO: if coord is a lone number say so
                 // TODO: if unique in groups G say so (color those groups?)
                 // TODO: explain why other marks have been eliminated
-                notes.appendText("Possible values: "+currentPencilMarks.get(coord));
+                notes.appendText("Possible values: " + currentPencilMarks.get(coord));
             } else {
                 IPuzzle newPuzzle = myPuzzle.doMove(coord, currentCellSymbol);
                 if (newPuzzle != null) {

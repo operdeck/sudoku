@@ -15,8 +15,7 @@ public class SudokuSolverTest {
     private SudokuSolver solver;
 
     @Before
-    public void setUp()
-    {
+    public void setUp() {
         IPuzzle p = new NRCPuzzle("Test",
                 "....65...",
                 ".......6.",
@@ -26,13 +25,12 @@ public class SudokuSolverTest {
                 ".3..9...1",
                 "..6..45..",
                 ".8...2...",
-                "........." );
+                ".........");
         solver = new SudokuSolver(p, false);
     }
 
     @Test
-    public void testBasicElimination()
-    {
+    public void testBasicElimination() {
         assertEquals(65, solver.getPencilMarks().size()); // is just empty squares
         assertEquals(311, solver.getTotalNumberOfPencilMarks());
 
@@ -43,8 +41,7 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testRadiationFromIntersections()
-    {
+    public void testRadiationFromIntersections() {
         solver.eliminateByRadiationFromIntersections();
 
         assertEquals(65, solver.getPencilMarks().size()); // empty cells remain the same
@@ -57,8 +54,7 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testNakedPairElimination()
-    {
+    public void testNakedPairElimination() {
         solver.eliminateNakedPairs();
 
         assertEquals(65, solver.getPencilMarks().size()); // empty cells remain the same
@@ -71,8 +67,7 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testRadiationFromIntersectionsAndNakedPairElimination()
-    {
+    public void testRadiationFromIntersectionsAndNakedPairElimination() {
         solver.eliminateByRadiationFromIntersections();
         solver.eliminateNakedPairs();
 
@@ -86,11 +81,10 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testSolveSimplePuzzle()
-    {
+    public void testSolveSimplePuzzle() {
         assertTrue(solver.solveSimplest());
 
-        assertEquals( "Test:\n"+
+        assertEquals("Test:\n" +
                 "748165392\n" +
                 "329478165\n" +
                 "165329478\n" +
@@ -103,8 +97,7 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testPuzzleState()
-    {
+    public void testPuzzleState() {
         solver = new SudokuSolver(PuzzleDB.Trouw_535, false);
         assertTrue(solver.solve());
 
@@ -173,43 +166,39 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testEasyPuzzles()
-    {
+    public void testEasyPuzzles() {
         IPuzzle[] puzzles = {PuzzleDB.NRC_17nov, PuzzleDB.NRC_5dec14,
-        PuzzleDB.NRC_28dec};
+                PuzzleDB.NRC_28dec};
 
-        for (IPuzzle p: puzzles) {
+        for (IPuzzle p : puzzles) {
             solver = new SudokuSolver(p, false);
             assertTrue("Can't solve " + p.getName(), solver.solveSimplest());
         }
     }
 
     @Test
-    public void testCharPuzzle()
-    {
+    public void testCharPuzzle() {
         solver = new SudokuSolver(PuzzleDB.EOC_dec14, false);
         assertTrue(solver.solve());
     }
 
     @Test
-    public void testHarderPuzzles()
-    {
+    public void testHarderPuzzles() {
         IPuzzle[] puzzles = {PuzzleDB.www_extremesudoku_info_evil,
-        PuzzleDB.extremesudoku_10_nov_2013,
-        PuzzleDB.extremesudoku_28_nov_2013};
+                PuzzleDB.extremesudoku_10_nov_2013,
+                PuzzleDB.extremesudoku_28_nov_2013};
 
-        for (IPuzzle p: puzzles) {
+        for (IPuzzle p : puzzles) {
             solver = new SudokuSolver(p, false);
             assertTrue("Can't solve " + p.getName(), solver.solve());
         }
     }
 
     @Test
-    public void testHardestPuzzles()
-    {
+    public void testHardestPuzzles() {
         IPuzzle[] puzzles = {PuzzleDB.www_extremesudoku_info_evil_271113};
 
-        for (IPuzzle p: puzzles) {
+        for (IPuzzle p : puzzles) {
             solver = new SudokuSolver(p, false);
             assertTrue("Can't solve " + p.getName(), solver.solve());
         }

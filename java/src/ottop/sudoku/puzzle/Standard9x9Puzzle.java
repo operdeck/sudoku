@@ -13,7 +13,7 @@ public class Standard9x9Puzzle extends AbstractPuzzle {
                              String row7, String row8, String row9) {
         this(name,
                 new String[]{" ", "1", "2", "3", "4", "5", "6", "7", "8", "9"},
-                new String[]{row1,row2,row3,row4,row5,row6,row7,row8,row9});
+                new String[]{row1, row2, row3, row4, row5, row6, row7, row8, row9});
     }
 
     // For cloning to new puzzle
@@ -52,8 +52,12 @@ public class Standard9x9Puzzle extends AbstractPuzzle {
     }
 
     @Override
-    public int getWidth() { return 9; }
+    public int getWidth() {
+        return 9;
+    }
 
     @Override
-    public int getHeight() { return 9; }
+    public int getHeight() {
+        return 9;
+    }
 }

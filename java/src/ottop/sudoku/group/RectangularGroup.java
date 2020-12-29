@@ -9,7 +9,12 @@ public class RectangularGroup extends AbstractGroup {
     }
 
     @Override
-    public int internalIndexToRelativeX(int idx) { return idx % 5; }
+    public int internalIndexToRelativeX(int idx) {
+        return idx % 5;
+    }
+
     @Override
-    public int internalIndexToRelativeY(int idx) { return idx / 5; }
+    public int internalIndexToRelativeY(int idx) {
+        return idx / 5;
+    }
 }

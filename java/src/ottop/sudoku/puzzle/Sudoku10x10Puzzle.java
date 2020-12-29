@@ -19,7 +19,7 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
                              String row9, String row10) {
         super(name);
         possibleSymbols = new String[]{" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
-        this.board = readCommaSeparatedBoard(new String[]{row1,row2,row3,row4,row5,row6,row7,row8,row9,row10});
+        this.board = readCommaSeparatedBoard(new String[]{row1, row2, row3, row4, row5, row6, row7, row8, row9, row10});
         resetState();
     }
 
@@ -57,9 +57,9 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
     protected void drawGroupBoundaries(Canvas canvas, GraphicsContext gc) {
         gc.setStroke(Color.BLUE);
         gc.setLineWidth(3);
-        for (int x=0; x<2; x++) {
-            for (int y = 0; y<5; y++) {
-                gc.strokeRect(getCellX(canvas,x*5), getCellY(canvas,y*2), 5*getCellWidth(canvas), 2*getCellHeight(canvas));
+        for (int x = 0; x < 2; x++) {
+            for (int y = 0; y < 5; y++) {
+                gc.strokeRect(getCellX(canvas, x * 5), getCellY(canvas, y * 2), 5 * getCellWidth(canvas), 2 * getCellHeight(canvas));
             }
         }
     }
@@ -73,19 +73,19 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
             if (y > 0 && ((y % 2) == 0)) {
                 for (int x = 0; x < getWidth(); x++) {
                     result.append("==");
-                    if (x < getWidth()-1) result.append("+");
-                    if (x==5) result.append("+");
+                    if (x < getWidth() - 1) result.append("+");
+                    if (x == 5) result.append("+");
                 }
                 result.append("\n");
             }
             for (int x = 0; x < getWidth(); x++) {
-                if (x>0) result.append("|");
-                if (x==5) result.append("|"); // group sep
-                String symbol = getSymbolAtCoordinates(new Coord(x,y));
+                if (x > 0) result.append("|");
+                if (x == 5) result.append("|"); // group sep
+                String symbol = getSymbolAtCoordinates(new Coord(x, y));
                 if (symbol.length() == 1) {
-                    result.append(" ").append(getSymbolAtCoordinates(new Coord(x,y)));
+                    result.append(" ").append(getSymbolAtCoordinates(new Coord(x, y)));
                 } else {
-                    result.append(getSymbolAtCoordinates(new Coord(x,y)));
+                    result.append(getSymbolAtCoordinates(new Coord(x, y)));
                 }
             }
             result.append("\n");
@@ -94,10 +94,14 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
     }
 
     @Override
-    public int getWidth() { return 10; }
+    public int getWidth() {
+        return 10;
+    }
 
     @Override
-    public int getHeight() { return 10; }
+    public int getHeight() {
+        return 10;
+    }
 
 
 }

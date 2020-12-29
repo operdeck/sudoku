@@ -2,55 +2,68 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ButtonBar?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ChoiceBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.ToolBar?>
-<?import javafx.scene.layout.AnchorPane?>
-
-<AnchorPane minHeight="560.0" minWidth="650.0" prefHeight="560.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ottop.sudoku.gui.Controller">
-   <children>
-      <ToolBar layoutX="5.0" layoutY="329.0" prefHeight="39.0" prefWidth="604.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0">
-        <items>
-            <ButtonBar fx:id="digitButtonBar" buttonMinWidth="20.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="21.0" prefWidth="350.0">
-               <buttons>
-                <Button mnemonicParsing="false" onAction="#symbolClicked" text="1" />
-                  <Button mnemonicParsing="false" onAction="#symbolClicked" text="2" />
-                  <Button minWidth="32.0" mnemonicParsing="false" onAction="#symbolClicked" prefHeight="27.0" text="3" />
-               </buttons>
-               <padding>
-                  <Insets left="5.0" right="5.0" />
-               </padding>
-            </ButtonBar>
-            <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="1.0" />
-            <Button fx:id="explainButton" mnemonicParsing="false" onAction="#explainClicked" text="Explain" />
-            <Button fx:id="nextMoveButton" mnemonicParsing="false" onAction="#doNextMove" text="Next Move" />
-            <Button fx:id="undoButton" mnemonicParsing="false" onAction="#undoAction" text="Undo" />
-        </items>
-      </ToolBar>
-      <AnchorPane layoutX="367.0" layoutY="5.0" prefHeight="350.0" prefWidth="237.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
-         <children>
-            <CheckBox fx:id="cbBasicElimination" layoutX="5.0" layoutY="182.0" mnemonicParsing="false" onAction="#hintsAction" text="Pencil marks" />
-            <CheckBox fx:id="cbNakedPairs" layoutX="5.0" layoutY="232.0" mnemonicParsing="false" onAction="#hintsAction" text="Naked Pairs" />
-            <CheckBox fx:id="cbXWings" layoutX="5.0" layoutY="257.0" mnemonicParsing="false" onAction="#hintsAction" text="X-Wings" />
-            <CheckBox fx:id="cbRadiation" layoutX="5.0" layoutY="207.0" mnemonicParsing="false" onAction="#hintsAction" text="Radiation" />
-            <Label fx:id="tbLevel" layoutX="5.0" layoutY="55.0" prefHeight="17.0" prefWidth="127.0" text="Difficulty: XXX" textFill="#12299e" />
-            <Label layoutX="5.0" layoutY="151.0" text="Hints:" />
-            <Separator layoutY="118.0" prefHeight="1.0" prefWidth="237.0" />
-            <Button fx:id="buttonMoreHelp" layoutX="5.0" layoutY="286.0" mnemonicParsing="false" onAction="#moreHelpAction" text="More..." />
-            <ChoiceBox fx:id="cbPuzzleDB" layoutX="5.0" layoutY="13.0" onAction="#puzzleSelectAction" prefHeight="27.0" prefWidth="166.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" />
-         </children>
-      </AnchorPane>
-      <TextArea fx:id="notes" layoutX="5.0" layoutY="371.0" prefHeight="107.0" prefWidth="597.0" AnchorPane.bottomAnchor="53.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="371.0" />
-      <Label fx:id="labelPosition" layoutX="5.0" layoutY="352.0" text="Label" />
-      <AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="335.0" prefWidth="393.0" AnchorPane.bottomAnchor="225.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="257.0" AnchorPane.topAnchor="0.0">
-         <children>
-            <Canvas fx:id="gameCanvas" height="335.0" layoutX="5.0" layoutY="5.0" onKeyTyped="#keyTyped" onMouseClicked="#canvasMouseClick" onMouseMoved="#canvasMouseMove" width="393.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0" />
-         </children>
-      </AnchorPane>
-   </children>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" minHeight="560.0" minWidth="650.0" prefHeight="560.0"
+            prefWidth="650.0" xmlns="http://javafx.com/javafx/11.0.1"
+            fx:controller="ottop.sudoku.gui.Controller">
+    <children>
+        <ToolBar layoutX="5.0" layoutY="329.0" prefHeight="39.0" prefWidth="604.0" AnchorPane.bottomAnchor="10.0"
+                 AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0">
+            <items>
+                <ButtonBar fx:id="digitButtonBar" buttonMinWidth="20.0" nodeOrientation="LEFT_TO_RIGHT"
+                           prefHeight="21.0" prefWidth="350.0">
+                    <buttons>
+                        <Button mnemonicParsing="false" onAction="#symbolClicked" text="1"/>
+                        <Button mnemonicParsing="false" onAction="#symbolClicked" text="2"/>
+                        <Button minWidth="32.0" mnemonicParsing="false" onAction="#symbolClicked" prefHeight="27.0"
+                                text="3"/>
+                    </buttons>
+                    <padding>
+                        <Insets left="5.0" right="5.0"/>
+                    </padding>
+                </ButtonBar>
+                <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="1.0"/>
+                <Button fx:id="explainButton" mnemonicParsing="false" onAction="#explainClicked" text="Explain"/>
+                <Button fx:id="nextMoveButton" mnemonicParsing="false" onAction="#doNextMove" text="Next Move"/>
+                <Button fx:id="undoButton" mnemonicParsing="false" onAction="#undoAction" text="Undo"/>
+            </items>
+        </ToolBar>
+        <AnchorPane layoutX="367.0" layoutY="5.0" prefHeight="350.0" prefWidth="237.0" AnchorPane.rightAnchor="10.0"
+                    AnchorPane.topAnchor="5.0">
+            <children>
+                <CheckBox fx:id="cbBasicElimination" layoutX="5.0" layoutY="182.0" mnemonicParsing="false"
+                          onAction="#hintsAction" text="Pencil marks"/>
+                <CheckBox fx:id="cbNakedPairs" layoutX="5.0" layoutY="232.0" mnemonicParsing="false"
+                          onAction="#hintsAction" text="Naked Pairs"/>
+                <CheckBox fx:id="cbXWings" layoutX="5.0" layoutY="257.0" mnemonicParsing="false" onAction="#hintsAction"
+                          text="X-Wings"/>
+                <CheckBox fx:id="cbRadiation" layoutX="5.0" layoutY="207.0" mnemonicParsing="false"
+                          onAction="#hintsAction" text="Radiation"/>
+                <Label fx:id="tbLevel" layoutX="5.0" layoutY="55.0" prefHeight="17.0" prefWidth="127.0"
+                       text="Difficulty: XXX" textFill="#12299e"/>
+                <Label layoutX="5.0" layoutY="151.0" text="Hints:"/>
+                <Separator layoutY="118.0" prefHeight="1.0" prefWidth="237.0"/>
+                <Button fx:id="buttonMoreHelp" layoutX="5.0" layoutY="286.0" mnemonicParsing="false"
+                        onAction="#moreHelpAction" text="More..."/>
+                <ChoiceBox fx:id="cbPuzzleDB" layoutX="5.0" layoutY="13.0" onAction="#puzzleSelectAction"
+                           prefHeight="27.0" prefWidth="166.0" AnchorPane.leftAnchor="5.0"
+                           AnchorPane.rightAnchor="5.0"/>
+            </children>
+        </AnchorPane>
+        <TextArea fx:id="notes" layoutX="5.0" layoutY="371.0" prefHeight="107.0" prefWidth="597.0"
+                  AnchorPane.bottomAnchor="53.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0"
+                  AnchorPane.topAnchor="371.0"/>
+        <Label fx:id="labelPosition" layoutX="5.0" layoutY="352.0" text="Label"/>
+        <AnchorPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="335.0" prefWidth="393.0"
+                    AnchorPane.bottomAnchor="225.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="257.0"
+                    AnchorPane.topAnchor="0.0">
+            <children>
+                <Canvas fx:id="gameCanvas" height="335.0" layoutX="5.0" layoutY="5.0" onKeyTyped="#keyTyped"
+                        onMouseClicked="#canvasMouseClick" onMouseMoved="#canvasMouseMove" width="393.0"
+                        AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0"
+                        AnchorPane.topAnchor="5.0"/>
+            </children>
+        </AnchorPane>
+    </children>
 </AnchorPane>

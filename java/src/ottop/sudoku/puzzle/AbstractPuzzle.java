@@ -28,8 +28,8 @@ public abstract class AbstractPuzzle implements IPuzzle {
         board = new int[getWidth()][getHeight()];
 
         List<Coord> cells = new ArrayList<>();
-        for (int x=0; x<getWidth(); x++) {
-            for (int y=0; y<getHeight(); y++) {
+        for (int x = 0; x < getWidth(); x++) {
+            for (int y = 0; y < getHeight(); y++) {
                 cells.add(new Coord(x, y));
             }
         }
@@ -50,7 +50,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
         if (name != null && name.length() > 0) result.append(name).append(":\n");
         for (int y = 0; y < getHeight(); y++) {
             for (int x = 0; x < getWidth(); x++) {
-                result.append(getSymbolAtCoordinates(new Coord(x,y)));
+                result.append(getSymbolAtCoordinates(new Coord(x, y)));
             }
             result.append("\n");
         }
@@ -70,7 +70,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
     public IPuzzle doMove(Coord coord, String symbol) { // x, y start at 0
         //if (isOccupied(yNew, xNew)) return null;
         int[][] newBoard = new int[getWidth()][getHeight()];
-        for (Coord c: getAllCells()) {
+        for (Coord c : getAllCells()) {
             if (c.equals(coord)) {
                 newBoard[c.getX()][c.getY()] = symbolToSymbolCode(symbol);
             } else {
@@ -79,7 +79,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
         }
 
         IPuzzle nextPuzzle = newInstance(this.name, newBoard);
-        ((AbstractPuzzle)nextPuzzle).previousPuzzle = this; // link new puzzle state to current
+        ((AbstractPuzzle) nextPuzzle).previousPuzzle = this; // link new puzzle state to current
 
         return nextPuzzle;
     }
@@ -114,7 +114,9 @@ public abstract class AbstractPuzzle implements IPuzzle {
     }
 
     @Override
-    public Coord[] getAllCells() { return allCells; };
+    public Coord[] getAllCells() {
+        return allCells;
+    }
 
     @Override
     public String getName() {
@@ -166,7 +168,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
         gc.fillRect(0, 0, canvasWidth, canvasHeight);
 
         // Background of individual cells
-        for (int x=0; x<getWidth(); x++) {
+        for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
                 gc.setFill(getCellBackground(x, y));
                 gc.fillRect(getCellX(canvas, x), getCellY(canvas, y), getCellWidth(canvas), getCellHeight(canvas));
@@ -179,7 +181,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
 
-        for (Coord c: getAllCells()) {
+        for (Coord c : getAllCells()) {
             gc.setStroke(Color.BLUE);
             gc.strokeRect(getCellX(canvas, c.getX()), getCellY(canvas, c.getY()), getCellWidth(canvas), getCellHeight(canvas));
             if (isOccupied(c)) {
@@ -190,7 +192,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
                     gc.setStroke(Color.BLACK);
                 }
                 gc.strokeText(String.valueOf(getSymbolAtCoordinates(c)),
-                        getCellX(canvas,c.getX()+0.5), getCellY(canvas,c.getY()+0.5));
+                        getCellX(canvas, c.getX() + 0.5), getCellY(canvas, c.getY() + 0.5));
             }
         }
 
@@ -207,9 +209,9 @@ public abstract class AbstractPuzzle implements IPuzzle {
     protected void drawGroupBoundaries(Canvas canvas, GraphicsContext gc) {
         gc.setStroke(Color.BLUE);
         gc.setLineWidth(3);
-        for (int x=0; x<3; x++) {
-            for (int y = 0; y<3; y++) {
-                gc.strokeRect(getCellX(canvas,x*3), getCellY(canvas,y*3), 3*getCellWidth(canvas), 3*getCellHeight(canvas));
+        for (int x = 0; x < 3; x++) {
+            for (int y = 0; y < 3; y++) {
+                gc.strokeRect(getCellX(canvas, x * 3), getCellY(canvas, y * 3), 3 * getCellWidth(canvas), 3 * getCellHeight(canvas));
             }
         }
     }
@@ -224,37 +226,37 @@ public abstract class AbstractPuzzle implements IPuzzle {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
 
-        int n = getSymbolCodeRange()-1; // minus empty cell code
+        int n = getSymbolCodeRange() - 1; // minus empty cell code
         int nmarkerrows = (int) Math.sqrt(n);
-        int nmarkercols = (int) Math.ceil(n/(double)nmarkerrows);
+        int nmarkercols = (int) Math.ceil(n / (double) nmarkerrows);
 
         for (int symbolCode : symbolCodes) {
-            int subrow = (symbolCode-1) / nmarkercols;
-            int subcol = (symbolCode-1) % nmarkercols;
+            int subrow = (symbolCode - 1) / nmarkercols;
+            int subcol = (symbolCode - 1) % nmarkercols;
             gc.strokeText(symbolCodeToSymbol(symbolCode),
-                    getCellX(canvas,c.getX()+0.15+0.7*subcol/(double)(nmarkercols-1)),
-                    getCellY(canvas,c.getY()+0.15+0.7*subrow/(double)(nmarkerrows-1)));
+                    getCellX(canvas, c.getX() + 0.15 + 0.7 * subcol / (double) (nmarkercols - 1)),
+                    getCellY(canvas, c.getY() + 0.15 + 0.7 * subrow / (double) (nmarkerrows - 1)));
         }
     }
 
     double getCellX(Canvas canvas, double x) {
-        return(5+x*getCellWidth(canvas));
+        return (5 + x * getCellWidth(canvas));
     }
 
     double getCellY(Canvas canvas, double y) {
-        return(5+y*getCellHeight(canvas));
+        return (5 + y * getCellHeight(canvas));
     }
 
     double getCellWidth(Canvas canvas) {
         double canvasWidth = canvas.getWidth();
-        double cellWidth = (canvasWidth-10)/getWidth();
-        return(cellWidth);
+        double cellWidth = (canvasWidth - 10) / getWidth();
+        return (cellWidth);
     }
 
     double getCellHeight(Canvas canvas) {
         double canvasHeight = canvas.getHeight();
-        double cellHeight = (canvasHeight-10)/getHeight();
-        return(cellHeight);
+        double cellHeight = (canvasHeight - 10) / getHeight();
+        return (cellHeight);
     }
 
     // TODO we could automatically detect overlapping groups
@@ -268,12 +270,12 @@ public abstract class AbstractPuzzle implements IPuzzle {
 
         int[][] brd = new int[getWidth()][getHeight()];
 
-        for (int y=0; y<getHeight(); y++) {
+        for (int y = 0; y < getHeight(); y++) {
             String s = sudokuRows[y];
             if (s.length() != getWidth())
                 throw new IllegalArgumentException("Initialization must have " + getWidth() + " chars for each row");
-            for (int x = 0; x<s.length(); x++) {
-                String symbol = s.substring(x, x+1);
+            for (int x = 0; x < s.length(); x++) {
+                String symbol = s.substring(x, x + 1);
                 brd[x][y] = symbolToSymbolCode(symbol);
             }
         }
@@ -287,12 +289,12 @@ public abstract class AbstractPuzzle implements IPuzzle {
 
         int[][] brd = new int[getWidth()][getHeight()];
 
-        for (int y=0; y<getHeight(); y++) {
+        for (int y = 0; y < getHeight(); y++) {
             String s = sudokuRows[y];
             String[] aRow = s.split(",");
             if (aRow.length != getWidth())
                 throw new IllegalArgumentException("Initialization must have " + getWidth() + " chars for each row");
-            for (int x = 0; x<getWidth(); x++) {
+            for (int x = 0; x < getWidth(); x++) {
                 String symbol = aRow[x];
                 brd[x][y] = symbolToSymbolCode(symbol);
             }

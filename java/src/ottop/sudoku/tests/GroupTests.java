@@ -8,8 +8,7 @@ import static org.junit.Assert.assertEquals;
 
 public class GroupTests {
     @Test
-    public void testGroupCount()
-    {
+    public void testGroupCount() {
         IPuzzle emptyPuzzle = new Standard9x9Puzzle("Anonymous",
                 ".........",
                 ".........",
@@ -21,6 +20,6 @@ public class GroupTests {
                 ".........",
                 ".........");
 
-        assertEquals(27, emptyPuzzle.getGroups().length );
+        assertEquals(27, emptyPuzzle.getGroups().length);
     }
 }
