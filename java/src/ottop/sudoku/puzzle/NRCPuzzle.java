@@ -6,6 +6,7 @@ import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.group.SquareGroup;
 
 public class NRCPuzzle extends Standard9x9Puzzle {
+	// For cloning to new puzzle
 	private NRCPuzzle(String name, String[] symbols, int[][] brd) {
 		super(name, symbols, brd);
 	}

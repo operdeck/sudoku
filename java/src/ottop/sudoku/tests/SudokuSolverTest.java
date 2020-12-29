@@ -33,14 +33,13 @@ public class SudokuSolverTest {
     @Test
     public void testBasicElimination()
     {
-        assertEquals(65, solver.getAllPotentialPossibilities().size()); // is just empty squares
-        assertEquals(311, solver.getNumberOfPotentialPossibilities());
+        assertEquals(65, solver.getPencilMarks().size()); // is just empty squares
+        assertEquals(311, solver.getTotalNumberOfPencilMarks());
 
-        SolutionContainer loneNumbers = solver.getLoneNumbers();
-        assertEquals(1, loneNumbers.size());
+        SolutionContainer solutions = solver.getMoves();
+        assertEquals(1, solutions.getLoneSymbols().size());
 
-        SolutionContainer uniqueValues = solver.getUniqueValues();
-        assertEquals(6, uniqueValues.size());
+        assertEquals(6, solutions.getUniqueSymbols().size());
     }
 
     @Test
@@ -48,14 +47,13 @@ public class SudokuSolverTest {
     {
         solver.eliminateByRadiationFromIntersections();
 
-        assertEquals(65, solver.getAllPotentialPossibilities().size()); // empty cells remain the same
-        assertEquals(261, solver.getNumberOfPotentialPossibilities()); // possibilities strongly reduced
+        assertEquals(65, solver.getPencilMarks().size()); // empty cells remain the same
+        assertEquals(261, solver.getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
-        SolutionContainer loneNumbers = solver.getLoneNumbers();
-        assertEquals(1, loneNumbers.size());
+        SolutionContainer solutions = solver.getMoves();
+        assertEquals(1, solutions.getLoneSymbols().size());
 
-        SolutionContainer uniqueValues = solver.getUniqueValues();
-        assertEquals(9, uniqueValues.size()); // increased after this elimination step
+        assertEquals(9, solutions.getUniqueSymbols().size()); // increased after this elimination step
     }
 
     @Test
@@ -63,14 +61,13 @@ public class SudokuSolverTest {
     {
         solver.eliminateNakedPairs();
 
-        assertEquals(65, solver.getAllPotentialPossibilities().size()); // empty cells remain the same
-        assertEquals(264, solver.getNumberOfPotentialPossibilities()); // possibilities strongly reduced
+        assertEquals(65, solver.getPencilMarks().size()); // empty cells remain the same
+        assertEquals(264, solver.getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
-        SolutionContainer loneNumbers = solver.getLoneNumbers();
-        assertEquals(10, loneNumbers.size());
+        SolutionContainer solutions = solver.getMoves();
+        assertEquals(10, solutions.getLoneSymbols().size());
 
-        SolutionContainer uniqueValues = solver.getUniqueValues();
-        assertEquals(13, uniqueValues.size()); // increased after this elimination step
+        assertEquals(13, solutions.getUniqueSymbols().size()); // increased after this elimination step
     }
 
     @Test
@@ -79,14 +76,13 @@ public class SudokuSolverTest {
         solver.eliminateByRadiationFromIntersections();
         solver.eliminateNakedPairs();
 
-        assertEquals(65, solver.getAllPotentialPossibilities().size()); // empty cells remain the same
-        assertEquals(157, solver.getNumberOfPotentialPossibilities()); // possibilities strongly reduced
+        assertEquals(65, solver.getPencilMarks().size()); // empty cells remain the same
+        assertEquals(157, solver.getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
-        SolutionContainer loneNumbers = solver.getLoneNumbers();
-        assertEquals(27, loneNumbers.size());
+        SolutionContainer solutions = solver.getMoves();
+        assertEquals(27, solutions.getLoneSymbols().size());
 
-        SolutionContainer uniqueValues = solver.getUniqueValues();
-        assertEquals(31, uniqueValues.size()); // increased after this elimination step
+        assertEquals(31, solutions.getUniqueSymbols().size()); // increased after this elimination step
     }
 
     @Test
@@ -143,10 +139,10 @@ public class SudokuSolverTest {
                 "962748315");
         solver = new SudokuSolver(p, false);
         solver.eliminateByRadiationFromIntersections();
-        assertEquals(0, solver.getNumberOfMoves());
+        assertEquals(0, solver.getMoves().size());
 
         solver.eliminateNakedPairs();
-        assertEquals(2, solver.getNumberOfMoves());
+        assertEquals(2, solver.getMoves().size());
     }
 
     @Test
@@ -164,10 +160,10 @@ public class SudokuSolverTest {
         solver = new SudokuSolver(p, false);
         solver.eliminateByRadiationFromIntersections();
         solver.eliminateNakedPairs();
-        assertEquals(0, solver.getNumberOfMoves());
+        assertEquals(0, solver.getMoves().size());
 
         solver.eliminateByXWings();
-        assertEquals(2, solver.getNumberOfMoves());
+        assertEquals(2, solver.getMoves().size());
     }
 
     @Test

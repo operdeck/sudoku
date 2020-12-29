@@ -16,6 +16,7 @@ public class Standard9x9Puzzle extends AbstractPuzzle {
                 new String[]{row1,row2,row3,row4,row5,row6,row7,row8,row9});
     }
 
+    // For cloning to new puzzle
     protected Standard9x9Puzzle(String name, String[] symbols, int[][] board) {
         super(name);
         possibleSymbols = symbols;
@@ -23,6 +24,7 @@ public class Standard9x9Puzzle extends AbstractPuzzle {
         resetState();
     }
 
+    // From subclasses that are 9x9 but use different symbols
     protected Standard9x9Puzzle(String name, String[] symbols, String[] sudokuRows) {
         super(name);
         possibleSymbols = symbols;

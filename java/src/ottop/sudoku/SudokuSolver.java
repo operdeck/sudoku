@@ -13,9 +13,9 @@ import java.util.*;
 // https://www.extremesudoku.info/
 
 public class SudokuSolver {
-    private PossibilitiesContainer possibilities;
+    private PencilMarkContainer possibilities;
     private IPuzzle myPuzzle;
-    private boolean trace = true;
+    private boolean trace;
 
     public enum EliminationMethods {
         BASICRADIATION (1),
@@ -40,7 +40,7 @@ public class SudokuSolver {
         this.trace = trace;
         myPuzzle = p;
         p.resetState();
-        possibilities = new PossibilitiesContainer(p, trace);
+        possibilities = new PencilMarkContainer(p, trace);
     }
 
     public boolean eliminateByRadiationFromIntersections() {
@@ -178,24 +178,16 @@ public class SudokuSolver {
 
     public Map.Entry<Coord, String> nextMove(int level) {
         Map.Entry<Coord, String> nextMove = null;
-        possibilities = new PossibilitiesContainer(myPuzzle, trace);
+        possibilities = new PencilMarkContainer(myPuzzle, trace);
 
         eliminate(level);
 
         if (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
             SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
-            // Lone numbers first
             for (AbstractGroup g : myPuzzle.getGroups()) {
-                g.addLoneNumbersToSolution(possibilities, sols);
+                g.addPossibilitiesToSolution(possibilities, sols);
             }
             nextMove = sols.getFirstMove();
-            if (nextMove == null) {
-                // Then unique values
-                for (AbstractGroup g : myPuzzle.getGroups()) {
-                    g.addUniqueValuesToSolution(possibilities, sols);
-                }
-                nextMove = sols.getFirstMove();
-            }
         }
         return nextMove;
     }
@@ -209,7 +201,7 @@ public class SudokuSolver {
                 }
                 IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
                 myPuzzle = nextPuzzle;
-                possibilities = new PossibilitiesContainer(nextPuzzle, trace);
+                possibilities = new PencilMarkContainer(nextPuzzle, trace);
             } else {
                 return false;
             }
@@ -247,38 +239,20 @@ public class SudokuSolver {
         return result;
     }
 
-    public SolutionContainer getLoneNumbers() {
+    public SolutionContainer getMoves() {
         SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
         for (AbstractGroup g : myPuzzle.getGroups()) {
-            g.addLoneNumbersToSolution(possibilities, sols);
+            g.addPossibilitiesToSolution(possibilities, sols);
         }
 
         return sols;
     }
 
-    public SolutionContainer getUniqueValues() {
-        SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
-        for (AbstractGroup g : myPuzzle.getGroups()) {
-            g.addUniqueValuesToSolution(possibilities, sols);
-        }
-
-        return sols;
-    }
-
-    public int getNumberOfMoves() {
-        SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
-        for (AbstractGroup g : myPuzzle.getGroups()) {
-            g.addLoneNumbersToSolution(possibilities, sols);
-            g.addUniqueValuesToSolution(possibilities, sols);
-        }
-        return sols.size();
-    }
-
-    public Map<Coord, Set<Integer>> getAllPotentialPossibilities() {
+    public Map<Coord, Set<Integer>> getPencilMarks() {
         return possibilities.getAllPossibilities(myPuzzle);
     }
 
-    public int getNumberOfPotentialPossibilities()
+    public int getTotalNumberOfPencilMarks()
     {
         Map<Coord, Set<Integer>> p = possibilities.getAllPossibilities(myPuzzle);
         int result = 0;

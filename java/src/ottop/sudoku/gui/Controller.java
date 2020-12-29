@@ -9,15 +9,17 @@ import ottop.sudoku.Coord;
 import ottop.sudoku.PuzzleDB;
 import ottop.sudoku.SolutionContainer;
 import ottop.sudoku.SudokuSolver;
+import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.puzzle.*;
 
+import java.util.AbstractMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class Controller {
     public static Controller theController = null;
 
-    public Button clearButton;
     public Canvas gameCanvas;
     public ButtonBar digitButtonBar;
     public Button undoButton;
@@ -31,9 +33,12 @@ public class Controller {
     public Label labelPosition;
     public ChoiceBox cbPuzzleDB;
     public Button nextMoveButton;
+    public Button explainButton;
 
     private IPuzzle myPuzzle;
     private String currentCellSymbol = null;
+    private Map<Coord, Set<Integer>> currentPencilMarks;
+    private SolutionContainer currentSolutions;
 
     public Controller() {
         theController = this;
@@ -41,10 +46,6 @@ public class Controller {
 
     public void symbolClicked(ActionEvent actionEvent) {
         currentCellSymbol = ((Button)actionEvent.getSource()).getText();
-    }
-
-    public void clearClicked(ActionEvent actionEvent) {
-        currentCellSymbol = null;
     }
 
     // TODO: support arrow keys move around in canvas
@@ -102,6 +103,9 @@ public class Controller {
     }
 
     public void showPuzzleHints() {
+        currentPencilMarks = null;
+        currentSolutions = null;
+
        if (myPuzzle.isSolved()) {
             notes.setText("Complete");
             nextMoveButton.setDisable(true);
@@ -123,18 +127,22 @@ public class Controller {
             }
 
             if (cbBasicElimination.isSelected()) {
-                Map<Coord, Set<Integer>> optionsPerCell = sv.getAllPotentialPossibilities();
-                for (Coord c : optionsPerCell.keySet()) {
-                    myPuzzle.drawPossibilities(gameCanvas, c, optionsPerCell.get(c));
+                // TODO: or just keep sv instead
+                currentPencilMarks = sv.getPencilMarks(); // Keep in field for explain button
+
+                for (Coord c : currentPencilMarks.keySet()) {
+                    myPuzzle.drawPossibilities(gameCanvas, c, currentPencilMarks.get(c));
                 }
-                SolutionContainer loners = sv.getLoneNumbers();
-                SolutionContainer unique = sv.getUniqueValues();
-                notes.setText(loners.size() + " lone numbers: " +  loners +"\n");
-                notes.appendText(unique.size() + " unique values: " + unique +"\n");
+
+                // TODO: keep this solution container too - preferably just one
+                currentSolutions = sv.getMoves();
+                notes.setText("Lone numbers: " +  currentSolutions.getLoneSymbols() +"\n");
+                notes.appendText("Unique values: " + currentSolutions.getUniqueSymbols() +"\n");
             } else {
                 notes.setText("");
             }
         }
+        explainButton.setDisable(!cbBasicElimination.isSelected());
     }
 
     public void moreHelpAction(ActionEvent actionEvent) {
@@ -176,12 +184,32 @@ public class Controller {
     public void canvasMouseClick(MouseEvent mouseEvent) {
         int x = (int) Math.floor(myPuzzle.getWidth()*mouseEvent.getX()/gameCanvas.getWidth());
         int y = (int) Math.floor(myPuzzle.getHeight()*mouseEvent.getY()/gameCanvas.getHeight());
+        Coord coord = new Coord(x, y);
 
         if (null != currentCellSymbol) {
-            Coord coord = new Coord(x, y);
-            IPuzzle newPuzzle = myPuzzle.doMove(coord, currentCellSymbol);
-            if (newPuzzle != null) {
-                setPuzzle(newPuzzle, coord);
+            if ("?".equals(currentCellSymbol)) {
+                // explain
+                notes.setText("Explain " + coord + "\n");
+
+                if (null != currentSolutions) {
+                    String s = currentSolutions.getLoneSymbolAt(coord);
+                    if (null != s) {
+                        notes.appendText("Lone symbol: " + s + "\n");
+                    }
+                    AbstractMap.SimpleEntry<String, List<AbstractGroup>> s2 = currentSolutions.getUniqueSymbolAt(coord);
+                    if (null != s2) {
+                        notes.appendText("Unique symbol: " + s2.getKey() + " in " + s2.getValue() + "\n");
+                    }
+                }
+                // TODO: if coord is a lone number say so
+                // TODO: if unique in groups G say so (color those groups?)
+                // TODO: explain why other marks have been eliminated
+                notes.appendText("Possible values: "+currentPencilMarks.get(coord));
+            } else {
+                IPuzzle newPuzzle = myPuzzle.doMove(coord, currentCellSymbol);
+                if (newPuzzle != null) {
+                    setPuzzle(newPuzzle, coord);
+                }
             }
         }
     }
@@ -213,5 +241,9 @@ public class Controller {
 
     public void keyTyped(KeyEvent keyEvent) {
         System.out.println("Key: " + keyEvent);
+    }
+
+    public void explainClicked(ActionEvent actionEvent) {
+        currentCellSymbol = "?";
     }
 }

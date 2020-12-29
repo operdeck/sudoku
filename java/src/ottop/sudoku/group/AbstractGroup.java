@@ -1,7 +1,7 @@
 package ottop.sudoku.group;
 
 import ottop.sudoku.Coord;
-import ottop.sudoku.PossibilitiesContainer;
+import ottop.sudoku.PencilMarkContainer;
 import ottop.sudoku.SolutionContainer;
 import ottop.sudoku.puzzle.IPuzzle;
 
@@ -83,7 +83,7 @@ public abstract class AbstractGroup {
 		return true;
 	}
 	
-	private Integer getUniquePossibility(PossibilitiesContainer cache,
+	private Integer getUniquePossibility(PencilMarkContainer cache,
 										 Coord myCell) {
 		Set<Integer> remainingPossibilities = new HashSet<>(cache.getPossibilities(myCell));
 		for (Coord otherCell : coords.keySet()) {
@@ -97,25 +97,7 @@ public abstract class AbstractGroup {
 		return null;
 	}
 
-	public boolean addLoneNumbersToSolution(PossibilitiesContainer cache, SolutionContainer sols) {
-		boolean found = false;
-
-		for (Coord myCell : coords.keySet()) {
-			if (coords.get(myCell) != null && groupSymbolCodes[coords.get(myCell)] != 0) continue;
-			
-			Set<Integer> cellPossibilities = cache.getPossibilities(myCell);
-			if (cellPossibilities != null) {
-				if (cellPossibilities.size() == 1) {
-					Integer loneNumber = cellPossibilities.iterator().next();
-					sols.addSolution(myCell, loneNumber, null); // group ID is not relevant
-					found = true;
-				}
-			}
-		}
-		return found;
-	}
-
-	public boolean addUniqueValuesToSolution(PossibilitiesContainer poss, SolutionContainer sols) {
+	public boolean addPossibilitiesToSolution(PencilMarkContainer poss, SolutionContainer sols) {
 		boolean found = false;
 
 		for (Coord myCell : coords.keySet()) {
@@ -123,10 +105,15 @@ public abstract class AbstractGroup {
 			
 			Set<Integer> cellPossibilities = poss.getPossibilities(myCell);
 			if (cellPossibilities != null) {
+				if (cellPossibilities.size() == 1) {
+					Integer loneNumber = cellPossibilities.iterator().next();
+					sols.addLoneSymbolCode(myCell, loneNumber);
+					found = true;
+				}
 				if (cellPossibilities.size() >= 1) {
 					Integer uniquePossibility = getUniquePossibility(poss, myCell);
 					if (uniquePossibility != null) {
-						sols.addSolution(myCell, uniquePossibility, groupID);
+						sols.addUniqueSymbolCode(myCell, uniquePossibility, this);
 						found = true;
 					}
 				}
@@ -134,7 +121,7 @@ public abstract class AbstractGroup {
 		}
 		return found;
 	}
-	
+
 	public boolean solved() {
 		boolean isSolved = true;
 		for (int symbolCode = 1; symbolCode<=groupSize; symbolCode++) {
@@ -150,7 +137,7 @@ public abstract class AbstractGroup {
 		return coords.keySet();
 	}
 
-	public boolean eliminateNakedPairs(PossibilitiesContainer cache) {
+	public boolean eliminateNakedPairs(PencilMarkContainer cache) {
 		
 		boolean result = false;
 		
@@ -179,7 +166,7 @@ public abstract class AbstractGroup {
 		return result;
 	}
 
-	private boolean eliminateInGroup(PossibilitiesContainer cache,
+	private boolean eliminateInGroup(PencilMarkContainer cache,
 									 boolean result, Map<Set<Integer>, Set<Coord>> map,
 									 String reason) {
 		for (Entry<Set<Integer>, Set<Coord>> entry : map.entrySet()) {
@@ -279,7 +266,7 @@ public abstract class AbstractGroup {
 		return result;
 	}
 	
-	public Set<Integer> getRowSet(int symbolCode, PossibilitiesContainer cache) {
+	public Set<Integer> getRowSet(int symbolCode, PencilMarkContainer cache) {
 		Set<Integer> set = new HashSet<>();
 		
 		for (Coord c : coords.keySet()) {
@@ -291,7 +278,7 @@ public abstract class AbstractGroup {
 		return set;
 	}
 
-	public Set<Integer> getColSet(int symbolCode, PossibilitiesContainer cache) {
+	public Set<Integer> getColSet(int symbolCode, PencilMarkContainer cache) {
 		Set<Integer> set = new HashSet<>();
 		
 		for (Coord c : coords.keySet()) {

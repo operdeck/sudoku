@@ -6,19 +6,20 @@ import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.*;
 
-public class PossibilitiesContainer {
+public class PencilMarkContainer {
 	// Map of cell to a set of possible values. The values are the
 	// internal representation of the cell symbols.
-	private final Map<Coord, Set<Integer>> nonCollissionMap = new HashMap<> ();
+	private final Map<Coord, Set<Integer>> pencilMarks = new HashMap<> ();
+	private final Map<Coord, Map<Integer, String>> removalReasons = new HashMap<>();
 
 	private final boolean trace;
 
-	public PossibilitiesContainer(IPuzzle p, boolean trace) {
+	public PencilMarkContainer(IPuzzle p, boolean trace) {
 		this.trace = trace;
 
 		AbstractGroup[] groups = p.getGroups();
 		for (Coord c : p.getAllCells()) {
-			nonCollissionMap.put(c, getPossibilities(c, groups));
+			pencilMarks.put(c, getPossibilities(c, groups, p.getSymbolCodeRange()));
 		}
 	}
 
@@ -27,7 +28,7 @@ public class PossibilitiesContainer {
 		Map<Coord, Set<Integer>> allPossibilities = new HashMap<>();
 
 		for (Coord c : puzzle.getAllCells()) {
-			Set<Integer> p = nonCollissionMap.get(c);
+			Set<Integer> p = pencilMarks.get(c);
 			if (p != null && !p.isEmpty()) {
 				allPossibilities.put(c, p);
 			}
@@ -36,20 +37,9 @@ public class PossibilitiesContainer {
 		return allPossibilities;
 	}
 
-	public String toString()
-	{
-		StringBuffer result = new StringBuffer("Possibilities Container");
-//		Map<Coord, Set<Integer>> allPossibilities = getAllPossibilities();
-//		for (Coord c : allPossibilities.keySet()) {
-//			result.append("Possibilities at " + c + ": [TODO internal rep] " + allPossibilities.get(c) + "\n");
-//		}
-		return result.toString();
-	}
-
-	// TODO this assumes something about the range of internal values
-	private Set<Integer> getPossibilities(Coord coord, AbstractGroup[] groups) {
+	private Set<Integer> getPossibilities(Coord coord, AbstractGroup[] groups, int symbolCodeRange) {
 		Set<Integer> s = new HashSet<>();
-		for (int symbolCode=1; symbolCode<=9; symbolCode++) {
+		for (int symbolCode=1; symbolCode<symbolCodeRange; symbolCode++) {
 			boolean isPossible = true;
 			for (AbstractGroup g : groups) {
 				if (!g.isPossibility(symbolCode, coord)) {
@@ -63,13 +53,13 @@ public class PossibilitiesContainer {
 	}
 
 	public Set<Integer> getPossibilities(Coord c) {
-		return nonCollissionMap.get(c);
+		return pencilMarks.get(c);
 	}
 	
 	public boolean removePossibility(int symbolCode, Set<Coord> coords, String reason) {
 		Set<Coord> removed = new TreeSet<>();
 		for (Coord c : coords) {
-			Set<Integer> set = nonCollissionMap.get(c);
+			Set<Integer> set = pencilMarks.get(c);
 			if (set != null) {
 				if (set.remove(symbolCode)) {
 					removed.add(c);
@@ -87,7 +77,7 @@ public class PossibilitiesContainer {
 	public boolean removePossibilities(Set<Integer> possibilities, Coord c, String reason) {
 		Set<Integer> removed = new TreeSet<>();
 		for (int symbolCode : possibilities) {
-			Set<Integer> set = nonCollissionMap.get(c);
+			Set<Integer> set = pencilMarks.get(c);
 			if (set != null) {
 				if (set.remove(symbolCode)) removed.add(symbolCode);
 			}
@@ -108,7 +98,7 @@ public class PossibilitiesContainer {
 		return p;
 	}
 
-//	public void merge(PossibilitiesContainer newCache) {
+//	public void merge(PencilMarkContainer newCache) {
 //		for (Coord c : nonCollissionMap.keySet()) {
 //			Set<Integer> p = nonCollissionMap.get(c);
 //			p.retainAll(newCache.nonCollissionMap.get(c));

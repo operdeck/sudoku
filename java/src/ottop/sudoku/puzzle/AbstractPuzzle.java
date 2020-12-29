@@ -218,19 +218,22 @@ public abstract class AbstractPuzzle implements IPuzzle {
     public void drawPossibilities(Canvas canvas, Coord c, Set<Integer> symbolCodes) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setStroke(Color.DARKGRAY);
-        gc.setLineWidth(1);
+        gc.setLineWidth(0.5);
         Font smallText = Font.font("Helvetica", 8);
         gc.setFont(smallText);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
 
-        int x = c.getX();
-        int y = c.getY();
+        int n = getSymbolCodeRange()-1; // minus empty cell code
+        int nmarkerrows = (int) Math.sqrt(n);
+        int nmarkercols = (int) Math.ceil(n/(double)nmarkerrows);
+
         for (int symbolCode : symbolCodes) {
-            int subrow = (symbolCode-1) / 3 - 1;
-            int subcol = (symbolCode-1) % 3 - 1;
+            int subrow = (symbolCode-1) / nmarkercols;
+            int subcol = (symbolCode-1) % nmarkercols;
             gc.strokeText(symbolCodeToSymbol(symbolCode),
-                    getCellX(canvas,x+0.5+(subcol*0.3)), getCellY(canvas,y+0.5+(subrow*0.3)));
+                    getCellX(canvas,c.getX()+0.15+0.7*subcol/(double)(nmarkercols-1)),
+                    getCellY(canvas,c.getY()+0.15+0.7*subrow/(double)(nmarkerrows-1)));
         }
     }
 

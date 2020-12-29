@@ -17,23 +17,17 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
                              String row5, String row6,
                              String row7, String row8,
                              String row9, String row10) {
-       this(name,
-                new String[]{" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"},
-                new String[]{row1,row2,row3,row4,row5,row6,row7,row8,row9,row10});
-    }
-
-    protected Sudoku10x10Puzzle(String name, String[] symbols, int[][] board) {
         super(name);
-        possibleSymbols = symbols;
-        this.board = board;
+        possibleSymbols = new String[]{" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+        this.board = readCommaSeparatedBoard(new String[]{row1,row2,row3,row4,row5,row6,row7,row8,row9,row10});
         resetState();
     }
 
-    protected Sudoku10x10Puzzle(String name, String[] symbols, String[] sudokuRows) {
+    // For cloning to new puzzle
+    private Sudoku10x10Puzzle(String name, String[] symbols, int[][] board) {
         super(name);
         possibleSymbols = symbols;
-        this.board = new int[10][10];
-        this.board = readCommaSeparatedBoard(sudokuRows);
+        this.board = board;
         resetState();
     }
 
@@ -72,7 +66,7 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
 
     @Override
     public String toString() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         if (name != null && name.length() > 0) result.append(name).append(":\n");
         for (int y = 0; y < getHeight(); y++) {
