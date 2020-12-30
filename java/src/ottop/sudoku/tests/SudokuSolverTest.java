@@ -31,7 +31,7 @@ public class SudokuSolverTest {
 
     @Test
     public void testBasicElimination() {
-        assertEquals(65, solver.getPencilMarks().size()); // is just empty squares
+        assertEquals(65, solver.getPossibilities().getAllPossibilities(solver.getPuzzle()).size()); // is just empty squares
         assertEquals(311, solver.getTotalNumberOfPencilMarks());
 
         SolutionContainer solutions = solver.getMoves();
@@ -44,7 +44,7 @@ public class SudokuSolverTest {
     public void testRadiationFromIntersections() {
         solver.eliminateByRadiationFromIntersections();
 
-        assertEquals(65, solver.getPencilMarks().size()); // empty cells remain the same
+        assertEquals(65, solver.getPossibilities().getAllPossibilities(solver.getPuzzle()).size()); // empty cells remain the same
         assertEquals(261, solver.getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
         SolutionContainer solutions = solver.getMoves();
@@ -57,7 +57,7 @@ public class SudokuSolverTest {
     public void testNakedPairElimination() {
         solver.eliminateNakedPairs();
 
-        assertEquals(65, solver.getPencilMarks().size()); // empty cells remain the same
+        assertEquals(65, solver.getPossibilities().getAllPossibilities(solver.getPuzzle()).size()); // empty cells remain the same
         assertEquals(264, solver.getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
         SolutionContainer solutions = solver.getMoves();
@@ -71,7 +71,7 @@ public class SudokuSolverTest {
         solver.eliminateByRadiationFromIntersections();
         solver.eliminateNakedPairs();
 
-        assertEquals(65, solver.getPencilMarks().size()); // empty cells remain the same
+        assertEquals(65, solver.getPossibilities().getAllPossibilities(solver.getPuzzle()).size()); // empty cells remain the same
         assertEquals(157, solver.getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
         SolutionContainer solutions = solver.getMoves();

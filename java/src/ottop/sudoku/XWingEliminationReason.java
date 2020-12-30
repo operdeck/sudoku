@@ -27,7 +27,7 @@ public class XWingEliminationReason extends EliminationReason {
 
     public String toString() {
         StringBuilder result = new StringBuilder(super.toString());
-        result.append(" of ").append(removedFromGroup).append(" because ");
+        result.append(" of ").append(removedFromGroup).append(" because it has to be in the intersections of ");
         result.append(groups1).append(" X ").append(groups2).append(" (X-Wing)");
         return result.toString();
     }

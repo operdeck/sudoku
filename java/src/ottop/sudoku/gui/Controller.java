@@ -5,10 +5,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import ottop.sudoku.Coord;
-import ottop.sudoku.PuzzleDB;
-import ottop.sudoku.SolutionContainer;
-import ottop.sudoku.SudokuSolver;
+import ottop.sudoku.*;
 import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.puzzle.IPuzzle;
 
@@ -37,8 +34,9 @@ public class Controller {
 
     private IPuzzle myPuzzle;
     private String currentCellSymbol = null;
-    private Map<Coord, Set<Integer>> currentPencilMarks;
+    //private Map<Coord, Set<Integer>> currentPencilMarks;
     private SolutionContainer currentSolutions;
+    private PossibilitiesContainer currentPossibilities;
 
     public Controller() {
         theController = this;
@@ -103,7 +101,7 @@ public class Controller {
     }
 
     public void showPuzzleHints() {
-        currentPencilMarks = null;
+        currentPossibilities = null;
         currentSolutions = null;
 
         if (myPuzzle.isSolved()) {
@@ -127,14 +125,14 @@ public class Controller {
             }
 
             if (cbBasicElimination.isSelected()) {
-                // TODO: or just keep sv instead
-                currentPencilMarks = sv.getPencilMarks(); // Keep in field for explain button
+                currentPossibilities = sv.getPossibilities();
 
-                for (Coord c : currentPencilMarks.keySet()) {
-                    myPuzzle.drawPossibilities(gameCanvas, c, currentPencilMarks.get(c));
+                for (Coord c : myPuzzle.getAllCells()) {
+                    if (!myPuzzle.isOccupied(c)) {
+                        myPuzzle.drawPossibilities(gameCanvas, c, currentPossibilities.getPossibilities(c));
+                    }
                 }
 
-                // TODO: keep this solution container too - preferably just one
                 currentSolutions = sv.getMoves();
                 notes.setText("Lone numbers: " + currentSolutions.getLoneSymbols() + "\n");
                 notes.appendText("Unique values: " + currentSolutions.getUniqueSymbols() + "\n");
@@ -196,15 +194,22 @@ public class Controller {
                     if (null != s) {
                         notes.appendText("Lone symbol: " + s + "\n");
                     }
+                    // TODO: consider highlighting the groups
                     AbstractMap.SimpleEntry<String, List<AbstractGroup>> s2 = currentSolutions.getUniqueSymbolAt(coord);
                     if (null != s2) {
                         notes.appendText("Unique symbol: " + s2.getKey() + " in " + s2.getValue() + "\n");
                     }
                 }
-                // TODO: if coord is a lone number say so
-                // TODO: if unique in groups G say so (color those groups?)
-                // TODO: explain why other marks have been eliminated
-                notes.appendText("Possible values: " + currentPencilMarks.get(coord));
+                notes.appendText("Possible values: " + currentPossibilities.getPossibilities(coord) + "\n");
+
+                // TODO: highlight the reasons in the board
+                // TODO: collect the simple eliminations
+                List<EliminationReason> reasons = currentPossibilities.getEliminations(coord);
+                if (null != reasons) {
+                    for (EliminationReason reason : reasons) {
+                        notes.appendText(reason + "\n");
+                    }
+                }
             } else {
                 IPuzzle newPuzzle = myPuzzle.doMove(coord, currentCellSymbol);
                 if (newPuzzle != null) {

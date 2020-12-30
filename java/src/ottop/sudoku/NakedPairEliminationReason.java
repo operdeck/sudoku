@@ -8,27 +8,27 @@ public class NakedPairEliminationReason extends EliminationReason {
 
     private final AbstractGroup removedFromGroup;
     private final boolean isExtendedNakedPairElimination;
+    private final Set<String> nakedPairSymbols;
     private final Set<Coord> nakedPairCells;
 
     public NakedPairEliminationReason(Set<String> symbols,
-                                                  Set<Coord> removedFromCells,
+                                                  Coord removedFromCell,
                                                   AbstractGroup removedFromGroup,
+                                      Set<String> nakedPairSymbols,
                                       Set<Coord> nakedPairCells,
                                       boolean isExtendedNakedPairElimination)
     {
-        super(symbols, removedFromCells);
+        super(symbols, removedFromCell);
         this.removedFromGroup = removedFromGroup;
+        this.nakedPairSymbols = nakedPairSymbols;
         this.nakedPairCells = nakedPairCells;
         this.isExtendedNakedPairElimination = isExtendedNakedPairElimination;
     }
-//                    if (cache.removePossibilities(possibilities, c, " in " + groupID +
-//            " because " + possibilities +
-//            " have to be in one of " + coordinates + " (" + reason + ")")) {
 
     public String toString() {
         StringBuilder result = new StringBuilder(super.toString());
-        result.append(" of ").append(removedFromGroup);
-        result.append(" because they have to be in ").append(nakedPairCells);
+        result.append(" in ").append(removedFromGroup);
+        result.append(" because ").append(nakedPairSymbols).append(" have to be in ").append(nakedPairCells);
         if (!isExtendedNakedPairElimination) result.append(" (Simple Naked Pairs)");
         if (isExtendedNakedPairElimination) result.append(" (Extended Naked Pairs)");
         return result.toString();

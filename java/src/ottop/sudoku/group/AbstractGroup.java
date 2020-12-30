@@ -2,7 +2,7 @@ package ottop.sudoku.group;
 
 import ottop.sudoku.Coord;
 import ottop.sudoku.NakedPairEliminationReason;
-import ottop.sudoku.PencilMarkContainer;
+import ottop.sudoku.PossibilitiesContainer;
 import ottop.sudoku.SolutionContainer;
 import ottop.sudoku.puzzle.IPuzzle;
 
@@ -83,7 +83,7 @@ public abstract class AbstractGroup {
         return true;
     }
 
-    private Integer getUniquePossibility(PencilMarkContainer cache,
+    private Integer getUniquePossibility(PossibilitiesContainer cache,
                                          Coord myCell) {
         Set<Integer> remainingPossibilities = new HashSet<>(cache.getPossibilities(myCell));
         for (Coord otherCell : coords.keySet()) {
@@ -97,7 +97,7 @@ public abstract class AbstractGroup {
         return null;
     }
 
-    public boolean addPossibilitiesToSolution(PencilMarkContainer poss, SolutionContainer sols) {
+    public boolean addPossibilitiesToSolution(PossibilitiesContainer poss, SolutionContainer sols) {
         boolean found = false;
 
         for (Coord myCell : coords.keySet()) {
@@ -135,7 +135,7 @@ public abstract class AbstractGroup {
         return coords.keySet();
     }
 
-    public boolean eliminateNakedPairs(PencilMarkContainer cache, IPuzzle myPuzzle) {
+    public boolean eliminateNakedPairs(PossibilitiesContainer possibilitiesContainer, IPuzzle myPuzzle) {
 
         boolean result = false;
 
@@ -143,7 +143,7 @@ public abstract class AbstractGroup {
         Map<Set<Integer>, Set<Coord>> map = new LinkedHashMap<>();
         for (Coord c : coords.keySet()) {
             if (!isOccupied(c)) {
-                Set<Integer> pc = cache.getPossibilities(c);
+                Set<Integer> pc = possibilitiesContainer.getPossibilities(c);
                 Set<Coord> coordSet = map.computeIfAbsent(pc, k -> new HashSet<>());
                 coordSet.add(c);
             }
@@ -151,7 +151,7 @@ public abstract class AbstractGroup {
 
         // find groups of cells that all have the same possibilities, and which is of the same size as the
         // nr of possibilities: the possibilities can be removed from the rest of the group
-        if (eliminateInGroup(cache, result, map, false, myPuzzle)) result = true;
+        if (eliminateInGroup(possibilitiesContainer, result, map, false, myPuzzle)) result = true;
 
         // Combine elements in this map. For example, if there are entries
         // {26} --> [a], {27} --> [c], {26} --> [c] can be combined
@@ -159,30 +159,47 @@ public abstract class AbstractGroup {
         combineNakedPairs(map);
 
         // Do further elimination (in two steps just to improve reporting)
-        if (eliminateInGroup(cache, result, map, true, myPuzzle)) result = true;
+        if (eliminateInGroup(possibilitiesContainer, result, map, true, myPuzzle)) result = true;
 
         return result;
     }
 
-    private boolean eliminateInGroup(PencilMarkContainer possibilitiesContainer,
+    private boolean eliminateInGroup(PossibilitiesContainer possibilitiesContainer,
                                      boolean result, Map<Set<Integer>, Set<Coord>> map,
                                      boolean isExtended, IPuzzle myPuzzle) {
         for (Entry<Set<Integer>, Set<Coord>> entry : map.entrySet()) {
-            Set<Integer> possibilities = entry.getKey();
-            Set<String> possibilitiesSymbols = new HashSet<>();
-            for (Integer p : possibilities) {
-                possibilitiesSymbols.add(myPuzzle.symbolCodeToSymbol(p));
+            Set<Integer> nakedPairSymbolCodes = entry.getKey();
+            Set<String> nakedPairSymbols = new HashSet<>();
+            for (Integer p : nakedPairSymbolCodes) {
+                nakedPairSymbols.add(myPuzzle.symbolCodeToSymbol(p));
             }
-            Set<Coord> coordinates = entry.getValue();
-            if (possibilities.size() > 1 && possibilities.size() == coordinates.size()) {
-                // remove all of the digits from 'possibilities' from
-                // the rest of the possibilities in this group
-                Set<Coord> restOfGroup = new HashSet<Coord>(coords.keySet());
-                restOfGroup.removeAll(coordinates);
-                if (possibilitiesContainer.removePossibilities(possibilities, restOfGroup,
-                        new NakedPairEliminationReason(possibilitiesSymbols, restOfGroup,
-                                this,
-                                coordinates, isExtended))) result=true;
+            Set<Coord> nakedPairCoords = entry.getValue();
+            if (nakedPairSymbolCodes.size() > 1 && nakedPairSymbolCodes.size() == nakedPairCoords.size()) {
+                for (Coord c : coords.keySet()) {
+                    if (!isOccupied(c)) {
+                        if (!nakedPairCoords.contains(c)) {
+
+                            // naked pair symbols to be removed at c but find the
+                            // intersection with the remaining possibilities so only
+                            // really remove the ones not already removed earlier
+                            Set<Integer> currentPossibilities = possibilitiesContainer.getPossibilities(c);
+                            Set<Integer> actualRemovals = new HashSet<>();
+                            actualRemovals.addAll(nakedPairSymbolCodes);
+                            actualRemovals.retainAll(currentPossibilities);
+
+                            // translate actual removals to symbols
+                            Set<String> actualRemovalSymbols = new HashSet<>();
+                            for (Integer p : actualRemovals) {
+                                actualRemovalSymbols.add(myPuzzle.symbolCodeToSymbol(p));
+                            }
+
+                            if (possibilitiesContainer.removePossibilities(actualRemovals, c,
+                                    new NakedPairEliminationReason(actualRemovalSymbols, c,
+                                            this,
+                                            nakedPairSymbols, nakedPairCoords, isExtended))) result=true;
+                        }
+                    }
+                }
             }
         }
         return result;
@@ -261,7 +278,7 @@ public abstract class AbstractGroup {
         return result;
     }
 
-    public Set<Integer> getRowSet(int symbolCode, PencilMarkContainer cache) {
+    public Set<Integer> getRowSet(int symbolCode, PossibilitiesContainer cache) {
         Set<Integer> set = new HashSet<>();
 
         for (Coord c : coords.keySet()) {
@@ -273,7 +290,7 @@ public abstract class AbstractGroup {
         return set;
     }
 
-    public Set<Integer> getColSet(int symbolCode, PencilMarkContainer possibilities) {
+    public Set<Integer> getColSet(int symbolCode, PossibilitiesContainer possibilities) {
         Set<Integer> set = new HashSet<>();
 
         for (Coord c : coords.keySet()) {

@@ -1,16 +1,14 @@
 package ottop.sudoku;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public abstract class EliminationReason {
     protected final Set<String> symbols;
     protected final Set<Coord> coords;
 
-    protected EliminationReason(Set<String> symbols, Set<Coord> coords) {
-        this.symbols = symbols;
-        this.coords = coords;
-    }
     protected EliminationReason(String symbol, Set<Coord> coords) {
         this.symbols = new HashSet<>();
         this.symbols.add(symbol);
@@ -42,5 +40,13 @@ public abstract class EliminationReason {
             result.append(coords.iterator().next());
         }
         return result.toString();
+    }
+
+    public List<EliminationReason> combine(List<EliminationReason> eliminationReasons) {
+        if (eliminationReasons == null) {
+            eliminationReasons = new ArrayList<>();
+        }
+        eliminationReasons.add(this);
+        return eliminationReasons;
     }
 }

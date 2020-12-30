@@ -13,7 +13,7 @@ import java.util.*;
 // https://www.extremesudoku.info/
 
 public class SudokuSolver {
-    private PencilMarkContainer possibilities;
+    private PossibilitiesContainer possibilities;
     private IPuzzle myPuzzle;
     private final boolean trace;
 
@@ -25,7 +25,7 @@ public class SudokuSolver {
         this.trace = trace;
         myPuzzle = p;
         p.resetState();
-        possibilities = new PencilMarkContainer(p, trace);
+        possibilities = new PossibilitiesContainer(p);
     }
 
     public boolean eliminateByRadiationFromIntersections() {
@@ -168,7 +168,7 @@ public class SudokuSolver {
 
     public Map.Entry<Coord, String> nextMove(int level) {
         Map.Entry<Coord, String> nextMove = null;
-        possibilities = new PencilMarkContainer(myPuzzle, trace);
+        possibilities = new PossibilitiesContainer(myPuzzle);
 
         eliminate(level);
 
@@ -191,7 +191,7 @@ public class SudokuSolver {
                 }
                 IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
                 myPuzzle = nextPuzzle;
-                possibilities = new PencilMarkContainer(nextPuzzle, trace);
+                possibilities = new PossibilitiesContainer(nextPuzzle);
             } else {
                 return false;
             }
@@ -237,8 +237,12 @@ public class SudokuSolver {
         return sols;
     }
 
-    public Map<Coord, Set<Integer>> getPencilMarks() {
-        return possibilities.getAllPossibilities(myPuzzle);
+    // public Map<Coord, Set<Integer>> getPencilMarks() {
+    //    return possibilities.getAllPossibilities(myPuzzle);
+    //}
+
+    public PossibilitiesContainer getPossibilities() {
+        return possibilities;
     }
 
     public int getTotalNumberOfPencilMarks() {
