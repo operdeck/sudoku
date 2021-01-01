@@ -1,16 +1,15 @@
-package ottop.sudoku;
+package ottop.sudoku.explain;
 
+import ottop.sudoku.Coord;
 import ottop.sudoku.group.AbstractGroup;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SimpleEliminationReason extends EliminationReason {
 
     private final AbstractGroup removedByGroup;
 
-    public SimpleEliminationReason(String symbol, Coord removedFromCell, AbstractGroup removedByGroup)
-    {
+    public SimpleEliminationReason(String symbol, Coord removedFromCell, AbstractGroup removedByGroup) {
         super(symbol, removedFromCell);
         this.removedByGroup = removedByGroup;
     }

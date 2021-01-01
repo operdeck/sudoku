@@ -1,9 +1,8 @@
 package ottop.sudoku.group;
 
 import ottop.sudoku.Coord;
-import ottop.sudoku.NakedPairEliminationReason;
 import ottop.sudoku.PossibilitiesContainer;
-import ottop.sudoku.SolutionContainer;
+import ottop.sudoku.explain.NakedPairEliminationReason;
 import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.*;
@@ -16,24 +15,24 @@ public abstract class AbstractGroup {
     private final int[] groupSymbolCodes; // current cell state
     private final String groupID;
 
-	/*
-	For a standard Sudoku:
+    /*
+    For a standard Sudoku:
 
-	Group has cells with internal index 0..8, mapped to (current) symbol codes via "groupSymbolCodes"
-	"coords" indicates where a coord is in this group: a map of Coord --> internal index
-	"hasSymbolCodes" indicates which symbol codes are currently in this group
+    Group has cells with internal index 0..8, mapped to (current) symbol codes via "groupSymbolCodes"
+    "coords" indicates where a coord is in this group: a map of Coord --> internal index
+    "hasSymbolCodes" indicates which symbol codes are currently in this group
 
-	So
+    So
 
-	Puzzle.symbolCodeToSymbol( groupSymbolCodes[coords[CELL]] ) gives the symbol at Coord CELL
+    Puzzle.symbolCodeToSymbol( groupSymbolCodes[coords[CELL]] ) gives the symbol at Coord CELL
 
-	and
+    and
 
-	groupSymbolCodes[i] = myPuzzle.getSymbolCodeAtCoordinates(
-	   new Coord(startX+internalIndexToRelativeX(i),
-	             startY+internalIndexToRelativeY(i)));
+    groupSymbolCodes[i] = myPuzzle.getSymbolCodeAtCoordinates(
+       new Coord(startX+internalIndexToRelativeX(i),
+                 startY+internalIndexToRelativeY(i)));
 
-	 */
+     */
     protected int groupSize; // number of cells in a group, identical to number of distinct symbols -1 for empty
     protected int startX;
     protected int startY;
@@ -65,7 +64,7 @@ public abstract class AbstractGroup {
 
     public abstract int internalIndexToRelativeY(int idx);
 
-    private boolean isInGroup(Coord c) {
+    public boolean isInGroup(Coord c) {
         return coords.containsKey(c);
     }
 
@@ -78,47 +77,47 @@ public abstract class AbstractGroup {
     public boolean isPossibility(int symbolCode, Coord c) {
         if (isInGroup(c)) {
             if (hasSymbolCode[symbolCode]) return false;
-			return !isOccupied(c);
+            return !isOccupied(c);
         }
         return true;
     }
 
-    private Integer getUniquePossibility(PossibilitiesContainer cache,
-                                         Coord myCell) {
-        Set<Integer> remainingPossibilities = new HashSet<>(cache.getPossibilities(myCell));
-        for (Coord otherCell : coords.keySet()) {
-            if (otherCell != myCell) {
-                remainingPossibilities.removeAll(cache.getPossibilities(otherCell));
-            }
-        }
-        if (remainingPossibilities.size() == 1) {
-            return remainingPossibilities.iterator().next();
-        }
-        return null;
-    }
+//    private Integer getUniquePossibility(PossibilitiesContainer cache,
+//                                         Coord myCell) {
+//        Set<Integer> remainingPossibilities = new HashSet<>(cache.getPossibilities(myCell));
+//        for (Coord otherCell : coords.keySet()) {
+//            if (otherCell != myCell) {
+//                remainingPossibilities.removeAll(cache.getPossibilities(otherCell));
+//            }
+//        }
+//        if (remainingPossibilities.size() == 1) {
+//            return remainingPossibilities.iterator().next();
+//        }
+//        return null;
+//    }
 
-    public boolean addPossibilitiesToSolution(PossibilitiesContainer poss, SolutionContainer sols) {
-        boolean found = false;
-
-        for (Coord myCell : coords.keySet()) {
-            if (coords.get(myCell) != null && groupSymbolCodes[coords.get(myCell)] != 0) continue;
-
-            Set<Integer> cellPossibilities = poss.getPossibilities(myCell);
-            if (cellPossibilities != null) {
-                if (cellPossibilities.size() == 1) {
-                    Integer loneNumber = cellPossibilities.iterator().next();
-                    found = sols.addLoneSymbolCode(myCell, loneNumber);
-                }
-                if (cellPossibilities.size() >= 1) {
-                    Integer uniquePossibility = getUniquePossibility(poss, myCell);
-                    if (uniquePossibility != null) {
-                        found = sols.addUniqueSymbolCode(myCell, uniquePossibility, this);
-                    }
-                }
-            }
-        }
-        return found;
-    }
+//    public boolean addPossibilitiesToSolution(PossibilitiesContainer poss, SolutionContainer sols) {
+//        boolean found = false;
+//
+//        for (Coord myCell : coords.keySet()) {
+//            if (coords.get(myCell) != null && groupSymbolCodes[coords.get(myCell)] != 0) continue;
+//
+//            Set<Integer> cellPossibilities = poss.getPossibilities(myCell);
+//            if (cellPossibilities != null) {
+//                if (cellPossibilities.size() == 1) {
+//                    Integer loneNumber = cellPossibilities.iterator().next();
+//                    found = sols.addLoneSymbolCode(myCell, loneNumber);
+//                }
+//                if (cellPossibilities.size() >= 1) {
+//                    Integer uniquePossibility = getUniquePossibility(poss, myCell);
+//                    if (uniquePossibility != null) {
+//                        found = sols.addUniqueSymbolCode(myCell, uniquePossibility, this);
+//                    }
+//                }
+//            }
+//        }
+//        return found;
+//    }
 
     public boolean solved() {
         boolean isSolved = true;
@@ -143,7 +142,7 @@ public abstract class AbstractGroup {
         Map<Set<Integer>, Set<Coord>> map = new LinkedHashMap<>();
         for (Coord c : coords.keySet()) {
             if (!isOccupied(c)) {
-                Set<Integer> pc = possibilitiesContainer.getPossibilities(c);
+                Set<Integer> pc = possibilitiesContainer.getCandidatesAtCell(c);
                 Set<Coord> coordSet = map.computeIfAbsent(pc, k -> new HashSet<>());
                 coordSet.add(c);
             }
@@ -182,7 +181,7 @@ public abstract class AbstractGroup {
                             // naked pair symbols to be removed at c but find the
                             // intersection with the remaining possibilities so only
                             // really remove the ones not already removed earlier
-                            Set<Integer> currentPossibilities = possibilitiesContainer.getPossibilities(c);
+                            Set<Integer> currentPossibilities = possibilitiesContainer.getCandidatesAtCell(c);
                             Set<Integer> actualRemovals = new HashSet<>();
                             actualRemovals.addAll(nakedPairSymbolCodes);
                             actualRemovals.retainAll(currentPossibilities);
@@ -196,7 +195,7 @@ public abstract class AbstractGroup {
                             if (possibilitiesContainer.removePossibilities(actualRemovals, c,
                                     new NakedPairEliminationReason(actualRemovalSymbols, c,
                                             this,
-                                            nakedPairSymbols, nakedPairCoords, isExtended))) result=true;
+                                            nakedPairSymbols, nakedPairCoords, isExtended))) result = true;
                         }
                     }
                 }
@@ -282,7 +281,7 @@ public abstract class AbstractGroup {
         Set<Integer> set = new HashSet<>();
 
         for (Coord c : coords.keySet()) {
-            if (cache.getPossibilities(c).contains(symbolCode)) {
+            if (cache.getCandidatesAtCell(c).contains(symbolCode)) {
                 set.add(c.getY());
             }
         }
@@ -294,7 +293,7 @@ public abstract class AbstractGroup {
         Set<Integer> set = new HashSet<>();
 
         for (Coord c : coords.keySet()) {
-            if (possibilities.getPossibilities(c).contains(symbolCode)) {
+            if (possibilities.getCandidatesAtCell(c).contains(symbolCode)) {
                 set.add(c.getX());
             }
         }

@@ -1,5 +1,7 @@
-package ottop.sudoku;
+package ottop.sudoku.explain;
 
+import ottop.sudoku.Coord;
+import ottop.sudoku.GroupIntersection;
 import ottop.sudoku.group.AbstractGroup;
 
 import java.util.Set;
@@ -14,8 +16,7 @@ public class IntersectionRadiationEliminationReason extends EliminationReason {
                                                   Set<Coord> removedFromCells,
                                                   AbstractGroup mustBeInGroup,
                                                   AbstractGroup removedFromGroup,
-                                                  GroupIntersection intersection)
-    {
+                                                  GroupIntersection intersection) {
         super(symbol, removedFromCells);
         this.mustBeInGroup = mustBeInGroup;
         this.removedFromGroup = removedFromGroup;

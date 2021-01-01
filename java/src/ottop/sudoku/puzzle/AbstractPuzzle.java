@@ -114,6 +114,17 @@ public abstract class AbstractPuzzle implements IPuzzle {
     }
 
     @Override
+    public List<AbstractGroup> getGroups(Coord c) {
+        List<AbstractGroup> grps = new ArrayList<>();
+        for (AbstractGroup g : groups) {
+            if (g.isInGroup(c)) {
+                grps.add(g);
+            }
+        }
+        return grps;
+    }
+
+    @Override
     public Coord[] getAllCells() {
         return allCells;
     }

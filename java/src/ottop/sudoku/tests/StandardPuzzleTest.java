@@ -77,7 +77,7 @@ public class StandardPuzzleTest {
     @Test
     public void checkDoMove() {
         IPuzzle p = PuzzleDB.Trouw_535;
-        SudokuSolver s = new SudokuSolver(p, false);
+        SudokuSolver s = new SudokuSolver(p);
 
         assertFalse(p.isOccupied(new Coord("r4c9")));
         assertFalse(p.canUndo());

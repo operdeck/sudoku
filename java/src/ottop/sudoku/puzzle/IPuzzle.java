@@ -4,6 +4,7 @@ import javafx.scene.canvas.Canvas;
 import ottop.sudoku.Coord;
 import ottop.sudoku.group.AbstractGroup;
 
+import java.util.List;
 import java.util.Set;
 
 public interface IPuzzle {
@@ -39,9 +40,12 @@ public interface IPuzzle {
 
     AbstractGroup[] getGroups();
 
+    List<AbstractGroup> getGroups(Coord coord);
+
     String getName();
 
     void drawPuzzleOnCanvas(Canvas canvas, Coord highlight);
 
     void drawPossibilities(Canvas canvas, Coord c, Set<Integer> values);
+
 }

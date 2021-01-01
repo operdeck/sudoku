@@ -1,5 +1,6 @@
-package ottop.sudoku;
+package ottop.sudoku.explain;
 
+import ottop.sudoku.Coord;
 import ottop.sudoku.group.AbstractGroup;
 
 import java.util.Set;
@@ -11,11 +12,10 @@ public class XWingEliminationReason extends EliminationReason {
     private final Set<AbstractGroup> groups2;
 
     public XWingEliminationReason(String symbol,
-                                                  Set<Coord> removedFromCells,
+                                  Set<Coord> removedFromCells,
                                   AbstractGroup removedFromGroup,
-                                                  Set<AbstractGroup> groups1,
-                                                  Set<AbstractGroup> groups2)
-    {
+                                  Set<AbstractGroup> groups1,
+                                  Set<AbstractGroup> groups2) {
         super(symbol, removedFromCells);
         this.removedFromGroup = removedFromGroup;
         this.groups1 = groups1;

@@ -5,14 +5,17 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import ottop.sudoku.*;
+import ottop.sudoku.Coord;
+import ottop.sudoku.PossibilitiesContainer;
+import ottop.sudoku.PuzzleDB;
+import ottop.sudoku.SudokuSolver;
+import ottop.sudoku.explain.EliminationReason;
 import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class Controller {
     public static Controller theController = null;
@@ -28,14 +31,15 @@ public class Controller {
     public Button buttonMoreHelp;
     public TextArea notes;
     public Label labelPosition;
-    public ChoiceBox cbPuzzleDB;
+    public ChoiceBox<String> cbPuzzleDB;
     public Button nextMoveButton;
     public Button explainButton;
 
     private IPuzzle myPuzzle;
     private String currentCellSymbol = null;
     //private Map<Coord, Set<Integer>> currentPencilMarks;
-    private SolutionContainer currentSolutions;
+    //private SolutionContainer currentSolutions;
+    // TODO or keep the solver? And reset whenever puzzle changes.
     private PossibilitiesContainer currentPossibilities;
 
     public Controller() {
@@ -59,7 +63,6 @@ public class Controller {
     }
 
     private void updateWholeDisplay(Coord highlight) {
-
         // List of puzzles
         try {
             String[] puzzles = PuzzleDB.getPuzzles();
@@ -72,14 +75,14 @@ public class Controller {
         cbPuzzleDB.setValue(myPuzzle.getName());
         undoButton.setDisable(!myPuzzle.canUndo());
 
-        // Possible values
+        // Symbol buttons
         digitButtonBar.getButtons().removeAll(digitButtonBar.getButtons());
         for (int symbolCode = 1; symbolCode < myPuzzle.getSymbolCodeRange(); symbolCode++) {
             Button symbolButton = new Button();
             symbolButton.setText(myPuzzle.symbolCodeToSymbol(symbolCode));
             symbolButton.setStyle("-fx-font-size:8; -fx-font-weight: bold");
             symbolButton.setPrefSize((digitButtonBar.getPrefWidth() - digitButtonBar.getPadding().getLeft() - digitButtonBar.getPadding().getRight()) / (myPuzzle.getSymbolCodeRange() - 1), digitButtonBar.getPrefHeight());
-            symbolButton.setOnAction(actionEvent -> symbolClicked(actionEvent));
+            symbolButton.setOnAction(this::symbolClicked);
             digitButtonBar.getButtons().add(symbolButton);
         }
 
@@ -100,9 +103,10 @@ public class Controller {
         updateWholeDisplay(null);
     }
 
+    // TODO: refactor this to just show the state of the solver not redo it here
+    // elimination happens when checkboxes are checked
     public void showPuzzleHints() {
         currentPossibilities = null;
-        currentSolutions = null;
 
         if (myPuzzle.isSolved()) {
             notes.setText("Complete");
@@ -125,17 +129,16 @@ public class Controller {
             }
 
             if (cbBasicElimination.isSelected()) {
-                currentPossibilities = sv.getPossibilities();
+                currentPossibilities = sv.getPossibilitiesContainer();
 
                 for (Coord c : myPuzzle.getAllCells()) {
                     if (!myPuzzle.isOccupied(c)) {
-                        myPuzzle.drawPossibilities(gameCanvas, c, currentPossibilities.getPossibilities(c));
+                        myPuzzle.drawPossibilities(gameCanvas, c, currentPossibilities.getCandidatesAtCell(c));
                     }
                 }
 
-                currentSolutions = sv.getMoves();
-                notes.setText("Lone numbers: " + currentSolutions.getLoneSymbols() + "\n");
-                notes.appendText("Unique values: " + currentSolutions.getUniqueSymbols() + "\n");
+                notes.setText("Lone numbers: " + sv.getLoneSymbols() + "\n");
+                notes.appendText("Unique values: " + sv.getUniqueSymbols() + "\n");
             } else {
                 notes.setText("");
             }
@@ -189,18 +192,20 @@ public class Controller {
                 // explain
                 notes.setText("Explain " + coord + "\n");
 
-                if (null != currentSolutions) {
-                    String s = currentSolutions.getLoneSymbolAt(coord);
+                if (null != currentPossibilities) {
+                    String s = currentPossibilities.getLoneSymbolAt(coord);
                     if (null != s) {
                         notes.appendText("Lone symbol: " + s + "\n");
                     }
                     // TODO: consider highlighting the groups
-                    AbstractMap.SimpleEntry<String, List<AbstractGroup>> s2 = currentSolutions.getUniqueSymbolAt(coord);
+                    AbstractMap.SimpleEntry<String, List<AbstractGroup>> s2 =
+                            currentPossibilities.getUniqueSymbolAt(coord);
                     if (null != s2) {
                         notes.appendText("Unique symbol: " + s2.getKey() + " in " + s2.getValue() + "\n");
                     }
                 }
-                notes.appendText("Possible values: " + currentPossibilities.getPossibilities(coord) + "\n");
+                notes.appendText("Possible values: " +
+                        currentPossibilities.getCandidatesAtCell(coord) + "\n");
 
                 // TODO: highlight the reasons in the board
                 // TODO: collect the simple eliminations

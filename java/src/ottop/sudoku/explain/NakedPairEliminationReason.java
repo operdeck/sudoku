@@ -1,5 +1,6 @@
-package ottop.sudoku;
+package ottop.sudoku.explain;
 
+import ottop.sudoku.Coord;
 import ottop.sudoku.group.AbstractGroup;
 
 import java.util.Set;
@@ -12,12 +13,11 @@ public class NakedPairEliminationReason extends EliminationReason {
     private final Set<Coord> nakedPairCells;
 
     public NakedPairEliminationReason(Set<String> symbols,
-                                                  Coord removedFromCell,
-                                                  AbstractGroup removedFromGroup,
+                                      Coord removedFromCell,
+                                      AbstractGroup removedFromGroup,
                                       Set<String> nakedPairSymbols,
                                       Set<Coord> nakedPairCells,
-                                      boolean isExtendedNakedPairElimination)
-    {
+                                      boolean isExtendedNakedPairElimination) {
         super(symbols, removedFromCell);
         this.removedFromGroup = removedFromGroup;
         this.nakedPairSymbols = nakedPairSymbols;
