@@ -2,7 +2,7 @@ package ottop.sudoku.group;
 
 import ottop.sudoku.Coord;
 import ottop.sudoku.PossibilitiesContainer;
-import ottop.sudoku.explain.NakedPairEliminationReason;
+import ottop.sudoku.explain.NakedGroupEliminationReason;
 import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.*;
@@ -82,43 +82,6 @@ public abstract class AbstractGroup {
         return true;
     }
 
-//    private Integer getUniquePossibility(PossibilitiesContainer cache,
-//                                         Coord myCell) {
-//        Set<Integer> remainingPossibilities = new HashSet<>(cache.getPossibilities(myCell));
-//        for (Coord otherCell : coords.keySet()) {
-//            if (otherCell != myCell) {
-//                remainingPossibilities.removeAll(cache.getPossibilities(otherCell));
-//            }
-//        }
-//        if (remainingPossibilities.size() == 1) {
-//            return remainingPossibilities.iterator().next();
-//        }
-//        return null;
-//    }
-
-//    public boolean addPossibilitiesToSolution(PossibilitiesContainer poss, SolutionContainer sols) {
-//        boolean found = false;
-//
-//        for (Coord myCell : coords.keySet()) {
-//            if (coords.get(myCell) != null && groupSymbolCodes[coords.get(myCell)] != 0) continue;
-//
-//            Set<Integer> cellPossibilities = poss.getPossibilities(myCell);
-//            if (cellPossibilities != null) {
-//                if (cellPossibilities.size() == 1) {
-//                    Integer loneNumber = cellPossibilities.iterator().next();
-//                    found = sols.addLoneSymbolCode(myCell, loneNumber);
-//                }
-//                if (cellPossibilities.size() >= 1) {
-//                    Integer uniquePossibility = getUniquePossibility(poss, myCell);
-//                    if (uniquePossibility != null) {
-//                        found = sols.addUniqueSymbolCode(myCell, uniquePossibility, this);
-//                    }
-//                }
-//            }
-//        }
-//        return found;
-//    }
-
     public boolean solved() {
         boolean isSolved = true;
         for (int symbolCode = 1; symbolCode <= groupSize; symbolCode++) {
@@ -193,7 +156,7 @@ public abstract class AbstractGroup {
                             }
 
                             if (possibilitiesContainer.removePossibilities(actualRemovals, c,
-                                    new NakedPairEliminationReason(actualRemovalSymbols, c,
+                                    new NakedGroupEliminationReason(actualRemovalSymbols, c,
                                             this,
                                             nakedPairSymbols, nakedPairCoords, isExtended))) result = true;
                         }

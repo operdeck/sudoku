@@ -1,6 +1,7 @@
 package ottop.sudoku.explain;
 
 import ottop.sudoku.Coord;
+import ottop.sudoku.group.AbstractGroup;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,12 +38,12 @@ public abstract class EliminationReason {
         } else {
             result.append(symbols.iterator().next());
         }
-        result.append(" from ");
-        if (coords.size() > 1) {
-            result.append(coords);
-        } else {
-            result.append(coords.iterator().next());
-        }
+//        result.append(" from ");
+//        if (coords.size() > 1) {
+//            result.append(coords);
+//        } else {
+//            result.append(coords.iterator().next());
+//        }
         return result.toString();
     }
 
@@ -52,5 +53,13 @@ public abstract class EliminationReason {
         }
         eliminationReasons.add(this);
         return eliminationReasons;
+    }
+
+    public List<AbstractGroup> getHighlightGroups() {
+        return null;
+    }
+
+    public Set<Coord> getHighlightSubArea() {
+        return null;
     }
 }

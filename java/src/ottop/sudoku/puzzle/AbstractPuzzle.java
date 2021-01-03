@@ -10,10 +10,7 @@ import javafx.scene.text.TextAlignment;
 import ottop.sudoku.Coord;
 import ottop.sudoku.group.AbstractGroup;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public abstract class AbstractPuzzle implements IPuzzle {
     final String name;
@@ -22,6 +19,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
     int[][] board; // [x][y]
     String[] possibleSymbols;
     Coord[] allCells;
+    List<AbstractGroup> groupsWithBoundaries = new ArrayList<>();
 
     public AbstractPuzzle(String name) {
         this.name = name;
@@ -93,6 +91,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
 
     @Override
     public IPuzzle undoMove() {
+        // Reset state here?
         return previousPuzzle;
     }
 
@@ -166,7 +165,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
     }
 
     @Override
-    public void drawPuzzleOnCanvas(Canvas canvas, Coord highlight) {
+    public void drawPuzzleOnCanvas(Canvas canvas, Coord highlight, Set<Coord> currentHighlightedSubArea) {
         // Canvas
         GraphicsContext gc = canvas.getGraphicsContext2D();
         double canvasHeight = canvas.getHeight();
@@ -178,12 +177,16 @@ public abstract class AbstractPuzzle implements IPuzzle {
         gc.setLineWidth(1);
         gc.fillRect(0, 0, canvasWidth, canvasHeight);
 
+        // For buddy cells
+        Set<Coord> buddies = getBuddies(highlight);
+
         // Background of individual cells
-        for (int x = 0; x < getWidth(); x++) {
-            for (int y = 0; y < getHeight(); y++) {
-                gc.setFill(getCellBackground(x, y));
-                gc.fillRect(getCellX(canvas, x), getCellY(canvas, y), getCellWidth(canvas), getCellHeight(canvas));
-            }
+        for (Coord c: allCells) {
+            gc.setFill(getCellBackground(c.getX(), c.getY(),
+                    (buddies != null) && buddies.contains(c),
+                    (currentHighlightedSubArea != null) && currentHighlightedSubArea.contains(c)));
+            gc.fillRect(getCellX(canvas, c.getX()), getCellY(canvas, c.getY()),
+                    getCellWidth(canvas), getCellHeight(canvas));
         }
 
         // Symbols
@@ -207,24 +210,48 @@ public abstract class AbstractPuzzle implements IPuzzle {
             }
         }
 
-        drawGroupBoundaries(canvas, gc);
-
-        // Highlight last move
-        if (highlight != null) {
-            gc.setStroke(Color.RED);
-            gc.setLineWidth(3);
-            gc.strokeRect(getCellX(canvas, highlight.getX()), getCellY(canvas, highlight.getY()), getCellWidth(canvas), getCellHeight(canvas));
+        // Group boundaries
+        gc.setStroke(Color.BLUE);
+        gc.setLineWidth(3);
+        for (AbstractGroup g: getGroupsWithVisualBoundary()) {
+            drawGroup(canvas, g);
         }
     }
 
-    protected void drawGroupBoundaries(Canvas canvas, GraphicsContext gc) {
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(3);
-        for (int x = 0; x < 3; x++) {
-            for (int y = 0; y < 3; y++) {
-                gc.strokeRect(getCellX(canvas, x * 3), getCellY(canvas, y * 3), 3 * getCellWidth(canvas), 3 * getCellHeight(canvas));
-            }
+    protected List<AbstractGroup> getGroupsWithVisualBoundary() {
+        return groupsWithBoundaries;
+    }
+
+    @Override
+    public void drawGroup(Canvas canvas, AbstractGroup g) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        Set<Coord> coords = g.getCoords();
+        int xMin=Integer.MAX_VALUE, yMin=Integer.MAX_VALUE;
+        int xMax=Integer.MIN_VALUE, yMax= Integer.MIN_VALUE;
+        for (Coord c: coords) {
+           xMin = Math.min(xMin, c.getX());
+           xMax = Math.max(xMax, c.getX());
+           yMin = Math.min(yMin, c.getY());
+           yMax = Math.max(yMax, c.getY());
         }
+        gc.strokeRect(getCellX(canvas, xMin), getCellY(canvas, yMin),
+                (xMax-xMin+1)*getCellWidth(canvas), (yMax-yMin+1)*getCellHeight(canvas));
+
+    }
+
+    private Set<Coord> getBuddies(Coord highlight) {
+        Set<Coord> buddies = new TreeSet<>();
+
+        if (highlight != null) {
+            for (AbstractGroup g : groups) {
+                if (g.getCoords().contains(highlight)) {
+                    buddies.addAll(g.getCoords());
+                }
+            }
+            buddies.remove(highlight); // you are not your own buddy
+        }
+
+        return buddies;
     }
 
     @Override
@@ -270,8 +297,11 @@ public abstract class AbstractPuzzle implements IPuzzle {
         return (cellHeight);
     }
 
-    // TODO we could automatically detect overlapping groups
-    protected Paint getCellBackground(int x, int y) {
+    // TODO: we could automatically detect overlapping groups
+    protected Paint getCellBackground(int x, int y, boolean isBuddy, boolean isInHighlightedSubArea) {
+        if (isInHighlightedSubArea) return Color.BURLYWOOD;
+        if (isBuddy) return Color.LIGHTGRAY;
+
         return Color.WHITE;
     }
 

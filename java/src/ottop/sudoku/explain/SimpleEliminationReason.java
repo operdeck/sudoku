@@ -35,4 +35,9 @@ public class SimpleEliminationReason extends EliminationReason {
         result.append(" because of ").append(removedByGroup).append(" (Simple Elimination)");
         return result.toString();
     }
+
+    public List<AbstractGroup> getHighlightGroups() {
+        return List.of(removedByGroup);
+    }
+
 }

@@ -38,11 +38,13 @@ public class NRCPuzzle extends Standard9x9Puzzle {
     }
 
     @Override
-    protected Paint getCellBackground(int x, int y) {
+    protected Paint getCellBackground(int x, int y, boolean isBuddy, boolean isInHighlightedSubArea) {
         if (((x >= 1 && x <= 3) || (x >= 5 && x <= 7)) && ((y >= 1 && y <= 3) || (y >= 5 && y <= 7))) {
-            return Color.LIGHTGRAY;
+            if (isInHighlightedSubArea) return Color.BURLYWOOD;
+            if (isBuddy) return Color.DARKGREEN;
+            return Color.SEAGREEN;
         } else {
-            return super.getCellBackground(x, y);
+            return super.getCellBackground(x, y, isBuddy, isInHighlightedSubArea);
         }
     }
 

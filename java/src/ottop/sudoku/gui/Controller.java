@@ -1,21 +1,28 @@
 package ottop.sudoku.gui;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
 import ottop.sudoku.Coord;
 import ottop.sudoku.PossibilitiesContainer;
 import ottop.sudoku.PuzzleDB;
 import ottop.sudoku.SudokuSolver;
 import ottop.sudoku.explain.EliminationReason;
+import ottop.sudoku.explain.IntersectionRadiationEliminationReason;
 import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.group.SingleCellGroup;
 import ottop.sudoku.puzzle.IPuzzle;
 
-import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Controller {
     public static Controller theController = null;
@@ -27,27 +34,45 @@ public class Controller {
     public CheckBox cbXWings;
     public CheckBox cbRadiation;
     public Label tbLevel;
-    public CheckBox cbBasicElimination;
-    public Button buttonMoreHelp;
+    public CheckBox cbPencilMarks;
     public TextArea notes;
     public Label labelPosition;
     public ChoiceBox<String> cbPuzzleDB;
     public Button nextMoveButton;
     public Button explainButton;
+    public ListView lvEliminationSteps;
 
     private IPuzzle myPuzzle;
-    private String currentCellSymbol = null;
-    //private Map<Coord, Set<Integer>> currentPencilMarks;
-    //private SolutionContainer currentSolutions;
-    // TODO or keep the solver? And reset whenever puzzle changes.
-    private PossibilitiesContainer currentPossibilities;
+    private String currentActionButtonValue = null;
+    private Coord currentHighlightedCell = null;
+    private List<AbstractGroup> currentHighlightedGroups = null;
+    private Set<Coord> currentHighlightedSubArea = null;
+    private SudokuSolver currentSolver = null;
+    private List<EliminationReason> currentEliminationReasons = null;
 
     public Controller() {
         theController = this;
     }
 
+    public void initialize() {
+        ChangeListener listener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
+                int selectionIdx = lvEliminationSteps.getSelectionModel().getSelectedIndex();
+                if (currentEliminationReasons != null && selectionIdx >= 0 && selectionIdx<currentEliminationReasons.size()) {
+                    EliminationReason reason = currentEliminationReasons.get(selectionIdx);
+                    currentHighlightedGroups = reason.getHighlightGroups();
+                    currentHighlightedSubArea = reason.getHighlightSubArea();
+                    updateWholeDisplay(currentHighlightedCell);
+                }
+            }
+        };
+        lvEliminationSteps.getSelectionModel().selectedItemProperty().removeListener(listener);
+        lvEliminationSteps.getSelectionModel().selectedItemProperty().addListener(listener);
+    }
+
     public void symbolClicked(ActionEvent actionEvent) {
-        currentCellSymbol = ((Button) actionEvent.getSource()).getText();
+        currentActionButtonValue = ((Button) actionEvent.getSource()).getText();
     }
 
     // TODO: support arrow keys move around in canvas
@@ -57,12 +82,26 @@ public class Controller {
         setPuzzle(initPuzzle, null);
     }
 
-    public void setPuzzle(IPuzzle initPuzzle, Coord highlight) {
-        myPuzzle = initPuzzle;
+    public void setPuzzle(IPuzzle initialPuzzle, Coord highlight) {
+        myPuzzle = initialPuzzle;
+
+        currentSolver = (new SudokuSolver(myPuzzle))
+                .setEliminateIntersectionRadiation(cbRadiation.isSelected())
+                .setEliminateNakedPairs(cbNakedPairs.isSelected())
+                .setEliminateXWings(cbXWings.isSelected());
+        currentSolver.eliminatePossibilities();
+
+        currentEliminationReasons = null;
+        currentHighlightedGroups = null;
+        currentHighlightedSubArea = null;
+        lvEliminationSteps.getItems().clear();
+
         updateWholeDisplay(highlight);
     }
 
     private void updateWholeDisplay(Coord highlight) {
+        this.currentHighlightedCell = highlight;
+
         // List of puzzles
         try {
             String[] puzzles = PuzzleDB.getPuzzles();
@@ -87,63 +126,94 @@ public class Controller {
         }
 
         // Puzzle itself
-        myPuzzle.drawPuzzleOnCanvas(gameCanvas, highlight);
+        myPuzzle.drawPuzzleOnCanvas(gameCanvas, highlight, currentHighlightedSubArea);
 
         // Cursor
         labelPosition.setText("");
 
         // Hints & help
         showPuzzleHints();
+
+        // Highlight last move
+        if (highlight != null) {
+            GraphicsContext gc = gameCanvas.getGraphicsContext2D();
+            gc.setStroke(Color.RED);
+            gc.setLineWidth(3);
+            myPuzzle.drawGroup(gameCanvas, new SingleCellGroup(highlight, myPuzzle));
+        }
+
     }
 
     public void hintsAction(ActionEvent actionEvent) {
-        if ((cbRadiation.isSelected() || cbNakedPairs.isSelected() || cbXWings.isSelected()) & !cbBasicElimination.isSelected()) {
-            cbBasicElimination.setSelected(true);
-        }
-        updateWholeDisplay(null);
+        setPuzzle(myPuzzle, currentHighlightedCell); // will re-do eliminations and reset puzzle solver
     }
 
-    // TODO: refactor this to just show the state of the solver not redo it here
-    // elimination happens when checkboxes are checked
     public void showPuzzleHints() {
-        currentPossibilities = null;
-
         if (myPuzzle.isSolved()) {
-            notes.setText("Complete");
+            notes.setText("Complete\n");
             nextMoveButton.setDisable(true);
         } else if (myPuzzle.isInconsistent()) {
-            notes.setText("Inconsistent");
-            nextMoveButton.setDisable(false);
+            notes.setText("Inconsistent\n");
+            nextMoveButton.setDisable(true);
         } else {
+            notes.setText("");
             nextMoveButton.setDisable(false);
-            SudokuSolver sv = new SudokuSolver(myPuzzle);
+        }
 
-            if (cbRadiation.isSelected()) {
-                sv.eliminateByRadiationFromIntersections();
-            }
-            if (cbNakedPairs.isSelected()) {
-                sv.eliminateNakedPairs();
-            }
-            if (cbXWings.isSelected()) {
-                sv.eliminateByXWings();
-            }
+        if (!myPuzzle.isSolved()) {
+            if (currentHighlightedCell != null && !myPuzzle.isOccupied(currentHighlightedCell)) {
+                notes.appendText(currentHighlightedCell + ":\n");
 
-            if (cbBasicElimination.isSelected()) {
-                currentPossibilities = sv.getPossibilitiesContainer();
+                boolean hasPossibleMoves = false;
+                PossibilitiesContainer possibilitiesContainer = currentSolver.getPossibilitiesContainer();
+                if (null != possibilitiesContainer) {
+                    Map<Coord, String> nakedSingles = possibilitiesContainer.getAllNakedSingles();
+                    if (nakedSingles != null && nakedSingles.size()>0) {
+                        String symbol = nakedSingles.get(currentHighlightedCell);
+                        if (symbol != null) {
+                            notes.appendText("Naked Single: " + symbol + "\n");
+                            hasPossibleMoves = true;
+                        }
+                    }
 
-                for (Coord c : myPuzzle.getAllCells()) {
-                    if (!myPuzzle.isOccupied(c)) {
-                        myPuzzle.drawPossibilities(gameCanvas, c, currentPossibilities.getCandidatesAtCell(c));
+                    Map<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValues = possibilitiesContainer.getAllUniqueValues();
+                    if (uniqueValues != null && uniqueValues.size()>0) {
+                        Map.Entry<String, List<AbstractGroup>> symbol = uniqueValues.get(currentHighlightedCell);
+                        if (symbol != null) {
+                            notes.appendText("Unique Value: " + symbol.getKey() + " in " + symbol.getValue() + "\n");
+                            hasPossibleMoves = true;
+                        }
                     }
                 }
-
-                notes.setText("Lone numbers: " + sv.getLoneSymbols() + "\n");
-                notes.appendText("Unique values: " + sv.getUniqueSymbols() + "\n");
+                if (!hasPossibleMoves) {
+                    notes.appendText("Candidates: " +
+                            possibilitiesContainer.getCandidatesAtCell(currentHighlightedCell) + "\n");
+                }
             } else {
-                notes.setText("");
+                notes.appendText("Naked Singles: " + currentSolver.getNakedSingles() + "\n");
+                notes.appendText("Unique Values: " + currentSolver.getUniqueValues() + "\n");
+            }
+
+            if (cbPencilMarks.isSelected()) {
+                for (Coord c : myPuzzle.getAllCells()) {
+                    if (!myPuzzle.isOccupied(c)) {
+                        Set<Integer> candidates = currentSolver.getPossibilitiesContainer().getCandidatesAtCell(c);
+                        myPuzzle.drawPossibilities(gameCanvas, c, candidates);
+                    }
+                }
+            }
+
+            // Highlighted groups
+            GraphicsContext gc = gameCanvas.getGraphicsContext2D();
+            gc.setStroke(Color.ORANGE);
+            gc.setLineWidth(3);
+            if (currentHighlightedGroups != null) {
+                for (AbstractGroup g : currentHighlightedGroups) {
+                    myPuzzle.drawGroup(gameCanvas, g);
+                }
             }
         }
-        explainButton.setDisable(!cbBasicElimination.isSelected());
+        explainButton.setDisable(!cbPencilMarks.isSelected());
     }
 
     public void moreHelpAction(ActionEvent actionEvent) {
@@ -160,8 +230,8 @@ public class Controller {
     public void canvasMouseMove(MouseEvent mouseEvent) {
         int x = (int) Math.floor(myPuzzle.getWidth() * mouseEvent.getX() / gameCanvas.getWidth());
         int y = (int) Math.floor(myPuzzle.getHeight() * mouseEvent.getY() / gameCanvas.getHeight());
-        if (x >= 0 && x <= 9) {
-            if (y >= 0 && y <= 9) {
+        if (x >= 0 && x <= myPuzzle.getWidth()) {
+            if (y >= 0 && y <= myPuzzle.getHeight()) {
                 labelPosition.setText("" + new Coord(x, y));
             }
         }
@@ -186,60 +256,44 @@ public class Controller {
         int x = (int) Math.floor(myPuzzle.getWidth() * mouseEvent.getX() / gameCanvas.getWidth());
         int y = (int) Math.floor(myPuzzle.getHeight() * mouseEvent.getY() / gameCanvas.getHeight());
         Coord coord = new Coord(x, y);
+        labelPosition.setText(""+coord);
 
-        if (null != currentCellSymbol) {
-            if ("?".equals(currentCellSymbol)) {
+        if (null != currentActionButtonValue) {
+            if ("?".equals(currentActionButtonValue)) {
                 // explain
-                notes.setText("Explain " + coord + "\n");
+                if (!myPuzzle.isOccupied(coord)) {
+                    PossibilitiesContainer possibilitiesContainer = currentSolver.getPossibilitiesContainer();
 
-                if (null != currentPossibilities) {
-                    String s = currentPossibilities.getLoneSymbolAt(coord);
-                    if (null != s) {
-                        notes.appendText("Lone symbol: " + s + "\n");
+                    currentEliminationReasons = possibilitiesContainer.getEliminationReasons(coord);
+                    lvEliminationSteps.getItems().clear();
+                    currentHighlightedGroups = null;
+                    currentHighlightedSubArea = null;
+                    lvEliminationSteps.setDisable(null == currentEliminationReasons || currentEliminationReasons.size() == 0);
+                    if (null != currentEliminationReasons) {
+                        for (EliminationReason reason : currentEliminationReasons) {
+                            lvEliminationSteps.getItems().add(reason);
+                        }
                     }
-                    // TODO: consider highlighting the groups
-                    AbstractMap.SimpleEntry<String, List<AbstractGroup>> s2 =
-                            currentPossibilities.getUniqueSymbolAt(coord);
-                    if (null != s2) {
-                        notes.appendText("Unique symbol: " + s2.getKey() + " in " + s2.getValue() + "\n");
-                    }
+                } else {
+                    currentEliminationReasons = null;
+                    lvEliminationSteps.getItems().clear();
+                    lvEliminationSteps.setDisable(true);
                 }
-                notes.appendText("Possible values: " +
-                        currentPossibilities.getCandidatesAtCell(coord) + "\n");
-
-                // TODO: highlight the reasons in the board
-                // TODO: collect the simple eliminations
-                List<EliminationReason> reasons = currentPossibilities.getEliminations(coord);
-                if (null != reasons) {
-                    for (EliminationReason reason : reasons) {
-                        notes.appendText(reason + "\n");
-                    }
-                }
+                updateWholeDisplay(coord); // highlight
             } else {
-                IPuzzle newPuzzle = myPuzzle.doMove(coord, currentCellSymbol);
+                // do move
+
+                IPuzzle newPuzzle = myPuzzle.doMove(coord, currentActionButtonValue);
                 if (newPuzzle != null) {
                     setPuzzle(newPuzzle, coord);
                 }
+
             }
         }
     }
 
     public void doNextMove(ActionEvent actionEvent) {
-        SudokuSolver sv = new SudokuSolver(myPuzzle);
-        int level = 0;
-        if (cbBasicElimination.isSelected()) {
-            level += SudokuSolver.EliminationMethods.BASICRADIATION.code();
-        }
-        if (cbRadiation.isSelected()) {
-            level += SudokuSolver.EliminationMethods.INTERSECTION.code();
-        }
-        if (cbNakedPairs.isSelected()) {
-            level += SudokuSolver.EliminationMethods.NAKEDPAIRS.code();
-        }
-        if (cbXWings.isSelected()) {
-            level += SudokuSolver.EliminationMethods.XWINGS.code();
-        }
-        Map.Entry<Coord, String> move = sv.nextMove(level);
+        Map.Entry<Coord, String> move = currentSolver.nextMove();
         if (move != null) {
             Coord coord = move.getKey();
             IPuzzle newPuzzle = myPuzzle.doMove(coord, move.getValue());
@@ -254,6 +308,10 @@ public class Controller {
     }
 
     public void explainClicked(ActionEvent actionEvent) {
-        currentCellSymbol = "?";
+        currentActionButtonValue = "?";
+    }
+
+    public void eliminationStepsClicked(MouseEvent mouseEvent) {
+        //System.out.println("Click elimination steps");
     }
 }

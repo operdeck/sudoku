@@ -1,10 +1,12 @@
 package ottop.sudoku.puzzle;
 
+import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.group.ColumnGroup;
 import ottop.sudoku.group.RowGroup;
 import ottop.sudoku.group.SquareGroup;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Standard9x9Puzzle extends AbstractPuzzle {
     public Standard9x9Puzzle(String name,
@@ -38,7 +40,9 @@ public class Standard9x9Puzzle extends AbstractPuzzle {
         int cnt = 0;
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
-                groups.add(new SquareGroup(x * 3, y * 3, this, "Group " + (++cnt)));
+                AbstractGroup g = new SquareGroup(x * 3, y * 3, this, "Group " + (++cnt));
+                groups.add(g);
+                groupsWithBoundaries.add(g);
             }
         }
         for (int i = 0; i < 9; i++) {
@@ -60,4 +64,5 @@ public class Standard9x9Puzzle extends AbstractPuzzle {
     public int getHeight() {
         return 9;
     }
+
 }

@@ -79,17 +79,27 @@ public class StandardPuzzleTest {
         IPuzzle p = PuzzleDB.Trouw_535;
         SudokuSolver s = new SudokuSolver(p);
 
-        assertFalse(p.isOccupied(new Coord("r4c9")));
+        assertFalse(p.isOccupied(new Coord("r4c4")));
         assertFalse(p.canUndo());
 
-        Map.Entry<Coord, String> move = s.nextMove();
+        assertEquals("[1@r2c5, 1@r4c6, 1@r8c8, 3@r3c7, 3@r5c2, 3@r7c3, 5@r5c8, 6@r8c1, 8@r4c9, 8@r9c1, 9@r9c2]",
+                s.getUniqueValues().toString());
+        assertEquals("[7@r4c4, 7@r6c9]",
+                s.getNakedSingles().toString());
+        assertEquals("[1@r2c5, 1@r4c6, 1@r8c8, 3@r3c7, 3@r5c2, 3@r7c3, 5@r5c8, 6@r8c1, 7@r4c4, 7@r6c9, 8@r4c9, 8@r9c1, 9@r9c2]",
+                s.getPossibleMoves().toString());
+
+        Map.Entry<Coord, String> move = s.nextMove(); // should give first lone symbol
+
         assertNotNull(move);
+        assertEquals("r4c4=7", move.toString());
 
-        assertEquals("8", move.getValue());
-        assertEquals("r4c9", move.getKey().toString());
 
-        IPuzzle nextPuzzle = p.doMove(new Coord("r4c9"), "8");
+        assertEquals("7", move.getValue());
+        assertEquals("r4c4", move.getKey().toString());
+
+        IPuzzle nextPuzzle = p.doMove(new Coord("r4c4"), "7");
         assertTrue(nextPuzzle.canUndo());
-        assertTrue(nextPuzzle.isOccupied(new Coord("r4c9")));
+        assertTrue(nextPuzzle.isOccupied(new Coord("r4c4")));
     }
 }

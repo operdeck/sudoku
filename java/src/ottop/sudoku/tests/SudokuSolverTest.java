@@ -2,11 +2,15 @@ package ottop.sudoku.tests;
 
 import org.junit.Before;
 import org.junit.Test;
+import ottop.sudoku.Coord;
 import ottop.sudoku.PuzzleDB;
 import ottop.sudoku.SudokuSolver;
 import ottop.sudoku.puzzle.IPuzzle;
 import ottop.sudoku.puzzle.NRCPuzzle;
 import ottop.sudoku.puzzle.Standard9x9Puzzle;
+
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -29,54 +33,67 @@ public class SudokuSolverTest {
         solver = new SudokuSolver(p);
     }
 
+    private int getTotalNumberOfPencilMarks() {
+        Map<Coord, Set<Integer>> p = solver.getPossibilitiesContainer().getAllCandidates();
+        int result = 0;
+        for (Coord c : p.keySet()) {
+            result += p.get(c).size();
+        }
+        return result;
+    }
+
     @Test
     public void testBasicElimination() {
         assertEquals(65, solver.getPossibilitiesContainer().getAllCandidates().size()); // is just empty squares
-        assertEquals(311, solver.getTotalNumberOfPencilMarks());
+        assertEquals(311, getTotalNumberOfPencilMarks());
 
-        assertEquals(1, solver.getLoneSymbols().size());
-        assertEquals(6, solver.getUniqueSymbols().size());
+        assertEquals(1, solver.getNakedSingles().size());
+        assertEquals(6, solver.getUniqueValues().size());
     }
 
     @Test
     public void testRadiationFromIntersections() {
-        solver.eliminateByRadiationFromIntersections();
+
+        solver.setSimplest().setEliminateIntersectionRadiation();
+        solver.eliminatePossibilities();
 
         assertEquals(65, solver.getPossibilitiesContainer().getAllCandidates().size()); // empty cells remain the same
-        assertEquals(261, solver.getTotalNumberOfPencilMarks()); // possibilities strongly reduced
+        assertEquals(261, getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
-        assertEquals(1, solver.getLoneSymbols().size());
+        assertEquals(1, solver.getNakedSingles().size());
 
-        assertEquals(9, solver.getUniqueSymbols().size()); // increased after this elimination step
+        assertEquals(9, solver.getUniqueValues().size()); // increased after this elimination step
     }
 
     @Test
     public void testNakedPairElimination() {
-        solver.eliminateNakedPairs();
+
+        solver.setSimplest().setEliminateNakedPairs();
+        solver.eliminatePossibilities();
 
         assertEquals(65, solver.getPossibilitiesContainer().getAllCandidates().size()); // empty cells remain the same
-        assertEquals(264, solver.getTotalNumberOfPencilMarks()); // possibilities strongly reduced
+        assertEquals(264, getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
-        assertEquals(10, solver.getLoneSymbols().size());
-        assertEquals(13, solver.getUniqueSymbols().size()); // increased after this elimination step
+        assertEquals(10, solver.getNakedSingles().size());
+        assertEquals(13, solver.getUniqueValues().size()); // increased after this elimination step
     }
 
     @Test
     public void testRadiationFromIntersectionsAndNakedPairElimination() {
-        solver.eliminateByRadiationFromIntersections();
-        solver.eliminateNakedPairs();
+        solver.setSimplest().setEliminateIntersectionRadiation().setEliminateNakedPairs();
+        solver.eliminatePossibilities();
 
         assertEquals(65, solver.getPossibilitiesContainer().getAllCandidates().size()); // empty cells remain the same
-        assertEquals(157, solver.getTotalNumberOfPencilMarks()); // possibilities strongly reduced
+        assertEquals(184, getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
-        assertEquals(27, solver.getLoneSymbols().size());
-
-        assertEquals(31, solver.getUniqueSymbols().size()); // increased after this elimination step
+        assertEquals(12, solver.getNakedSingles().size());
+        assertEquals(23, solver.getUniqueValues().size()); // increased after this elimination step
     }
 
     @Test
     public void testSolveSimplePuzzle() {
-        IPuzzle solvedPuzzle = solver.solveSimplest();
+        solver.setSimplest();
+        IPuzzle solvedPuzzle = solver.solve();
 
         assertNotNull(solvedPuzzle);
 
@@ -93,7 +110,7 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testPuzzleState() {
+    public void testRepeatedSolves() {
         solver = new SudokuSolver(PuzzleDB.Trouw_535);
         assertNotNull(solver.solve());
 
@@ -103,15 +120,12 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testCantSolveWithJustBasicRadiation() {
-        solver = new SudokuSolver(PuzzleDB.Parool_18nov);
-        assertNull(solver.solve(SudokuSolver.EliminationMethods.BASICRADIATION.code()));
-    }
+    public void testPuzzleNeedsIntersectionRadiation() {
+        solver = (new SudokuSolver(PuzzleDB.Parool_18nov)).setSimplest();
+        assertNull(solver.solve());
 
-    @Test
-    public void testNeedSomeSmarterSolution() {
-        solver = new SudokuSolver(PuzzleDB.Parool_18nov);
-        assertNotNull(solver.solve(SudokuSolver.EliminationMethods.INTERSECTION.code())); // some others work as well
+        solver.setEliminateIntersectionRadiation();
+        assertNotNull(solver.solve());
     }
 
     @Test
@@ -126,11 +140,13 @@ public class SudokuSolverTest {
                 "...295..6",
                 "...1369..",
                 "962748315");
-        solver = new SudokuSolver(p);
-        solver.eliminateByRadiationFromIntersections();
+
+        solver = (new SudokuSolver(p)).setEliminateIntersectionRadiation();
+        solver.eliminatePossibilities();
         assertEquals(0, solver.getPossibleMoves().size());
 
-        solver.eliminateNakedPairs();
+        solver.setEliminateNakedPairs();
+        solver.eliminatePossibilities();
         assertEquals(2, solver.getPossibleMoves().size());
     }
 
@@ -146,12 +162,12 @@ public class SudokuSolverTest {
                 "...295.86",
                 "..81369..",
                 "962748315");
-        solver = new SudokuSolver(p);
-        solver.eliminateByRadiationFromIntersections();
-        solver.eliminateNakedPairs();
+        solver = (new SudokuSolver(p)).setEliminateIntersectionRadiation(true).setEliminateNakedPairs(true);
+        solver.eliminatePossibilities();
         assertEquals(0, solver.getPossibleMoves().size());
 
-        solver.eliminateByXWings();
+        solver.setEliminateXWings();
+        solver.eliminatePossibilities();
         assertEquals(2, solver.getPossibleMoves().size());
     }
 
@@ -168,14 +184,15 @@ public class SudokuSolverTest {
 
         for (IPuzzle p : puzzles) {
             solver = new SudokuSolver(p);
-            assertNotNull("Can't solve " + p.getName(), solver.solveSimplest());
+            assertNotNull("Can't solve " + p.getName(), solver.solve());
         }
     }
 
     @Test
     public void testCharPuzzle() {
         solver = new SudokuSolver(PuzzleDB.EOC_dec14);
-        assertEquals("SHFCRPTIU\n" +
+        assertEquals("Char puzzle:\n" +
+                "SHFCRPTIU\n" +
                 "IPRTUSCHF\n" +
                 "UCTIFHRSP\n" +
                 "FRIPSUHCT\n" +
@@ -183,7 +200,7 @@ public class SudokuSolverTest {
                 "CSPHTRFUI\n" +
                 "RTSUICPFH\n" +
                 "PFUSHTIRC\n" +
-                "HICRPFUTS" , solver.solve().toString());
+                "HICRPFUTS\n" , solver.solve().toString());
     }
 
     @Test
@@ -194,6 +211,8 @@ public class SudokuSolverTest {
 
         for (IPuzzle p : puzzles) {
             solver = new SudokuSolver(p);
+            solver.setSmartest();
+            solver.eliminatePossibilities();
             assertNotNull("Can't solve " + p.getName(), solver.solve());
         }
     }

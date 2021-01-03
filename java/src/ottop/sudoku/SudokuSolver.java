@@ -18,20 +18,99 @@ public class SudokuSolver {
     private PossibilitiesContainer possibilitiesContainer;
     private IPuzzle myPuzzle;
 
-    // TODO: perhaps level should be a constructor argument
-    // every time there is a new puzzle, a solver of certain level is present
-    // when settings change solver is reset to new level
+    private boolean doEliminationBasicRadiation;
+    private boolean doEliminationNakedPairs;
+    private boolean doEliminationIntersectionRadiation;
+    private boolean doEliminationXWings;
+
     public SudokuSolver(IPuzzle p) {
         resetToNewPuzzle(p);
+        setSimplest();
+    }
+
+    public SudokuSolver setEliminateBasicRadiation() {
+        return setEliminateBasicRadiation(true);
+    }
+
+    public SudokuSolver setEliminateBasicRadiation(boolean onOff) {
+        doEliminationBasicRadiation = onOff;
+        return this;
+    }
+
+    public SudokuSolver setEliminateNakedPairs() {
+        return setEliminateNakedPairs(true);
+    }
+
+    public SudokuSolver setEliminateNakedPairs(boolean onOff) {
+        doEliminationNakedPairs = onOff;
+        return this;
+    }
+
+    public SudokuSolver setEliminateIntersectionRadiation() {
+        return setEliminateIntersectionRadiation(true);
+    }
+
+    public SudokuSolver setEliminateIntersectionRadiation(boolean onOff) {
+        doEliminationIntersectionRadiation = onOff;
+        return this;
+    }
+
+    public SudokuSolver setEliminateXWings() {
+        return setEliminateXWings(true);
+    }
+
+    public SudokuSolver setEliminateXWings(boolean onOff) {
+        doEliminationXWings = onOff;
+        return this;
+    }
+
+    public SudokuSolver setSimplest() {
+        setEliminateBasicRadiation(true);
+        setEliminateNakedPairs(false);
+        setEliminateIntersectionRadiation(false);
+        setEliminateXWings(false);
+        return this;
+    }
+
+    public SudokuSolver setSmartest() {
+        setEliminateBasicRadiation(true);
+        setEliminateNakedPairs(true);
+        setEliminateIntersectionRadiation(true);
+        setEliminateXWings(true);
+        return this;
+    }
+
+    public boolean eliminatePossibilities() {
+        // Basic radiation will be done always
+
+        boolean hasEliminated = false;
+
+//        if (doEliminationBasicRadiation) {
+//            if (true) hasEliminated = true;
+//        }
+        if (doEliminationNakedPairs) {
+            if (eliminateNakedPairs()) hasEliminated=true;
+        }
+        if (doEliminationIntersectionRadiation) {
+            if (eliminateByRadiationFromIntersections()) hasEliminated=true;
+        }
+        if (doEliminationXWings) {
+           if (eliminateByXWings()) hasEliminated=true;
+        }
+
+        return hasEliminated;
     }
 
     private void resetToNewPuzzle(IPuzzle p) {
         myPuzzle = p;
         p.resetState();
+
+        // This will just do basic elimination. Additional elimination steps done
+        // via next move or solve. Or by calling elimination explicitly.
         possibilitiesContainer = new PossibilitiesContainer(p);
     }
 
-    public boolean eliminateByRadiationFromIntersections() {
+    private boolean eliminateByRadiationFromIntersections() {
         boolean updated = false;
         // TODO maybe not even need to explicitly create these intersections
         // TODO intersections can be smaller anyway
@@ -40,7 +119,7 @@ public class SudokuSolver {
 
         for (GroupIntersection intersection : groupIntersections) {
             Set<Integer> possibilitiesAtGroupIntersection =
-                    possibilitiesContainer.getCandidatesAtCell(intersection.getIntersection());
+                    possibilitiesContainer.getCandidatesInArea(intersection.getIntersection());
             for (int symbolCode = 1; symbolCode < myPuzzle.getSymbolCodeRange(); symbolCode++) {
                 if (possibilitiesAtGroupIntersection.contains(symbolCode)) {
                     @SuppressWarnings("unchecked")
@@ -50,7 +129,7 @@ public class SudokuSolver {
                     for (int i = 0; i < 2; i++) {
                         groupCoordSet[i] = new HashSet<>(intersection.getIntersectionGroup(i).getCoords());
                         groupCoordSet[i].removeAll(intersection.getIntersection());
-                        pr[i] = possibilitiesContainer.getCandidatesAtCell(groupCoordSet[i]);
+                        pr[i] = possibilitiesContainer.getCandidatesInArea(groupCoordSet[i]);
                     }
                     for (int i = 0; i < 2; i++) {
                         if (!pr[i].contains(symbolCode)) {
@@ -72,7 +151,7 @@ public class SudokuSolver {
         return updated;
     }
 
-    public boolean eliminateNakedPairs() {
+    private boolean eliminateNakedPairs() {
         boolean updated = false;
 
         for (AbstractGroup g : myPuzzle.getGroups()) {
@@ -82,7 +161,7 @@ public class SudokuSolver {
         return updated;
     }
 
-    public boolean eliminateByXWings() {
+    private boolean eliminateByXWings() {
         boolean updated = false;
         for (int symbolCode = 1; symbolCode < myPuzzle.getSymbolCodeRange(); symbolCode++) {
             // For each symbolCode, figure out in which rows of each column it occurs. Then
@@ -133,44 +212,12 @@ public class SudokuSolver {
         return updated;
     }
 
-    public void eliminatePossibilities(int level) {
-        // Basic radiation will be done always
-
-        if ((level & EliminationMethods.NAKEDPAIRS.code()) != 0) {
-            eliminateNakedPairs();
-        }
-        if ((level & EliminationMethods.INTERSECTION.code()) != 0) {
-            eliminateByRadiationFromIntersections();
-        }
-        if ((level & EliminationMethods.XWINGS.code()) != 0) {
-            eliminateByXWings();
-        }
-    }
-
-    public IPuzzle solveSimplest() {
-        return solve(EliminationMethods.BASICRADIATION.code());
-    }
-
-    public IPuzzle solve() {
-        return solve(EliminationMethods.BASICRADIATION.code() +
-                EliminationMethods.NAKEDPAIRS.code() +
-                EliminationMethods.INTERSECTION.code() +
-                EliminationMethods.XWINGS.code());
-    }
-
     public Map.Entry<Coord, String> nextMove() {
-        return nextMove(EliminationMethods.BASICRADIATION.code() +
-                EliminationMethods.NAKEDPAIRS.code() +
-                EliminationMethods.INTERSECTION.code() +
-                EliminationMethods.XWINGS.code());
-    }
-
-    public Map.Entry<Coord, String> nextMove(int level) {
         Map.Entry<Coord, String> nextMove = null;
         // TODO: is this needed?? The puzzle will give a new container at construction.
-        possibilitiesContainer = new PossibilitiesContainer(myPuzzle);
 
-        eliminatePossibilities(level);
+        possibilitiesContainer = new PossibilitiesContainer(myPuzzle);
+        eliminatePossibilities();
 
         //System.out.println(this);
 
@@ -179,28 +226,23 @@ public class SudokuSolver {
 //            for (AbstractGroup g : myPuzzle.getGroups()) {
 //                g.addPossibilitiesToSolution(possibilities, sols);
 //            }
-            for (Coord c: myPuzzle.getAllCells()) {
-                String loneSymbol = possibilitiesContainer.getLoneSymbolAt(c);
-                if (loneSymbol != null) {
-                    nextMove = new AbstractMap.SimpleEntry<>(c, loneSymbol);
-                    break;
-                }
-                AbstractMap.SimpleEntry<String, List<AbstractGroup>> uniqueValue =
-                        possibilitiesContainer.getUniqueSymbolAt(c);
-                if (uniqueValue != null) {
-                    nextMove = new AbstractMap.SimpleEntry<>(c, uniqueValue.getKey());
-                    break;
-                }
+            nextMove = possibilitiesContainer.getFirstNakedSingle();
 
+            if (nextMove == null) {
+                Map.Entry<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueSymbol =
+                        possibilitiesContainer.getFirstUniqueValue();
+                if (uniqueSymbol != null) {
+                    nextMove = new AbstractMap.SimpleEntry<>(uniqueSymbol.getKey(), uniqueSymbol.getValue().getKey());
+                }
             }
         }
 
         return nextMove;
     }
 
-    public IPuzzle solve(int level) {
+    public IPuzzle solve() {
         while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
-            Map.Entry<Coord, String> nextMove = nextMove(level);
+            Map.Entry<Coord, String> nextMove = nextMove();
             if (nextMove != null) {
                 IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
                 resetToNewPuzzle(nextPuzzle);
@@ -210,11 +252,6 @@ public class SudokuSolver {
         }
         return myPuzzle;
     }
-
-//    // TODO: why??
-//    public IPuzzle getPuzzle() {
-//        return myPuzzle;
-//    }
 
     private Set<AbstractGroup> toRowGroups(Set<Integer> rowset) {
         Set<AbstractGroup> result = new HashSet<>();
@@ -240,80 +277,40 @@ public class SudokuSolver {
         return result;
     }
 
-//    public SolutionContainer getMoves() {
-//        SolutionContainer sols = new SolutionContainer(myPuzzle);
-//        for (AbstractGroup g : myPuzzle.getGroups()) {
-//            g.addPossibilitiesToSolution(possibilities, sols);
-//        }
-//
-//        return sols;
-//    }
-
-    // public Map<Coord, Set<Integer>> getPencilMarks() {
-    //    return possibilities.getAllPossibilities(myPuzzle);
-    //}
-
     public PossibilitiesContainer getPossibilitiesContainer() {
         return possibilitiesContainer;
     }
 
-    public int getTotalNumberOfPencilMarks() {
-        Map<Coord, Set<Integer>> p = possibilitiesContainer.getAllCandidates();
-        int result = 0;
-        for (Coord c : p.keySet()) {
-            result += p.get(c).size();
+    // Just a list of strings for the UI
+    public SortedSet<String> getNakedSingles() {
+        SortedSet<String> results = new TreeSet<>();
+        Map<Coord, String> nakedSingles = possibilitiesContainer.getAllNakedSingles();
+
+        for (Map.Entry<Coord, String> nakedSingle: nakedSingles.entrySet()) {
+            results.add(nakedSingle.getValue() + "@" + nakedSingle.getKey());
         }
-        return result;
+
+        return results;
     }
 
     // Just a list of strings for the UI
-    public List<String> getLoneSymbols() {
-        List<String> loneSymbols = new ArrayList();
-        for (Coord c : myPuzzle.getAllCells()) {
-            if (!myPuzzle.isOccupied(c)) {
-                String loneSymbol = possibilitiesContainer.getLoneSymbolAt(c);
-                if (null != loneSymbol) loneSymbols.add(loneSymbol + "@" + c);
-            }
-        }
-        return loneSymbols;
-    }
+    public SortedSet<String> getUniqueValues() {
+        SortedSet<String> results = new TreeSet<>();
+        Map<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValues = possibilitiesContainer.getAllUniqueValues();
 
-    // Just a list of strings for the UI
-    public List<String> getUniqueSymbols() {
-        List<String> uniqueSymbols = new ArrayList();
-        for (Coord c : myPuzzle.getAllCells()) {
-            if (!myPuzzle.isOccupied(c)) {
-                AbstractMap.SimpleEntry<String, List<AbstractGroup>> uniqueSymbol =
-                        possibilitiesContainer.getUniqueSymbolAt(c);
-                if (null != uniqueSymbol) uniqueSymbols.add(uniqueSymbol.getKey() + "@" + c);
-            }
+        for (Map.Entry<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValue: uniqueValues.entrySet()) {
+            results.add(uniqueValue.getValue().getKey() + "@" + uniqueValue.getKey());
         }
-        return uniqueSymbols;
+
+        return results;
     }
 
     // All possible moves
-    public Set<String> getPossibleMoves() {
-        Set<String> moves = new HashSet<>();
-        moves.addAll(getLoneSymbols());
-        moves.addAll(getUniqueSymbols());
+    public SortedSet<String> getPossibleMoves() {
+        SortedSet<String> moves = new TreeSet<>();
+        moves.addAll(getNakedSingles());
+        moves.addAll(getUniqueValues());
         return moves;
-    }
-
-    public enum EliminationMethods {
-        BASICRADIATION(1),
-        NAKEDPAIRS(2),
-        INTERSECTION(4),
-        XWINGS(8);
-
-        private final int levelCode;
-
-        EliminationMethods(int levelCode) {
-            this.levelCode = levelCode;
-        }
-
-        public int code() {
-            return levelCode;
-        }
     }
 
     public String toString() {

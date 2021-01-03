@@ -44,7 +44,9 @@ public interface IPuzzle {
 
     String getName();
 
-    void drawPuzzleOnCanvas(Canvas canvas, Coord highlight);
+    void drawPuzzleOnCanvas(Canvas canvas, Coord highlight, Set<Coord> currentHighlightedSubArea);
+
+    void drawGroup(Canvas canvas, AbstractGroup g);
 
     void drawPossibilities(Canvas canvas, Coord c, Set<Integer> values);
 

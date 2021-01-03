@@ -4,6 +4,8 @@ import ottop.sudoku.Coord;
 import ottop.sudoku.GroupIntersection;
 import ottop.sudoku.group.AbstractGroup;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class IntersectionRadiationEliminationReason extends EliminationReason {
@@ -29,9 +31,17 @@ public class IntersectionRadiationEliminationReason extends EliminationReason {
 
     public String toString() {
         StringBuilder result = new StringBuilder(super.toString());
-        result.append(" of ").append(removedFromGroup).append(" because it has to be in the intersection with ");
-        result.append(mustBeInGroup).append(" (Intersection Radiation)");
+        result.append(" because it has to be in the intersection of ")
+                .append(removedFromGroup).append(" with ")
+                .append(mustBeInGroup).append(" (Intersection Radiation)");
         return result.toString();
     }
 
+    public List<AbstractGroup> getHighlightGroups() {
+        return List.of(mustBeInGroup, removedFromGroup);
+    }
+
+    public Set<Coord> getHighlightSubArea() {
+        return intersection.getIntersection();
+    }
 }

@@ -4,6 +4,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import ottop.sudoku.Coord;
+import ottop.sudoku.group.AbstractGroup;
 import ottop.sudoku.group.ColumnGroup;
 import ottop.sudoku.group.RectangularGroup;
 import ottop.sudoku.group.RowGroup;
@@ -38,7 +39,9 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
         int cnt = 0;
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 2; x++) {
-                groups.add(new RectangularGroup(x * 5, y * 2, this, "Rect " + (++cnt)));
+                AbstractGroup g = new RectangularGroup(x * 5, y * 2, this, "Rect " + (++cnt));
+                groups.add(g);
+                groupsWithBoundaries.add(g);
             }
         }
         for (int i = 0; i < 10; i++) {
@@ -50,18 +53,6 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
     @Override
     protected IPuzzle newInstance(String name, int[][] brd) {
         return new Sudoku10x10Puzzle(name, possibleSymbols, brd);
-    }
-
-    // TODO: this can be fairly generic based on the Square or Rectangular groups
-    @Override
-    protected void drawGroupBoundaries(Canvas canvas, GraphicsContext gc) {
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(3);
-        for (int x = 0; x < 2; x++) {
-            for (int y = 0; y < 5; y++) {
-                gc.strokeRect(getCellX(canvas, x * 5), getCellY(canvas, y * 2), 5 * getCellWidth(canvas), 2 * getCellHeight(canvas));
-            }
-        }
     }
 
     @Override
@@ -102,6 +93,4 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
     public int getHeight() {
         return 10;
     }
-
-
 }

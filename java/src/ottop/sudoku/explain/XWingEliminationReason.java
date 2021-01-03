@@ -3,6 +3,9 @@ package ottop.sudoku.explain;
 import ottop.sudoku.Coord;
 import ottop.sudoku.group.AbstractGroup;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class XWingEliminationReason extends EliminationReason {
@@ -31,4 +34,12 @@ public class XWingEliminationReason extends EliminationReason {
         result.append(groups1).append(" X ").append(groups2).append(" (X-Wing)");
         return result.toString();
     }
+
+    public List<AbstractGroup> getHighlightGroups() {
+        List<AbstractGroup> result = new ArrayList<>();
+        result.addAll(groups1);
+        result.addAll(groups2);
+        return result;
+    }
+
 }
