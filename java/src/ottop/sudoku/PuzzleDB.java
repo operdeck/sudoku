@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PuzzleDB {
-    public static IPuzzle emptyStandardPuzzle = new Standard9x9Puzzle("Empty standard SudokuMain",
+    public static ISudoku emptyStandardPuzzle = new StandardSudoku("Empty standard SudokuMain",
             ".........",
             ".........",
             ".........",
@@ -18,7 +18,7 @@ public class PuzzleDB {
             ".........",
             ".........");
 
-    public static IPuzzle emptyNRCPuzzle = new NRCPuzzle("Empty NRC SudokuMain",
+    public static ISudoku emptyNRCPuzzle = new NRCSudoku("Empty NRC SudokuMain",
             ".........",
             ".........",
             ".........",
@@ -29,7 +29,7 @@ public class PuzzleDB {
             ".........",
             ".........");
 
-    public static IPuzzle emptyLetterPuzzle = new SudokuLetterPuzzle("Empty Letter SudokuMain", "CFHIPRSTU",
+    public static ISudoku emptyLetterPuzzle = new LetterSudoku("Empty Letter SudokuMain", "CFHIPRSTU",
             ".........",
             ".........",
             ".........",
@@ -40,7 +40,7 @@ public class PuzzleDB {
             ".........",
             ".........");
 
-    public static IPuzzle Parool_18nov = new Standard9x9Puzzle("Parool_18nov",
+    public static ISudoku Parool_18nov = new StandardSudoku("Parool_18nov",
             "........8",
             "..9..2.7.",
             ".64.38...",
@@ -51,7 +51,7 @@ public class PuzzleDB {
             ".5.9..2..",
             "9........");
 
-    public static IPuzzle Trouw_535 = new Standard9x9Puzzle("Trouw_535",
+    public static ISudoku Trouw_535 = new StandardSudoku("Trouw_535",
             "9 1357   ",
             "3        ",
             " 8   6  1",
@@ -62,7 +62,7 @@ public class PuzzleDB {
             "        3",
             "   1637 5");
 
-    public static IPuzzle puzzelbrein12_2020 = new Sudoku10x10Puzzle("Puzzelbrein 12/2020",
+    public static ISudoku puzzelbrein12_2020 = new Sudoku10x10("Puzzelbrein 12/2020",
             "10, , , ,6, , ,2,7, ",
             " , , , , , , ,5, , ,",
             " , , ,9, , , , ,3, ",
@@ -74,7 +74,7 @@ public class PuzzleDB {
             " , , , , , ,4, , ,8",
             " ,2, ,4,, 6, ,9,5, ");
 
-    public static IPuzzle www_extremesudoku_info_evil = new Standard9x9Puzzle("www_extremesudoku_info_evil",
+    public static ISudoku www_extremesudoku_info_evil = new StandardSudoku("www_extremesudoku_info_evil",
             " 4  8 6  ",
             "  84    3",
             "2   1  8 ",
@@ -85,7 +85,7 @@ public class PuzzleDB {
             "9    15  ",
             "  5 3  1 ");
 
-    public static IPuzzle www_extremesudoku_info_evil_271113 = new Standard9x9Puzzle("www.extremesudoku.info 27/11/13",
+    public static ISudoku www_extremesudoku_info_evil_271113 = new StandardSudoku("www.extremesudoku.info 27/11/13",
             "..1.9.5..",
             ".5.4.3.1.",
             "9...8...6",
@@ -96,7 +96,7 @@ public class PuzzleDB {
             ".2.7.9.5.",
             "..4.1.6..");
 
-    public static IPuzzle extremesudoku_28_nov_2013 = new Standard9x9Puzzle("extremesudoku_28_nov_2013",
+    public static ISudoku extremesudoku_28_nov_2013 = new StandardSudoku("extremesudoku_28_nov_2013",
             " 1   9   ",
             "  4 7   1",
             "  2   98 ",
@@ -107,7 +107,7 @@ public class PuzzleDB {
             "5   2 8  ",
             "   3   6 ");
 
-    public static IPuzzle extremesudoku_10_nov_2013 = new Standard9x9Puzzle("extremesudoku_10_nov_2013",
+    public static ISudoku extremesudoku_10_nov_2013 = new StandardSudoku("extremesudoku_10_nov_2013",
             "  89    2",
             " 2  7  8 ",
             "3    41  ",
@@ -119,7 +119,7 @@ public class PuzzleDB {
             "8    74  "
     );
 
-    public static IPuzzle NRC_5dec14 = new NRCPuzzle("NRC 5 dec '14",
+    public static ISudoku NRC_5dec14 = new NRCSudoku("NRC 5 dec '14",
             "....65...",
             ".......6.",
             "1......78",
@@ -131,7 +131,7 @@ public class PuzzleDB {
             ".........");
 
 
-    public static IPuzzle unsolvable = new NRCPuzzle("Unsolvable",
+    public static ISudoku unsolvable = new NRCSudoku("Unsolvable",
             "....652..",
             ".......6.",
             "1......78",
@@ -142,7 +142,7 @@ public class PuzzleDB {
             ".8...2...",
             ".........");
 
-    public static IPuzzle NRC_28dec = new NRCPuzzle("NRC 28 dec 2014",
+    public static ISudoku NRC_28dec = new NRCSudoku("NRC 28 dec 2014",
             ".....2...",
             "..85..1.9",
             ".......6.",
@@ -153,7 +153,7 @@ public class PuzzleDB {
             ".8.7.....",
             "...1....7");
 
-    public static IPuzzle NRC_17nov = new NRCPuzzle("NRC 17 nov 2014",
+    public static ISudoku NRC_17nov = new NRCSudoku("NRC 17 nov 2014",
             ".86...3..",
             "..95.....",
             "......1.8",
@@ -164,7 +164,7 @@ public class PuzzleDB {
             ".....5...",
             ".........");
 
-    public static IPuzzle sudoku_very_hard_1 = new Standard9x9Puzzle("SudokuMain Essentials #1",
+    public static ISudoku sudoku_very_hard_1 = new StandardSudoku("SudokuMain Essentials #1",
             ".3.48.6.9",
             "....27...",
             "8..3.....",
@@ -175,7 +175,7 @@ public class PuzzleDB {
             "...13....",
             "9.2.48.1.");
 
-    public static IPuzzle EOC_dec14 = new SudokuLetterPuzzle("Char puzzle", "CFHIPRSTU",
+    public static ISudoku EOC_dec14 = new LetterSudoku("Char puzzle", "CFHIPRSTU",
             "SH..R...U",
             "...T.S..F",
             "..T.FHR..",
@@ -186,7 +186,7 @@ public class PuzzleDB {
             "P..S.T...",
             "H...P..TS");
 
-    public static IPuzzle extremesudoku_info_evil_4jan2021 = new Standard9x9Puzzle("Extreme Sudoku Evil 4/1/21",
+    public static ISudoku extremesudoku_info_evil_4jan2021 = new StandardSudoku("Extreme Sudoku Evil 4/1/21",
             "6.13.57.9",
             ".........",
             "3..7.4..6",
@@ -197,7 +197,7 @@ public class PuzzleDB {
             ".........",
             "5.61.89.3");
 
-    public static IPuzzle extremesudoku_info_excessive_4jan2021 = new Standard9x9Puzzle("Extreme Sudoku Excessive 4/1/21",
+    public static ISudoku extremesudoku_info_excessive_4jan2021 = new StandardSudoku("Extreme Sudoku Excessive 4/1/21",
             "..6..7..2",
             ".7..5..1.",
             "3..6..9..",
@@ -215,16 +215,16 @@ public class PuzzleDB {
         List<String> puzzleNames = new ArrayList<>();
         PuzzleDB db = new PuzzleDB();
         for (Field f : allFields) {
-            puzzleNames.add(((IPuzzle) f.get(db)).getName());
+            puzzleNames.add(((ISudoku) f.get(db)).getName());
         }
         return puzzleNames.toArray(new String[0]);
     }
 
-    public static IPuzzle getPuzzleByName(String name) throws IllegalAccessException {
+    public static ISudoku getPuzzleByName(String name) throws IllegalAccessException {
         Field[] allFields = PuzzleDB.class.getDeclaredFields();
         PuzzleDB db = new PuzzleDB();
         for (Field f : allFields) {
-            IPuzzle p = (IPuzzle) f.get(db);
+            ISudoku p = (ISudoku) f.get(db);
             if (name.equals(p.getName())) {
                 return p;
             }

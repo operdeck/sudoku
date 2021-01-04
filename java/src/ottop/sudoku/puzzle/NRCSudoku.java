@@ -5,13 +5,18 @@ import javafx.scene.paint.Paint;
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.SquareGroup;
 
-public class NRCPuzzle extends Standard9x9Puzzle {
+// The Four-Square Sudoku is a standard puzzle with four extra shaded 3x3 squares on
+// the Sudoku board, for which each shaded region must also contain each digit from
+// 1 to 9 exactly once.
+// The Four-Square Sudoku is also known as Hyper-Sudoku or NRC-Sudoku.
+
+public class NRCSudoku extends StandardSudoku {
     // For cloning to new puzzle
-    private NRCPuzzle(String name, String[] symbols, int[][] brd) {
+    private NRCSudoku(String name, String[] symbols, int[][] brd) {
         super(name, symbols, brd);
     }
 
-    public NRCPuzzle(String name,
+    public NRCSudoku(String name,
                      String row1, String row2, String row3,
                      String row4, String row5, String row6,
                      String row7, String row8, String row9) {
@@ -33,8 +38,8 @@ public class NRCPuzzle extends Standard9x9Puzzle {
     }
 
     @Override
-    protected IPuzzle newInstance(String name, int[][] brd) {
-        return new NRCPuzzle(name, possibleSymbols, brd);
+    protected ISudoku newInstance(String name, int[][] brd) {
+        return new NRCSudoku(name, possibleSymbols, brd);
     }
 
     @Override

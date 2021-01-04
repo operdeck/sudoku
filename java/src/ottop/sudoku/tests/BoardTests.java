@@ -1,15 +1,15 @@
 package ottop.sudoku.tests;
 
 import org.junit.Test;
-import ottop.sudoku.puzzle.IPuzzle;
-import ottop.sudoku.puzzle.Standard9x9Puzzle;
+import ottop.sudoku.puzzle.ISudoku;
+import ottop.sudoku.puzzle.StandardSudoku;
 
 import static org.junit.Assert.assertEquals;
 
-public class GroupTests {
+public class BoardTests {
     @Test
     public void testGroupCount() {
-        IPuzzle emptyPuzzle = new Standard9x9Puzzle("Anonymous",
+        ISudoku emptyPuzzle = new StandardSudoku("Anonymous",
                 ".........",
                 ".........",
                 ".........",

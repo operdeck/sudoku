@@ -5,7 +5,7 @@ import ottop.sudoku.board.Coord;
 import ottop.sudoku.explain.EliminationReason;
 import ottop.sudoku.explain.SimpleEliminationReason;
 import ottop.sudoku.board.AbstractGroup;
-import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.ISudoku;
 
 import java.util.*;
 
@@ -14,9 +14,9 @@ public class PossibilitiesContainer {
     // internal representation of the cell symbols.
     private final Map<Coord, Set<Integer>> candidatesPerCell = new HashMap<>();
     private final Map<Coord, List<EliminationReason>> removalReasons = new HashMap<>();
-    private final IPuzzle myPuzzle;
+    private final ISudoku myPuzzle;
 
-    public PossibilitiesContainer(IPuzzle p) {
+    public PossibilitiesContainer(ISudoku p) {
         myPuzzle = p;
         AbstractGroup[] groups = p.getGroups();
         for (Coord c : p.getAllCells()) {

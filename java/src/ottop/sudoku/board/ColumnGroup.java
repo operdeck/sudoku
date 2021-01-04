@@ -1,11 +1,11 @@
 package ottop.sudoku.board;
 
-import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.ISudoku;
 
 public class ColumnGroup extends AbstractGroup {
 
     // TODO drop id argument, generate it yourself
-    public ColumnGroup(int startX, int startY, IPuzzle myPuzzle, String id) {
+    public ColumnGroup(int startX, int startY, ISudoku myPuzzle, String id) {
         super(startX, startY, myPuzzle, id);
     }
 

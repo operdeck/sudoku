@@ -4,25 +4,23 @@ import org.junit.Before;
 import org.junit.Test;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.PuzzleDB;
-import ottop.sudoku.explain.EliminationReason;
-import ottop.sudoku.puzzle.IPuzzle;
-import ottop.sudoku.puzzle.NRCPuzzle;
-import ottop.sudoku.puzzle.Standard9x9Puzzle;
+import ottop.sudoku.puzzle.ISudoku;
+import ottop.sudoku.puzzle.NRCSudoku;
+import ottop.sudoku.puzzle.StandardSudoku;
 import ottop.sudoku.solve.SudokuSolver;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.*;
 
 public class SudokuSolverTest {
-    IPuzzle p;
+    ISudoku p;
     private SudokuSolver solver;
 
     @Before
     public void setUp() {
-        p = new NRCPuzzle("Test",
+        p = new NRCSudoku("Test",
                 "....65...",
                 ".......6.",
                 "1......78",
@@ -95,7 +93,7 @@ public class SudokuSolverTest {
     @Test
     public void testSolveSimplePuzzle() {
         solver.setSimplest();
-        IPuzzle solvedPuzzle = solver.solve();
+        ISudoku solvedPuzzle = solver.solve();
 
         assertNotNull(solvedPuzzle);
 
@@ -132,7 +130,7 @@ public class SudokuSolverTest {
 
     @Test
     public void testNakedPairs() {
-        IPuzzle p = new Standard9x9Puzzle("https://www.sudokuessentials.com/support-files/sudoku-very-hard-1.pdf",
+        ISudoku p = new StandardSudoku("https://www.sudokuessentials.com/support-files/sudoku-very-hard-1.pdf",
                 ".374816.9",
                 ".9..27.38",
                 "8..3.9...",
@@ -154,7 +152,7 @@ public class SudokuSolverTest {
 
     @Test
     public void testXWings() {
-        IPuzzle p = new Standard9x9Puzzle("https://www.sudokuessentials.com/x-wing.html",
+        ISudoku p = new StandardSudoku("https://www.sudokuessentials.com/x-wing.html",
                 ".374816.9",
                 ".9..27.38",
                 "8..3.9...",
@@ -180,8 +178,8 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testNakedPairAfterXWing() {
-        IPuzzle p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
+    public void testNakedPairAfterXWingMultipleEliminationRounds() {
+        ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
         p = p.doMove(new Coord("r1c1"), "1");
         p = p.doMove(new Coord("r3c5"), "2");
         p = p.doMove(new Coord("r3c6"), "1");
@@ -192,11 +190,14 @@ public class SudokuSolverTest {
         p = p.doMove(new Coord("r8c3"), "7");
 
         // Now, there are
-        //  a '39' naked pair at r4c3 and r9c3 but only after first finding
-        //  a swordfish of 9s at r2/r5/r8 x c1/c4/c6
+        //  a '39' naked pair at r4c3 and r9c3 but this can be found
+        //  only after first finding a swordfish of 9s at r2/r5/r8 x c1/c4/c6
 
         solver = new SudokuSolver(p);
         solver.setSmartest();
+
+        // Assert that with successive elimination steps we reduce the possibilities more and more
+
         assertEquals(true, solver.eliminatePossibilities());
         assertEquals(132, getTotalNumberOfPencilMarks());
         assertEquals(true, solver.eliminatePossibilities());
@@ -209,13 +210,26 @@ public class SudokuSolverTest {
         assertEquals(47, getTotalNumberOfPencilMarks());
         assertEquals(false, solver.eliminatePossibilities());
         assertEquals(47, getTotalNumberOfPencilMarks());
-        
-        assertEquals("r7c1=7", String.valueOf(solver.nextMove()) );
+
+        // this is only possible after first XWing then Naked pairs
+        assertEquals("r7c1=8", String.valueOf(solver.nextMove()) );
+
+        // eventually, just make sure it is completely solved
+        assertEquals("Extreme Sudoku Excessive 4/1/21:\n" +
+                "196437852\n" +
+                "274859613\n" +
+                "385621974\n" +
+                "463598127\n" +
+                "912743586\n" +
+                "758162349\n" +
+                "821376495\n" +
+                "647985231\n" +
+                "539214768\n", String.valueOf(solver.solve()));
     }
 
     @Test
     public void testSwordfish() {
-        IPuzzle p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
+        ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
         p = p.doMove(new Coord("r1c1"), "1");
         p = p.doMove(new Coord("r3c5"), "2");
         p = p.doMove(new Coord("r3c6"), "1");
@@ -235,17 +249,28 @@ public class SudokuSolverTest {
         assertNotEquals(-1, solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r7c1")).toString().indexOf("(X-Wing)"));
         assertNotEquals(-1, solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r6c1")).toString().indexOf("(X-Wing)"));
 
+        // this requires a swordfish
         assertEquals("r6c1=7", String.valueOf(solver.nextMove()) );
 
-        //assertEquals("pipo", solver.solve());
+        // eventually, just make sure it is completely solved
+        assertEquals("Extreme Sudoku Excessive 4/1/21:\n" +
+                "196437852\n" +
+                "274859613\n" +
+                "385621974\n" +
+                "463598127\n" +
+                "912743586\n" +
+                "758162349\n" +
+                "821376495\n" +
+                "647985231\n" +
+                "539214768\n", String.valueOf(solver.solve()));
     }
 
     @Test
     public void testEasyPuzzles() {
-        IPuzzle[] puzzles = {PuzzleDB.NRC_17nov, PuzzleDB.NRC_5dec14,
+        ISudoku[] puzzles = {PuzzleDB.NRC_17nov, PuzzleDB.NRC_5dec14,
                 PuzzleDB.NRC_28dec};
 
-        for (IPuzzle p : puzzles) {
+        for (ISudoku p : puzzles) {
             solver = new SudokuSolver(p);
             assertNotNull("Can't solve " + p.getName(), solver.solve());
         }
@@ -268,11 +293,11 @@ public class SudokuSolverTest {
 
     @Test
     public void testHarderPuzzles() {
-        IPuzzle[] puzzles = {PuzzleDB.www_extremesudoku_info_evil,
+        ISudoku[] puzzles = {PuzzleDB.www_extremesudoku_info_evil,
                 PuzzleDB.extremesudoku_10_nov_2013,
                 PuzzleDB.extremesudoku_28_nov_2013};
 
-        for (IPuzzle p : puzzles) {
+        for (ISudoku p : puzzles) {
             solver = new SudokuSolver(p);
             solver.setSmartest();
             solver.eliminatePossibilities();
@@ -282,14 +307,34 @@ public class SudokuSolverTest {
 
     @Test
     public void testExtremeEvilSuduko() {
-        IPuzzle[] puzzles = {PuzzleDB.www_extremesudoku_info_evil_271113};
+        ISudoku[] puzzles = {PuzzleDB.www_extremesudoku_info_evil_271113};
 
-        for (IPuzzle p : puzzles) {
+        for (ISudoku p : puzzles) {
             solver = new SudokuSolver(p);
-            IPuzzle solvedPuzzle = solver.solve();
+            ISudoku solvedPuzzle = solver.setSmartest().solve();
 
-            assertNull("Can't solve " + p.getName(), solvedPuzzle);
+            assertEquals(p.getName() + ":\n" +
+                    "831692547\n" +
+                    "256473819\n" +
+                    "947581326\n" +
+                    "689247135\n" +
+                    "572138964\n" +
+                    "413956278\n" +
+                    "365824791\n" +
+                    "128769453\n" +
+                    "794315682\n", String.valueOf(solvedPuzzle));
         }
     }
 
+    @Test
+    public void testDifficultyLevel()
+    {
+        assertEquals(1, SudokuSolver.assessDifficulty(PuzzleDB.Trouw_535));
+
+        // requires naked pairs and intersection radiation
+        assertEquals(3, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_28_nov_2013));
+
+        // requires XWings and perhaps even multiple iterations of elimination rounds
+        assertEquals(4, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_info_excessive_4jan2021));
+    }
 }

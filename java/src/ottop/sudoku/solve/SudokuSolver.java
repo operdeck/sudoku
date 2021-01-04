@@ -6,7 +6,7 @@ import ottop.sudoku.explain.XWingEliminationReason;
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.ColumnGroup;
 import ottop.sudoku.board.RowGroup;
-import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.ISudoku;
 
 import java.util.*;
 
@@ -17,13 +17,13 @@ import java.util.*;
 
 public class SudokuSolver {
     private PossibilitiesContainer possibilitiesContainer;
-    private IPuzzle myPuzzle;
+    private ISudoku myPuzzle;
 
     private boolean doEliminationNakedPairs;
     private boolean doEliminationIntersectionRadiation;
     private boolean doEliminationXWings;
 
-    public SudokuSolver(IPuzzle p) {
+    public SudokuSolver(ISudoku p) {
         resetToNewPuzzle(p);
         setSimplest();
     }
@@ -87,7 +87,7 @@ public class SudokuSolver {
         return hasEliminated;
     }
 
-    private void resetToNewPuzzle(IPuzzle p) {
+    private void resetToNewPuzzle(ISudoku p) {
         myPuzzle = p;
         p.resetState();
 
@@ -173,12 +173,6 @@ public class SudokuSolver {
                 }
             }
 
-//            if (symbolCode == 4) {
-//                for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> k: xWingMap.entrySet()) {
-//                    System.out.println("X-Wing, code " + symbolCode + " intersection groups=" + k);
-//                }
-//            }
-
             // For all keys k
             // if there is another key that k is a full subset of
             // then add all values of k to that one too
@@ -191,13 +185,6 @@ public class SudokuSolver {
                     }
                 }
             }
-
-//            if (symbolCode == 4) {
-//                System.out.println("Merged:");
-//                for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> k: xWingMap.entrySet()) {
-//                    System.out.println("X-Wing, code " + symbolCode + " intersection groups=" + k);
-//                }
-//            }
 
             // Now, with this map, if the set of rows is of the same size as the set of
             // columns that have identical row sets, eliminate 'symbolCode' from other cells
@@ -226,13 +213,27 @@ public class SudokuSolver {
     public Map.Entry<Coord, String> nextMove() {
         Map.Entry<Coord, String> nextMove = null;
         possibilitiesContainer = new PossibilitiesContainer(myPuzzle);
-        eliminatePossibilities();
 
-        //System.out.println(this);
+        boolean hasEliminatedCandidates = true;
 
-        if (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
+        int eliminationRound = 1;
+        while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent() && nextMove == null && hasEliminatedCandidates) {
+
+            // TODO: multiple iterations could count as higher level
+            //System.out.println("Elimination round " + eliminationRound);
+
+            // we may have to do multiple rounds of elimination
+            hasEliminatedCandidates = eliminatePossibilities();
+
+//            if (doEliminationNakedPairs && !hasEliminatedCandidates)
+//                hasEliminatedCandidates = eliminateNakedPairs();
+//            if (doEliminationIntersectionRadiation && !hasEliminatedCandidates)
+//                hasEliminatedCandidates = eliminateByRadiationFromIntersections();
+//            if (doEliminationXWings && !hasEliminatedCandidates)
+//                hasEliminatedCandidates = eliminateByXWings();
+
+            // see if there is a move now, naked singles first
             nextMove = possibilitiesContainer.getFirstNakedSingle();
-
             if (nextMove == null) {
                 Map.Entry<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueSymbol =
                         possibilitiesContainer.getFirstUniqueValue();
@@ -240,13 +241,15 @@ public class SudokuSolver {
                     nextMove = new AbstractMap.SimpleEntry<>(uniqueSymbol.getKey(), uniqueSymbol.getValue().getKey());
                 }
             }
+
+            eliminationRound++;
         }
 
         return nextMove;
     }
 
-    public IPuzzle solve() {
-        IPuzzle nextPuzzle = myPuzzle;
+    public ISudoku solve() {
+        ISudoku nextPuzzle = myPuzzle;
         while (!nextPuzzle.isSolved() && !nextPuzzle.isInconsistent()) {
             Map.Entry<Coord, String> nextMove = nextMove();
             if (nextMove != null) {
@@ -259,8 +262,8 @@ public class SudokuSolver {
         return nextPuzzle;
     }
 
-    public static int assessDifficulty(IPuzzle p) {
-        IPuzzle nextPuzzle = p;
+    public static int assessDifficulty(ISudoku p) {
+        ISudoku nextPuzzle = p;
         SudokuSolver sv = new SudokuSolver(p);
         sv.setSimplest();
         int level = 1;
@@ -268,6 +271,7 @@ public class SudokuSolver {
             Map.Entry<Coord, String> nextMove = sv.nextMove();
             if (nextMove != null) {
                 nextPuzzle = nextPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
+                // TODO: Alternatively, examine the solution steps in the elimination reasons
                 sv.resetToNewPuzzle(nextPuzzle);
             } else {
                 if (!sv.doEliminationIntersectionRadiation) {
@@ -276,10 +280,12 @@ public class SudokuSolver {
                 } else {
                     if (!sv.doEliminationNakedPairs) {
                         sv.setEliminateNakedPairs();
+                        // TODO: we should have bonus points for extended naked pairs
                         level++;
                     } else {
                         if (!sv.doEliminationXWings) {
                             sv.setEliminateXWings();
+                            // TODO: swordfish should count higher
                             level++;
                         } else {
                             return -1;

@@ -7,7 +7,7 @@ import ottop.sudoku.board.AbstractGroup;
 import java.util.List;
 import java.util.Set;
 
-public interface IPuzzle {
+public interface ISudoku {
     boolean isSolved();
 
     boolean isInconsistent();
@@ -32,9 +32,9 @@ public interface IPuzzle {
 
     Coord[] getAllCells();
 
-    IPuzzle doMove(Coord coord, String symbol);
+    ISudoku doMove(Coord coord, String symbol);
 
-    IPuzzle undoMove();
+    ISudoku undoMove();
 
     boolean canUndo();
 

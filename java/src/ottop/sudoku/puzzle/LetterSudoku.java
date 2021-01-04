@@ -3,18 +3,18 @@ package ottop.sudoku.puzzle;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class SudokuLetterPuzzle extends Standard9x9Puzzle {
-    public SudokuLetterPuzzle(String name, String symbols,
-                              String row1, String row2, String row3,
-                              String row4, String row5, String row6,
-                              String row7, String row8, String row9) {
+public class LetterSudoku extends StandardSudoku {
+    public LetterSudoku(String name, String symbols,
+                        String row1, String row2, String row3,
+                        String row4, String row5, String row6,
+                        String row7, String row8, String row9) {
 
         super(name, stringToSymbolArray(symbols),
                 new String[]{row1, row2, row3, row4, row5, row6, row7, row8, row9});
     }
 
     // For cloning to new puzzle
-    private SudokuLetterPuzzle(String name, String[] symbols, int[][] board) {
+    private LetterSudoku(String name, String[] symbols, int[][] board) {
         super(name, symbols, board);
     }
 
@@ -29,7 +29,7 @@ public class SudokuLetterPuzzle extends Standard9x9Puzzle {
     }
 
     @Override
-    protected IPuzzle newInstance(String name, int[][] brd) {
-        return new SudokuLetterPuzzle(name, possibleSymbols, brd);
+    protected ISudoku newInstance(String name, int[][] brd) {
+        return new LetterSudoku(name, possibleSymbols, brd);
     }
 }

@@ -12,16 +12,16 @@ import ottop.sudoku.board.AbstractGroup;
 
 import java.util.*;
 
-public abstract class AbstractPuzzle implements IPuzzle {
+public abstract class AbstractSudoku implements ISudoku {
     final String name;
-    IPuzzle previousPuzzle = null;
+    ISudoku previousPuzzle = null;
     List<AbstractGroup> groups;
     int[][] board; // [x][y]
     String[] possibleSymbols;
     Coord[] allCells;
     List<AbstractGroup> groupsWithBoundaries = new ArrayList<>();
 
-    public AbstractPuzzle(String name) {
+    public AbstractSudoku(String name) {
         this.name = name;
         board = new int[getWidth()][getHeight()];
 
@@ -65,7 +65,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
     }
 
     @Override
-    public IPuzzle doMove(Coord coord, String symbol) { // x, y start at 0
+    public ISudoku doMove(Coord coord, String symbol) { // x, y start at 0
         //if (isOccupied(yNew, xNew)) return null;
         int[][] newBoard = new int[getWidth()][getHeight()];
         for (Coord c : getAllCells()) {
@@ -76,13 +76,13 @@ public abstract class AbstractPuzzle implements IPuzzle {
             }
         }
 
-        IPuzzle nextPuzzle = newInstance(this.name, newBoard);
-        ((AbstractPuzzle) nextPuzzle).previousPuzzle = this; // link new puzzle state to current
+        ISudoku nextPuzzle = newInstance(this.name, newBoard);
+        ((AbstractSudoku) nextPuzzle).previousPuzzle = this; // link new puzzle state to current
 
         return nextPuzzle;
     }
 
-    abstract protected IPuzzle newInstance(String name, int[][] brd);
+    abstract protected ISudoku newInstance(String name, int[][] brd);
 
     @Override
     public boolean canUndo() {
@@ -90,7 +90,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
     }
 
     @Override
-    public IPuzzle undoMove() {
+    public ISudoku undoMove() {
         // Reset state here?
         return previousPuzzle;
     }

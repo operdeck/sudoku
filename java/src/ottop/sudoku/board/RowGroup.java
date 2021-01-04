@@ -1,10 +1,10 @@
 package ottop.sudoku.board;
 
-import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.ISudoku;
 
 public class RowGroup extends AbstractGroup {
 
-    public RowGroup(int startX, int startY, IPuzzle myPuzzle, String id) {
+    public RowGroup(int startX, int startY, ISudoku myPuzzle, String id) {
         super(startX, startY, myPuzzle, id);
     }
 

@@ -8,13 +8,13 @@ import ottop.sudoku.board.RowGroup;
 
 import java.util.ArrayList;
 
-public class Sudoku10x10Puzzle extends AbstractPuzzle {
-    public Sudoku10x10Puzzle(String name,
-                             String row1, String row2,
-                             String row3, String row4,
-                             String row5, String row6,
-                             String row7, String row8,
-                             String row9, String row10) {
+public class Sudoku10x10 extends AbstractSudoku {
+    public Sudoku10x10(String name,
+                       String row1, String row2,
+                       String row3, String row4,
+                       String row5, String row6,
+                       String row7, String row8,
+                       String row9, String row10) {
         super(name);
         possibleSymbols = new String[]{" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
         this.board = readCommaSeparatedBoard(new String[]{row1, row2, row3, row4, row5, row6, row7, row8, row9, row10});
@@ -22,7 +22,7 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
     }
 
     // For cloning to new puzzle
-    private Sudoku10x10Puzzle(String name, String[] symbols, int[][] board) {
+    private Sudoku10x10(String name, String[] symbols, int[][] board) {
         super(name);
         possibleSymbols = symbols;
         this.board = board;
@@ -48,8 +48,8 @@ public class Sudoku10x10Puzzle extends AbstractPuzzle {
     }
 
     @Override
-    protected IPuzzle newInstance(String name, int[][] brd) {
-        return new Sudoku10x10Puzzle(name, possibleSymbols, brd);
+    protected ISudoku newInstance(String name, int[][] brd) {
+        return new Sudoku10x10(name, possibleSymbols, brd);
     }
 
     @Override

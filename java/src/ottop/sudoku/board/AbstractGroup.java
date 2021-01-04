@@ -2,7 +2,7 @@ package ottop.sudoku.board;
 
 import ottop.sudoku.solve.PossibilitiesContainer;
 import ottop.sudoku.explain.NakedGroupEliminationReason;
-import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.ISudoku;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -36,7 +36,7 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
     protected int startX;
     protected int startY;
 
-    public AbstractGroup(int startX, int startY, IPuzzle myPuzzle, String id) {
+    public AbstractGroup(int startX, int startY, ISudoku myPuzzle, String id) {
         this.startX = startX;
         this.startY = startY;
         this.groupID = id;
@@ -96,7 +96,7 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
         return coords.keySet();
     }
 
-    public boolean eliminateNakedGroups(PossibilitiesContainer possibilitiesContainer, IPuzzle myPuzzle) {
+    public boolean eliminateNakedGroups(PossibilitiesContainer possibilitiesContainer, ISudoku myPuzzle) {
 
         boolean result = false;
 
@@ -136,7 +136,7 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
 
     private boolean eliminateInGroup(PossibilitiesContainer possibilitiesContainer,
                                      boolean result, Map<Set<Integer>, Set<Coord>> map,
-                                     boolean isExtended, IPuzzle myPuzzle) {
+                                     boolean isExtended, ISudoku myPuzzle) {
         for (Entry<Set<Integer>, Set<Coord>> entry : map.entrySet()) {
             Set<Integer> nakedGroupSymbolCodes = entry.getKey();
             Set<Coord> nakedGroupCoords = entry.getValue();

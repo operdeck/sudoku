@@ -7,18 +7,18 @@ import ottop.sudoku.board.SquareGroup;
 
 import java.util.ArrayList;
 
-public class Standard9x9Puzzle extends AbstractPuzzle {
-    public Standard9x9Puzzle(String name,
-                             String row1, String row2, String row3,
-                             String row4, String row5, String row6,
-                             String row7, String row8, String row9) {
+public class StandardSudoku extends AbstractSudoku {
+    public StandardSudoku(String name,
+                          String row1, String row2, String row3,
+                          String row4, String row5, String row6,
+                          String row7, String row8, String row9) {
         this(name,
                 new String[]{" ", "1", "2", "3", "4", "5", "6", "7", "8", "9"},
                 new String[]{row1, row2, row3, row4, row5, row6, row7, row8, row9});
     }
 
     // For cloning to new puzzle
-    protected Standard9x9Puzzle(String name, String[] symbols, int[][] board) {
+    protected StandardSudoku(String name, String[] symbols, int[][] board) {
         super(name);
         possibleSymbols = symbols;
         this.board = board;
@@ -26,7 +26,7 @@ public class Standard9x9Puzzle extends AbstractPuzzle {
     }
 
     // From subclasses that are 9x9 but use different symbols
-    protected Standard9x9Puzzle(String name, String[] symbols, String[] sudokuRows) {
+    protected StandardSudoku(String name, String[] symbols, String[] sudokuRows) {
         super(name);
         possibleSymbols = symbols;
         this.board = readSingleCharBoard(sudokuRows);
@@ -50,8 +50,8 @@ public class Standard9x9Puzzle extends AbstractPuzzle {
         }
     }
 
-    protected IPuzzle newInstance(String name, int[][] brd) {
-        return new Standard9x9Puzzle(name, possibleSymbols, brd);
+    protected ISudoku newInstance(String name, int[][] brd) {
+        return new StandardSudoku(name, possibleSymbols, brd);
     }
 
     @Override

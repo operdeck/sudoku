@@ -1,7 +1,6 @@
 package ottop.sudoku.fx;
 
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -16,7 +15,7 @@ import ottop.sudoku.solve.SudokuSolver;
 import ottop.sudoku.explain.EliminationReason;
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.SingleCellGroup;
-import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.ISudoku;
 
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,7 @@ public class Controller {
     public Button nextMoveButton;
     public ListView<String> lvEliminationSteps;
 
-    private IPuzzle myPuzzle;
+    private ISudoku myPuzzle;
 
     private Coord currentHighlightedCell = null;
     private List<AbstractGroup> currentHighlightedGroups = null;
@@ -69,7 +68,7 @@ public class Controller {
     public void symbolClicked(ActionEvent actionEvent) {
         String clickedSymbol = ((Button) actionEvent.getSource()).getText();
 
-        IPuzzle newPuzzle = myPuzzle.doMove(currentHighlightedCell, clickedSymbol);
+        ISudoku newPuzzle = myPuzzle.doMove(currentHighlightedCell, clickedSymbol);
         if (newPuzzle != null) {
             setPuzzle(newPuzzle, currentHighlightedCell);
         }
@@ -78,11 +77,11 @@ public class Controller {
     // TODO: support arrow keys move around in canvas
     // TODO: also support pressing keys 1-9
 
-    public void setPuzzle(IPuzzle initPuzzle) {
+    public void setPuzzle(ISudoku initPuzzle) {
         setPuzzle(initPuzzle, null);
     }
 
-    public void setPuzzle(IPuzzle initialPuzzle, Coord highlight) {
+    public void setPuzzle(ISudoku initialPuzzle, Coord highlight) {
         myPuzzle = initialPuzzle;
 
         currentSolver = (new SudokuSolver(myPuzzle))
@@ -217,7 +216,7 @@ public class Controller {
     }
 
     public void undoAction(ActionEvent actionEvent) {
-        IPuzzle prevPuzzle = myPuzzle.undoMove();
+        ISudoku prevPuzzle = myPuzzle.undoMove();
         if (prevPuzzle != null) {
             setPuzzle(prevPuzzle);
         }
@@ -236,7 +235,7 @@ public class Controller {
     public void puzzleSelectAction(ActionEvent actionEvent) {
         String puzzleName = String.valueOf(cbPuzzleDB.getValue());
         if (!puzzleName.equals(myPuzzle.getName())) { // event triggers very often
-            IPuzzle p;
+            ISudoku p;
             try {
                 p = PuzzleDB.getPuzzleByName(puzzleName);
                 if (p != null) {
@@ -280,7 +279,7 @@ public class Controller {
         Map.Entry<Coord, String> move = currentSolver.nextMove();
         if (move != null) {
             Coord coord = move.getKey();
-            IPuzzle newPuzzle = myPuzzle.doMove(coord, move.getValue());
+            ISudoku newPuzzle = myPuzzle.doMove(coord, move.getValue());
             if (newPuzzle != null) {
                 setPuzzle(newPuzzle, coord);
             }

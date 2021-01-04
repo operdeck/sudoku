@@ -2,14 +2,14 @@ package ottop.sudoku.tests;
 
 import org.junit.Test;
 import ottop.sudoku.PuzzleDB;
-import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.ISudoku;
 
 import static org.junit.Assert.assertEquals;
 
-public class NRCPuzzleTest {
+public class NRCSudokuTest {
     @Test
     public void checkNRCGroups() {
-        IPuzzle p = PuzzleDB.NRC_17nov;
+        ISudoku p = PuzzleDB.NRC_17nov;
         assertEquals(31, p.getGroups().length);
     }
 }

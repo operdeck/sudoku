@@ -1,9 +1,9 @@
 package ottop.sudoku.board;
 
-import ottop.sudoku.puzzle.IPuzzle;
+import ottop.sudoku.puzzle.ISudoku;
 
 public class SingleCellGroup extends AbstractGroup {
-    public SingleCellGroup(Coord cell, IPuzzle p) {
+    public SingleCellGroup(Coord cell, ISudoku p) {
         super(cell.getX(), cell.getY(), p, "Cell: " + cell.toString());
     }
 

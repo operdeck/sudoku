@@ -3,18 +3,18 @@ package ottop.sudoku.tests;
 import org.junit.Test;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.PuzzleDB;
-import ottop.sudoku.puzzle.IPuzzle;
-import ottop.sudoku.puzzle.Standard9x9Puzzle;
+import ottop.sudoku.puzzle.ISudoku;
+import ottop.sudoku.puzzle.StandardSudoku;
 import ottop.sudoku.solve.SudokuSolver;
 
 import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class StandardPuzzleTest {
+public class StandardSudokuTest {
     @Test
     public void checkBoard() {
-        Standard9x9Puzzle p = new Standard9x9Puzzle("Test",
+        StandardSudoku p = new StandardSudoku("Test",
                 "....65...",
                 ".......6.",
                 "1......78",
@@ -41,7 +41,7 @@ public class StandardPuzzleTest {
 
     @Test
     public void checkState() {
-        Standard9x9Puzzle p = new Standard9x9Puzzle("Bad puzzle",
+        StandardSudoku p = new StandardSudoku("Bad puzzle",
                 "123456789",
                 "123456789",
                 "123456789",
@@ -54,7 +54,7 @@ public class StandardPuzzleTest {
         assertFalse(p.isSolved());
         assertTrue(p.isInconsistent());
 
-        Standard9x9Puzzle p2 = new Standard9x9Puzzle("Solved puzzle",
+        StandardSudoku p2 = new StandardSudoku("Solved puzzle",
                 "827154396",
                 "965327148",
                 "341689752",
@@ -70,13 +70,13 @@ public class StandardPuzzleTest {
 
     @Test
     public void checkGroups() {
-        IPuzzle p = PuzzleDB.Trouw_535;
+        ISudoku p = PuzzleDB.Trouw_535;
         assertEquals(27, p.getGroups().length);
     }
 
     @Test
     public void checkDoMove() {
-        IPuzzle p = PuzzleDB.Trouw_535;
+        ISudoku p = PuzzleDB.Trouw_535;
         SudokuSolver s = new SudokuSolver(p);
 
         assertFalse(p.isOccupied(new Coord("r4c4")));
@@ -98,7 +98,7 @@ public class StandardPuzzleTest {
         assertEquals("7", move.getValue());
         assertEquals("r4c4", move.getKey().toString());
 
-        IPuzzle nextPuzzle = p.doMove(new Coord("r4c4"), "7");
+        ISudoku nextPuzzle = p.doMove(new Coord("r4c4"), "7");
         assertTrue(nextPuzzle.canUndo());
         assertTrue(nextPuzzle.isOccupied(new Coord("r4c4")));
     }
