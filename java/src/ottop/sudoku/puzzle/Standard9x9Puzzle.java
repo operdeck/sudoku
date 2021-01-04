@@ -1,12 +1,11 @@
 package ottop.sudoku.puzzle;
 
-import ottop.sudoku.group.AbstractGroup;
-import ottop.sudoku.group.ColumnGroup;
-import ottop.sudoku.group.RowGroup;
-import ottop.sudoku.group.SquareGroup;
+import ottop.sudoku.board.AbstractGroup;
+import ottop.sudoku.board.ColumnGroup;
+import ottop.sudoku.board.RowGroup;
+import ottop.sudoku.board.SquareGroup;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Standard9x9Puzzle extends AbstractPuzzle {
     public Standard9x9Puzzle(String name,

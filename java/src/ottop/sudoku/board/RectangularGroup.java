@@ -1,4 +1,4 @@
-package ottop.sudoku.group;
+package ottop.sudoku.board;
 
 import ottop.sudoku.puzzle.IPuzzle;
 

@@ -1,8 +1,8 @@
 package ottop.sudoku.puzzle;
 
 import javafx.scene.canvas.Canvas;
-import ottop.sudoku.Coord;
-import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.board.Coord;
+import ottop.sudoku.board.AbstractGroup;
 
 import java.util.List;
 import java.util.Set;
@@ -43,6 +43,8 @@ public interface IPuzzle {
     List<AbstractGroup> getGroups(Coord coord);
 
     String getName();
+
+    // TODO: consider moving out the draw functions to some Fx class
 
     void drawPuzzleOnCanvas(Canvas canvas, Coord highlight, Set<Coord> currentHighlightedSubArea);
 

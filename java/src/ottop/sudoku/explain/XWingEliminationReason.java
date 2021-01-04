@@ -1,12 +1,10 @@
 package ottop.sudoku.explain;
 
-import ottop.sudoku.Coord;
-import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.board.Coord;
+import ottop.sudoku.board.AbstractGroup;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class XWingEliminationReason extends EliminationReason {
 
@@ -30,16 +28,21 @@ public class XWingEliminationReason extends EliminationReason {
 
     public String toString() {
         StringBuilder result = new StringBuilder(super.toString());
-        result.append(" of ").append(removedFromGroup).append(" because it has to be in the intersections of ");
+        result.append(" from ").append(removedFromGroup).append(" because it has to be in the intersections of ");
         result.append(groups1).append(" X ").append(groups2).append(" (X-Wing)");
         return result.toString();
     }
 
-    public List<AbstractGroup> getHighlightGroups() {
-        List<AbstractGroup> result = new ArrayList<>();
-        result.addAll(groups1);
-        result.addAll(groups2);
-        return result;
+    public Set<Coord> getHighlightSubArea() {
+        Set<Coord> xwingCells = new TreeSet<>();
+        Set<Coord> allGroup2 = new TreeSet<>();
+        for (AbstractGroup g: groups1) {
+            xwingCells.addAll(g.getCoords());
+        }
+        for (AbstractGroup g: groups2) {
+            allGroup2.addAll(g.getCoords());
+        }
+        xwingCells.retainAll(allGroup2);
+        return xwingCells;
     }
-
 }

@@ -1,10 +1,8 @@
 package ottop.sudoku.explain;
 
-import ottop.sudoku.Coord;
-import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.board.Coord;
+import ottop.sudoku.board.AbstractGroup;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -32,8 +30,13 @@ public class NakedGroupEliminationReason extends EliminationReason {
         StringBuilder result = new StringBuilder(super.toString());
         result.append(" in ").append(removedFromGroup);
         result.append(" because ").append(nakedPairSymbols).append(" have to be in ").append(nakedPairCells);
-        if (!isExtended) result.append(" (Simple Naked Groups)");
-        if (isExtended) result.append(" (Extended Naked Groups)");
+        String groupLabel = "Group";
+        if (nakedPairCells.size()==2) groupLabel = "Pair";
+        if (nakedPairCells.size()==3) groupLabel = "Trio";
+        if (nakedPairCells.size()==4) groupLabel = "Quad";
+
+        if (!isExtended) result.append(" (Simple Naked ").append(groupLabel).append(")");
+        if (isExtended) result.append(" (Extended Naked ").append(groupLabel).append(")");
         return result.toString();
     }
 

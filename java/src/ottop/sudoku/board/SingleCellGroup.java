@@ -1,6 +1,5 @@
-package ottop.sudoku.group;
+package ottop.sudoku.board;
 
-import ottop.sudoku.Coord;
 import ottop.sudoku.puzzle.IPuzzle;
 
 public class SingleCellGroup extends AbstractGroup {

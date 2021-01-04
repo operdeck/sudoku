@@ -1,4 +1,4 @@
-package ottop.sudoku.gui;
+package ottop.sudoku.fx;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -7,7 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import ottop.sudoku.PuzzleDB;
 
-public class Sudoku extends Application {
+public class SudokuFx extends Application {
 
     private Controller myController;
 

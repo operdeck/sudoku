@@ -2,8 +2,8 @@ package ottop.sudoku.puzzle;
 
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import ottop.sudoku.group.AbstractGroup;
-import ottop.sudoku.group.SquareGroup;
+import ottop.sudoku.board.AbstractGroup;
+import ottop.sudoku.board.SquareGroup;
 
 public class NRCPuzzle extends Standard9x9Puzzle {
     // For cloning to new puzzle

@@ -1,13 +1,10 @@
 package ottop.sudoku.puzzle;
 
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
-import ottop.sudoku.Coord;
-import ottop.sudoku.group.AbstractGroup;
-import ottop.sudoku.group.ColumnGroup;
-import ottop.sudoku.group.RectangularGroup;
-import ottop.sudoku.group.RowGroup;
+import ottop.sudoku.board.Coord;
+import ottop.sudoku.board.AbstractGroup;
+import ottop.sudoku.board.ColumnGroup;
+import ottop.sudoku.board.RectangularGroup;
+import ottop.sudoku.board.RowGroup;
 
 import java.util.ArrayList;
 

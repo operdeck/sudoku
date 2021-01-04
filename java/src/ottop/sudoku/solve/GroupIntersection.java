@@ -1,10 +1,13 @@
-package ottop.sudoku;
+package ottop.sudoku.solve;
 
-import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.board.AbstractGroup;
+import ottop.sudoku.board.Coord;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
+
+// TODO: consider getting rid of this class
 
 public class GroupIntersection {
     private final Set<Coord> intersection;

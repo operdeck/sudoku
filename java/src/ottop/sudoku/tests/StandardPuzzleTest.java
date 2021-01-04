@@ -1,11 +1,11 @@
 package ottop.sudoku.tests;
 
 import org.junit.Test;
-import ottop.sudoku.Coord;
+import ottop.sudoku.board.Coord;
 import ottop.sudoku.PuzzleDB;
-import ottop.sudoku.SudokuSolver;
 import ottop.sudoku.puzzle.IPuzzle;
 import ottop.sudoku.puzzle.Standard9x9Puzzle;
+import ottop.sudoku.solve.SudokuSolver;
 
 import java.util.Map;
 

@@ -1,14 +1,13 @@
-package ottop.sudoku.group;
+package ottop.sudoku.board;
 
-import ottop.sudoku.Coord;
-import ottop.sudoku.PossibilitiesContainer;
+import ottop.sudoku.solve.PossibilitiesContainer;
 import ottop.sudoku.explain.NakedGroupEliminationReason;
 import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.*;
 import java.util.Map.Entry;
 
-public abstract class AbstractGroup {
+public abstract class AbstractGroup implements Comparable<AbstractGroup> {
     protected static int EMPTYSYMBOLCODE = 0; // 0 by definition, code for empty cell is 0
     private final boolean[] hasSymbolCode; // map that tells which symbols are currently contained
     private final Map<Coord, Integer> coords; // the cell coordinates in this group, mapped to internal index
@@ -16,7 +15,7 @@ public abstract class AbstractGroup {
     private final String groupID;
 
     /*
-    For a standard Sudoku:
+    For a standard SudokuMain:
 
     Group has cells with internal index 0..8, mapped to (current) symbol codes via "groupSymbolCodes"
     "coords" indicates where a coord is in this group: a map of Coord --> internal index
@@ -97,31 +96,40 @@ public abstract class AbstractGroup {
         return coords.keySet();
     }
 
-    public boolean eliminateNakedPairs(PossibilitiesContainer possibilitiesContainer, IPuzzle myPuzzle) {
+    public boolean eliminateNakedGroups(PossibilitiesContainer possibilitiesContainer, IPuzzle myPuzzle) {
 
         boolean result = false;
 
         // create map from sets of possibilities to the coordinates (in this group) that have those (same) possibilities
-        Map<Set<Integer>, Set<Coord>> map = new LinkedHashMap<>();
+        Map<Set<Integer>, Set<Coord>> nakedGroupMap = new LinkedHashMap<>();
         for (Coord c : coords.keySet()) {
             if (!isOccupied(c)) {
                 Set<Integer> pc = possibilitiesContainer.getCandidatesAtCell(c);
-                Set<Coord> coordSet = map.computeIfAbsent(pc, k -> new HashSet<>());
+                Set<Coord> coordSet = nakedGroupMap.computeIfAbsent(pc, k -> new HashSet<>());
                 coordSet.add(c);
             }
         }
 
+//        if (this.groupID.equals("Column 3")) {
+//            System.out.println(nakedGroupMap.toString());
+//        }
+
         // find groups of cells that all have the same possibilities, and which is of the same size as the
         // nr of possibilities: the possibilities can be removed from the rest of the group
-        if (eliminateInGroup(possibilitiesContainer, result, map, false, myPuzzle)) result = true;
+        if (eliminateInGroup(possibilitiesContainer, result, nakedGroupMap, false, myPuzzle)) result = true;
 
         // Combine elements in this map. For example, if there are entries
         // {26} --> [a], {27} --> [c], {26} --> [c] can be combined
         // to a new entry {267} --> [abc]
-        combineNakedPairs(map);
+        combineNakedGroups(nakedGroupMap);
+
+//        if (this.groupID.equals("Column 3")) {
+//            System.out.println("Combined:");
+//            System.out.println(nakedGroupMap.toString());
+//        }
 
         // Do further elimination (in two steps just to improve reporting)
-        if (eliminateInGroup(possibilitiesContainer, result, map, true, myPuzzle)) result = true;
+        if (eliminateInGroup(possibilitiesContainer, result, nakedGroupMap, true, myPuzzle)) result = true;
 
         return result;
     }
@@ -130,23 +138,22 @@ public abstract class AbstractGroup {
                                      boolean result, Map<Set<Integer>, Set<Coord>> map,
                                      boolean isExtended, IPuzzle myPuzzle) {
         for (Entry<Set<Integer>, Set<Coord>> entry : map.entrySet()) {
-            Set<Integer> nakedPairSymbolCodes = entry.getKey();
-            Set<String> nakedPairSymbols = new HashSet<>();
-            for (Integer p : nakedPairSymbolCodes) {
-                nakedPairSymbols.add(myPuzzle.symbolCodeToSymbol(p));
+            Set<Integer> nakedGroupSymbolCodes = entry.getKey();
+            Set<Coord> nakedGroupCoords = entry.getValue();
+            Set<String> nakedGroupSymbols = new HashSet<>();
+            for (Integer p : nakedGroupSymbolCodes) {
+                nakedGroupSymbols.add(myPuzzle.symbolCodeToSymbol(p));
             }
-            Set<Coord> nakedPairCoords = entry.getValue();
-            if (nakedPairSymbolCodes.size() > 1 && nakedPairSymbolCodes.size() == nakedPairCoords.size()) {
+            if (nakedGroupSymbolCodes.size() > 1 && nakedGroupSymbolCodes.size() == nakedGroupCoords.size()) {
                 for (Coord c : coords.keySet()) {
                     if (!isOccupied(c)) {
-                        if (!nakedPairCoords.contains(c)) {
+                        if (!nakedGroupCoords.contains(c)) {
 
                             // naked pair symbols to be removed at c but find the
                             // intersection with the remaining possibilities so only
                             // really remove the ones not already removed earlier
                             Set<Integer> currentPossibilities = possibilitiesContainer.getCandidatesAtCell(c);
-                            Set<Integer> actualRemovals = new HashSet<>();
-                            actualRemovals.addAll(nakedPairSymbolCodes);
+                            Set<Integer> actualRemovals = new HashSet<>(nakedGroupSymbolCodes);
                             actualRemovals.retainAll(currentPossibilities);
 
                             // translate actual removals to symbols
@@ -158,7 +165,7 @@ public abstract class AbstractGroup {
                             if (possibilitiesContainer.removePossibilities(actualRemovals, c,
                                     new NakedGroupEliminationReason(actualRemovalSymbols, c,
                                             this,
-                                            nakedPairSymbols, nakedPairCoords, isExtended))) result = true;
+                                            nakedGroupSymbols, nakedGroupCoords, isExtended))) result = true;
                         }
                     }
                 }
@@ -167,7 +174,7 @@ public abstract class AbstractGroup {
         return result;
     }
 
-    private void combineNakedPairs(Map<Set<Integer>, Set<Coord>> map) {
+    private void combineNakedGroups(Map<Set<Integer>, Set<Coord>> map) {
         final int range = (1 << groupSize); // range of possibilities for 9 digits: 2^9
         final int mask = range - 1;
         int groupFillSize = 0;
@@ -230,7 +237,7 @@ public abstract class AbstractGroup {
 
     // This could be static, the range of sets is limited
     private Set<Integer> fromBitSet(int i) {
-        Set<Integer> result = new HashSet<Integer>();
+        Set<Integer> result = new HashSet<>();
         int val = 1;
         while (i != 0) {
             if ((i & 1) != 0) result.add(val);
@@ -240,8 +247,9 @@ public abstract class AbstractGroup {
         return result;
     }
 
+    // Get indices of rows where given symbol is a candidate
     public Set<Integer> getRowSet(int symbolCode, PossibilitiesContainer cache) {
-        Set<Integer> set = new HashSet<>();
+        Set<Integer> set = new TreeSet<>();
 
         for (Coord c : coords.keySet()) {
             if (cache.getCandidatesAtCell(c).contains(symbolCode)) {
@@ -253,7 +261,7 @@ public abstract class AbstractGroup {
     }
 
     public Set<Integer> getColSet(int symbolCode, PossibilitiesContainer possibilities) {
-        Set<Integer> set = new HashSet<>();
+        Set<Integer> set = new TreeSet<>();
 
         for (Coord c : coords.keySet()) {
             if (possibilities.getCandidatesAtCell(c).contains(symbolCode)) {
@@ -282,5 +290,10 @@ public abstract class AbstractGroup {
             }
         }
         return isInconsistent;
+    }
+
+    @Override
+    public int compareTo(AbstractGroup g) {
+        return groupID.compareTo(g.groupID);
     }
 }

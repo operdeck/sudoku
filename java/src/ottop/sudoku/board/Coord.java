@@ -1,4 +1,4 @@
-package ottop.sudoku;
+package ottop.sudoku.board;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

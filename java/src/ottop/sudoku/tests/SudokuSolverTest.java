@@ -2,13 +2,15 @@ package ottop.sudoku.tests;
 
 import org.junit.Before;
 import org.junit.Test;
-import ottop.sudoku.Coord;
+import ottop.sudoku.board.Coord;
 import ottop.sudoku.PuzzleDB;
-import ottop.sudoku.SudokuSolver;
+import ottop.sudoku.explain.EliminationReason;
 import ottop.sudoku.puzzle.IPuzzle;
 import ottop.sudoku.puzzle.NRCPuzzle;
 import ottop.sudoku.puzzle.Standard9x9Puzzle;
+import ottop.sudoku.solve.SudokuSolver;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -168,13 +170,74 @@ public class SudokuSolverTest {
 
         solver.setEliminateXWings();
         solver.eliminatePossibilities();
-        assertEquals(2, solver.getPossibleMoves().size());
+        assertEquals(3, solver.getPossibleMoves().size());
     }
 
     @Test
     public void testUnsolvable() {
         solver = new SudokuSolver(PuzzleDB.unsolvable);
         assertNull(solver.solve());
+    }
+
+    @Test
+    public void testNakedPairAfterXWing() {
+        IPuzzle p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
+        p = p.doMove(new Coord("r1c1"), "1");
+        p = p.doMove(new Coord("r3c5"), "2");
+        p = p.doMove(new Coord("r3c6"), "1");
+        p = p.doMove(new Coord("r4c6"), "8");
+        p = p.doMove(new Coord("r8c6"), "5");
+        // skip the X-wings needed for next step
+        p = p.doMove(new Coord("r6c1"), "7");
+        p = p.doMove(new Coord("r8c3"), "7");
+
+        // Now, there are
+        //  a '39' naked pair at r4c3 and r9c3 but only after first finding
+        //  a swordfish of 9s at r2/r5/r8 x c1/c4/c6
+
+        solver = new SudokuSolver(p);
+        solver.setSmartest();
+        assertEquals(true, solver.eliminatePossibilities());
+        assertEquals(132, getTotalNumberOfPencilMarks());
+        assertEquals(true, solver.eliminatePossibilities());
+        assertEquals(125, getTotalNumberOfPencilMarks());
+        assertEquals(true, solver.eliminatePossibilities());
+        assertEquals(119, getTotalNumberOfPencilMarks());
+        assertEquals(true, solver.eliminatePossibilities());
+        assertEquals(92, getTotalNumberOfPencilMarks());
+        assertEquals(true, solver.eliminatePossibilities());
+        assertEquals(47, getTotalNumberOfPencilMarks());
+        assertEquals(false, solver.eliminatePossibilities());
+        assertEquals(47, getTotalNumberOfPencilMarks());
+        
+        assertEquals("r7c1=7", String.valueOf(solver.nextMove()) );
+    }
+
+    @Test
+    public void testSwordfish() {
+        IPuzzle p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
+        p = p.doMove(new Coord("r1c1"), "1");
+        p = p.doMove(new Coord("r3c5"), "2");
+        p = p.doMove(new Coord("r3c6"), "1");
+        p = p.doMove(new Coord("r4c6"), "8");
+        p = p.doMove(new Coord("r8c6"), "5");
+
+        solver = new SudokuSolver(p);
+
+        // Now, there are
+        //  x-wing of 8s at r3c2, r3c9, r9c2, r9c9
+        //  x-wing of 2s at r4c2, r7c2, r4c8, r7c8
+        //  swordfish of 4s at r1c4, r1c7, r1c8, r6c7, r6c8, r7c4, r7c7, r7c8
+
+        solver.setSmartest();
+        assertEquals(true, solver.eliminatePossibilities());
+        assertNotEquals(-1, solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r1c2")).toString().indexOf("(X-Wing)"));
+        assertNotEquals(-1, solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r7c1")).toString().indexOf("(X-Wing)"));
+        assertNotEquals(-1, solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r6c1")).toString().indexOf("(X-Wing)"));
+
+        assertEquals("r6c1=7", String.valueOf(solver.nextMove()) );
+
+        //assertEquals("pipo", solver.solve());
     }
 
     @Test

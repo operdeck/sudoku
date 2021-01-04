@@ -1,10 +1,11 @@
-package ottop.sudoku;
+package ottop.sudoku.solve;
 
+import ottop.sudoku.board.Coord;
 import ottop.sudoku.explain.IntersectionRadiationEliminationReason;
 import ottop.sudoku.explain.XWingEliminationReason;
-import ottop.sudoku.group.AbstractGroup;
-import ottop.sudoku.group.ColumnGroup;
-import ottop.sudoku.group.RowGroup;
+import ottop.sudoku.board.AbstractGroup;
+import ottop.sudoku.board.ColumnGroup;
+import ottop.sudoku.board.RowGroup;
 import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.*;
@@ -18,7 +19,6 @@ public class SudokuSolver {
     private PossibilitiesContainer possibilitiesContainer;
     private IPuzzle myPuzzle;
 
-    private boolean doEliminationBasicRadiation;
     private boolean doEliminationNakedPairs;
     private boolean doEliminationIntersectionRadiation;
     private boolean doEliminationXWings;
@@ -26,15 +26,6 @@ public class SudokuSolver {
     public SudokuSolver(IPuzzle p) {
         resetToNewPuzzle(p);
         setSimplest();
-    }
-
-    public SudokuSolver setEliminateBasicRadiation() {
-        return setEliminateBasicRadiation(true);
-    }
-
-    public SudokuSolver setEliminateBasicRadiation(boolean onOff) {
-        doEliminationBasicRadiation = onOff;
-        return this;
     }
 
     public SudokuSolver setEliminateNakedPairs() {
@@ -65,7 +56,6 @@ public class SudokuSolver {
     }
 
     public SudokuSolver setSimplest() {
-        setEliminateBasicRadiation(true);
         setEliminateNakedPairs(false);
         setEliminateIntersectionRadiation(false);
         setEliminateXWings(false);
@@ -73,7 +63,6 @@ public class SudokuSolver {
     }
 
     public SudokuSolver setSmartest() {
-        setEliminateBasicRadiation(true);
         setEliminateNakedPairs(true);
         setEliminateIntersectionRadiation(true);
         setEliminateXWings(true);
@@ -85,9 +74,6 @@ public class SudokuSolver {
 
         boolean hasEliminated = false;
 
-//        if (doEliminationBasicRadiation) {
-//            if (true) hasEliminated = true;
-//        }
         if (doEliminationNakedPairs) {
             if (eliminateNakedPairs()) hasEliminated=true;
         }
@@ -155,7 +141,7 @@ public class SudokuSolver {
         boolean updated = false;
 
         for (AbstractGroup g : myPuzzle.getGroups()) {
-            if (g.eliminateNakedPairs(possibilitiesContainer, myPuzzle)) updated = true;
+            if (g.eliminateNakedGroups(possibilitiesContainer, myPuzzle)) updated = true;
         }
 
         return updated;
@@ -171,7 +157,7 @@ public class SudokuSolver {
             // so it can be eliminated from the possibilities in each of those groups
             // outside of the intersections.
 
-            Map<Set<AbstractGroup>, Set<AbstractGroup>> map = new HashMap<>();
+            Map<Set<AbstractGroup>, Set<AbstractGroup>> xWingMap = new HashMap<>();
             for (AbstractGroup g : myPuzzle.getGroups()) {
                 Set<AbstractGroup> intersectingGroups = null;
                 if (g instanceof ColumnGroup) {
@@ -182,21 +168,46 @@ public class SudokuSolver {
                     intersectingGroups = toColumnGroups(g.getColSet(symbolCode, possibilitiesContainer));
                 }
                 if (intersectingGroups != null && !intersectingGroups.isEmpty()) {
-                    Set<AbstractGroup> grps = map.computeIfAbsent(intersectingGroups, k -> new HashSet<>());
+                    Set<AbstractGroup> grps = xWingMap.computeIfAbsent(intersectingGroups, k -> new TreeSet<>());
                     grps.add(g);
                 }
             }
 
+//            if (symbolCode == 4) {
+//                for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> k: xWingMap.entrySet()) {
+//                    System.out.println("X-Wing, code " + symbolCode + " intersection groups=" + k);
+//                }
+//            }
+
+            // For all keys k
+            // if there is another key that k is a full subset of
+            // then add all values of k to that one too
+            for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> k: xWingMap.entrySet()) {
+                for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> l: xWingMap.entrySet()) {
+                    if (k != l) {
+                        if (l.getKey().containsAll(k.getKey())) {
+                            l.getValue().addAll(k.getValue());
+                        }
+                    }
+                }
+            }
+
+//            if (symbolCode == 4) {
+//                System.out.println("Merged:");
+//                for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> k: xWingMap.entrySet()) {
+//                    System.out.println("X-Wing, code " + symbolCode + " intersection groups=" + k);
+//                }
+//            }
+
             // Now, with this map, if the set of rows is of the same size as the set of
             // columns that have identical row sets, eliminate 'symbolCode' from other cells
             // in the rows. Same for col vs row.
-            for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> entry : map.entrySet()) {
+            for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> entry : xWingMap.entrySet()) {
                 if (entry.getKey().size() > 1 &&
                         entry.getKey().size() == entry.getValue().size()) { // becomes * 2 now ??
                     for (AbstractGroup g : entry.getKey()) {
                         // Eliminate 'symbolCode' from this row 'g' except for the groups it intersects
-                        Set<Coord> candidateRemovals = new TreeSet<>();
-                        candidateRemovals.addAll(g.getCoords());
+                        Set<Coord> candidateRemovals = new TreeSet<>(g.getCoords());
                         for (AbstractGroup other : entry.getValue()) {
                             candidateRemovals.removeAll(other.getCoords());
                         }
@@ -214,18 +225,12 @@ public class SudokuSolver {
 
     public Map.Entry<Coord, String> nextMove() {
         Map.Entry<Coord, String> nextMove = null;
-        // TODO: is this needed?? The puzzle will give a new container at construction.
-
         possibilitiesContainer = new PossibilitiesContainer(myPuzzle);
         eliminatePossibilities();
 
         //System.out.println(this);
 
         if (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
-//            SolutionContainer sols = new SolutionContainer(myPuzzle, trace);
-//            for (AbstractGroup g : myPuzzle.getGroups()) {
-//                g.addPossibilitiesToSolution(possibilities, sols);
-//            }
             nextMove = possibilitiesContainer.getFirstNakedSingle();
 
             if (nextMove == null) {
@@ -241,20 +246,55 @@ public class SudokuSolver {
     }
 
     public IPuzzle solve() {
-        while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent()) {
+        IPuzzle nextPuzzle = myPuzzle;
+        while (!nextPuzzle.isSolved() && !nextPuzzle.isInconsistent()) {
             Map.Entry<Coord, String> nextMove = nextMove();
             if (nextMove != null) {
-                IPuzzle nextPuzzle = myPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
+                nextPuzzle = nextPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
                 resetToNewPuzzle(nextPuzzle);
             } else {
                 return null;
             }
         }
-        return myPuzzle;
+        return nextPuzzle;
     }
 
+    public static int assessDifficulty(IPuzzle p) {
+        IPuzzle nextPuzzle = p;
+        SudokuSolver sv = new SudokuSolver(p);
+        sv.setSimplest();
+        int level = 1;
+        while (!nextPuzzle.isSolved() && !nextPuzzle.isInconsistent()) {
+            Map.Entry<Coord, String> nextMove = sv.nextMove();
+            if (nextMove != null) {
+                nextPuzzle = nextPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
+                sv.resetToNewPuzzle(nextPuzzle);
+            } else {
+                if (!sv.doEliminationIntersectionRadiation) {
+                    sv.setEliminateIntersectionRadiation();
+                    level++;
+                } else {
+                    if (!sv.doEliminationNakedPairs) {
+                        sv.setEliminateNakedPairs();
+                        level++;
+                    } else {
+                        if (!sv.doEliminationXWings) {
+                            sv.setEliminateXWings();
+                            level++;
+                        } else {
+                            return -1;
+                        }
+                    }
+                }
+            }
+        }
+        return level;
+    }
+
+
+    // Get rows corresponding to indices
     private Set<AbstractGroup> toRowGroups(Set<Integer> rowset) {
-        Set<AbstractGroup> result = new HashSet<>();
+        Set<AbstractGroup> result = new TreeSet<>();
         for (AbstractGroup g : myPuzzle.getGroups()) {
             if (g instanceof RowGroup) {
                 if (rowset.contains(((RowGroup) g).getRow())) {
@@ -266,7 +306,7 @@ public class SudokuSolver {
     }
 
     private Set<AbstractGroup> toColumnGroups(Set<Integer> colset) {
-        Set<AbstractGroup> result = new HashSet<>();
+        Set<AbstractGroup> result = new TreeSet<>();
         for (AbstractGroup g : myPuzzle.getGroups()) {
             if (g instanceof ColumnGroup) {
                 if (colset.contains(((ColumnGroup) g).getColumn())) {

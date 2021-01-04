@@ -1,9 +1,10 @@
-package ottop.sudoku;
+package ottop.sudoku.solve;
 
 import org.jetbrains.annotations.NotNull;
+import ottop.sudoku.board.Coord;
 import ottop.sudoku.explain.EliminationReason;
 import ottop.sudoku.explain.SimpleEliminationReason;
-import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.puzzle.IPuzzle;
 
 import java.util.*;

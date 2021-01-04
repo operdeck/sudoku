@@ -1,10 +1,9 @@
 package ottop.sudoku.explain;
 
-import ottop.sudoku.Coord;
-import ottop.sudoku.GroupIntersection;
-import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.board.Coord;
+import ottop.sudoku.solve.GroupIntersection;
+import ottop.sudoku.board.AbstractGroup;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 

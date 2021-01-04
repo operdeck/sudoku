@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PuzzleDB {
-    public static IPuzzle emptyStandardPuzzle = new Standard9x9Puzzle("Empty standard Sudoku",
+    public static IPuzzle emptyStandardPuzzle = new Standard9x9Puzzle("Empty standard SudokuMain",
             ".........",
             ".........",
             ".........",
@@ -18,7 +18,7 @@ public class PuzzleDB {
             ".........",
             ".........");
 
-    public static IPuzzle emptyNRCPuzzle = new NRCPuzzle("Empty NRC Sudoku",
+    public static IPuzzle emptyNRCPuzzle = new NRCPuzzle("Empty NRC SudokuMain",
             ".........",
             ".........",
             ".........",
@@ -29,7 +29,7 @@ public class PuzzleDB {
             ".........",
             ".........");
 
-    public static IPuzzle emptyLetterPuzzle = new SudokuLetterPuzzle("Empty Letter Sudoku", "CFHIPRSTU",
+    public static IPuzzle emptyLetterPuzzle = new SudokuLetterPuzzle("Empty Letter SudokuMain", "CFHIPRSTU",
             ".........",
             ".........",
             ".........",
@@ -164,7 +164,7 @@ public class PuzzleDB {
             ".....5...",
             ".........");
 
-    public static IPuzzle sudoku_very_hard_1 = new Standard9x9Puzzle("Sudoku Essentials #1",
+    public static IPuzzle sudoku_very_hard_1 = new Standard9x9Puzzle("SudokuMain Essentials #1",
             ".3.48.6.9",
             "....27...",
             "8..3.....",
@@ -185,6 +185,28 @@ public class PuzzleDB {
             "...UI.P..",
             "P..S.T...",
             "H...P..TS");
+
+    public static IPuzzle extremesudoku_info_evil_4jan2021 = new Standard9x9Puzzle("Extreme Sudoku Evil 4/1/21",
+            "6.13.57.9",
+            ".........",
+            "3..7.4..6",
+            "2.8...3.5",
+            "....9....",
+            "9.7...6.8",
+            "7..9.2..4",
+            ".........",
+            "5.61.89.3");
+
+    public static IPuzzle extremesudoku_info_excessive_4jan2021 = new Standard9x9Puzzle("Extreme Sudoku Excessive 4/1/21",
+            "..6..7..2",
+            ".7..5..1.",
+            "3..6..9..",
+            "4..5..1..",
+            ".1..4..8.",
+            "..8..2..9",
+            "..1..6..5",
+            ".4..8..3.",
+            "5..2..7..");
 
     // TODO include some others from the puzzle book
 

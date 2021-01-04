@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane minHeight="560.0" minWidth="650.0" prefHeight="560.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ottop.sudoku.gui.Controller">
+<AnchorPane minHeight="560.0" minWidth="650.0" prefHeight="560.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ottop.sudoku.fx.Controller">
     <children>
         <ToolBar layoutX="5.0" layoutY="329.0" prefHeight="39.0" prefWidth="604.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0">
             <items>
@@ -29,16 +29,15 @@
                     </padding>
                 </ButtonBar>
                 <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="1.0" />
-                <Button fx:id="explainButton" mnemonicParsing="false" onAction="#explainClicked" text="Explain" />
                 <Button fx:id="nextMoveButton" mnemonicParsing="false" onAction="#doNextMove" text="Next Move" />
                 <Button fx:id="undoButton" mnemonicParsing="false" onAction="#undoAction" text="Undo" />
             </items>
         </ToolBar>
         <AnchorPane layoutX="367.0" layoutY="5.0" prefHeight="382.0" prefWidth="237.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
             <children>
-                <CheckBox fx:id="cbPencilMarks" layoutX="5.0" layoutY="103.0" mnemonicParsing="false" onAction="#hintsAction" text="Pencil marks" />
-                <CheckBox fx:id="cbNakedPairs" layoutX="5.0" layoutY="192.0" mnemonicParsing="false" onAction="#hintsAction" text="Naked Sets" />
-                <CheckBox fx:id="cbXWings" layoutX="5.0" layoutY="217.0" mnemonicParsing="false" onAction="#hintsAction" text="X-Wings" />
+                <CheckBox fx:id="cbPencilMarks" layoutX="5.0" layoutY="103.0" mnemonicParsing="false" onAction="#hintsAction" text="Pencil Marks" />
+                <CheckBox fx:id="cbNakedPairs" layoutX="5.0" layoutY="192.0" mnemonicParsing="false" onAction="#hintsAction" text="Naked Groups" />
+                <CheckBox fx:id="cbXWings" layoutX="5.0" layoutY="217.0" mnemonicParsing="false" onAction="#hintsAction" text="X-Wings (Extended)" />
                 <CheckBox fx:id="cbRadiation" layoutX="5.0" layoutY="167.0" mnemonicParsing="false" onAction="#hintsAction" text="Intersection Radiation" />
                 <Label fx:id="tbLevel" layoutX="5.0" layoutY="55.0" prefHeight="17.0" prefWidth="127.0" text="Difficulty: XXX" textFill="#12299e" />
                 <Label layoutX="5.0" layoutY="138.0" text="Methods:" />
@@ -56,7 +55,7 @@
                 <Canvas fx:id="gameCanvas" height="335.0" layoutX="5.0" layoutY="5.0" onKeyTyped="#keyTyped" onMouseClicked="#canvasMouseClick" onMouseMoved="#canvasMouseMove" width="393.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0" />
             </children>
         </AnchorPane>
-      <ListView fx:id="lvEliminationSteps" layoutX="2.0" layoutY="392.0" onMouseClicked="#eliminationStepsClicked" prefHeight="114.0" prefWidth="640.0" AnchorPane.bottomAnchor="54.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="392.0" />
+      <ListView fx:id="lvEliminationSteps" layoutX="2.0" layoutY="392.0" prefHeight="114.0" prefWidth="640.0" AnchorPane.bottomAnchor="54.0" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="392.0" />
       <Label layoutX="4.0" layoutY="371.0" prefHeight="17.0" prefWidth="507.0" text="Elimination steps:" />
     </children>
 </AnchorPane>

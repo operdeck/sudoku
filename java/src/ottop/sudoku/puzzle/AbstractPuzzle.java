@@ -7,8 +7,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
-import ottop.sudoku.Coord;
-import ottop.sudoku.group.AbstractGroup;
+import ottop.sudoku.board.Coord;
+import ottop.sudoku.board.AbstractGroup;
 
 import java.util.*;
 
@@ -43,7 +43,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
 
     @Override
     public String toString() {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         if (name != null && name.length() > 0) result.append(name).append(":\n");
         for (int y = 0; y < getHeight(); y++) {
@@ -160,8 +160,7 @@ public abstract class AbstractPuzzle implements IPuzzle {
 
     @Override
     public int symbolToSymbolCode(String symbol) {
-        int idx = Math.max(0, Arrays.asList(possibleSymbols).indexOf(symbol)); // return 0 if not found or empty
-        return idx;
+        return Math.max(0, Arrays.asList(possibleSymbols).indexOf(symbol));
     }
 
     @Override
@@ -287,14 +286,12 @@ public abstract class AbstractPuzzle implements IPuzzle {
 
     double getCellWidth(Canvas canvas) {
         double canvasWidth = canvas.getWidth();
-        double cellWidth = (canvasWidth - 10) / getWidth();
-        return (cellWidth);
+        return (canvasWidth - 10) / getWidth();
     }
 
     double getCellHeight(Canvas canvas) {
         double canvasHeight = canvas.getHeight();
-        double cellHeight = (canvasHeight - 10) / getHeight();
-        return (cellHeight);
+        return (canvasHeight - 10) / getHeight();
     }
 
     // TODO: we could automatically detect overlapping groups
