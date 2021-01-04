@@ -1,6 +1,7 @@
 package ottop.sudoku.solve;
 
 import ottop.sudoku.board.Coord;
+import ottop.sudoku.explain.EliminationReason;
 import ottop.sudoku.explain.IntersectionRadiationEliminationReason;
 import ottop.sudoku.explain.XWingEliminationReason;
 import ottop.sudoku.board.AbstractGroup;
@@ -22,6 +23,8 @@ public class SudokuSolver {
     private boolean doEliminationNakedPairs;
     private boolean doEliminationIntersectionRadiation;
     private boolean doEliminationXWings;
+
+    private int numberOfEliminationIterations;
 
     public SudokuSolver(ISudoku p) {
         resetToNewPuzzle(p);
@@ -214,25 +217,15 @@ public class SudokuSolver {
         Map.Entry<Coord, String> nextMove = null;
         possibilitiesContainer = new PossibilitiesContainer(myPuzzle);
 
-        boolean hasEliminatedCandidates = true;
+        numberOfEliminationIterations = 0;
+        while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent() && nextMove == null) {
 
-        int eliminationRound = 1;
-        while (!myPuzzle.isSolved() && !myPuzzle.isInconsistent() && nextMove == null && hasEliminatedCandidates) {
+            numberOfEliminationIterations++;
 
             // TODO: multiple iterations could count as higher level
             //System.out.println("Elimination round " + eliminationRound);
 
-            // we may have to do multiple rounds of elimination
-            hasEliminatedCandidates = eliminatePossibilities();
-
-//            if (doEliminationNakedPairs && !hasEliminatedCandidates)
-//                hasEliminatedCandidates = eliminateNakedPairs();
-//            if (doEliminationIntersectionRadiation && !hasEliminatedCandidates)
-//                hasEliminatedCandidates = eliminateByRadiationFromIntersections();
-//            if (doEliminationXWings && !hasEliminatedCandidates)
-//                hasEliminatedCandidates = eliminateByXWings();
-
-            // see if there is a move now, naked singles first
+            // see if there is a move, naked singles first
             nextMove = possibilitiesContainer.getFirstNakedSingle();
             if (nextMove == null) {
                 Map.Entry<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueSymbol =
@@ -242,7 +235,22 @@ public class SudokuSolver {
                 }
             }
 
-            eliminationRound++;
+            // no move? try different types of elimination, possibly iteratively
+            if (nextMove == null) {
+                boolean hasEliminatedCandidates = false;
+
+                if (doEliminationNakedPairs && !hasEliminatedCandidates) {
+                    hasEliminatedCandidates = eliminateNakedPairs();
+                }
+                if (doEliminationIntersectionRadiation && !hasEliminatedCandidates) {
+                    hasEliminatedCandidates = eliminateByRadiationFromIntersections();
+                }
+                if (doEliminationXWings && !hasEliminatedCandidates) {
+                    hasEliminatedCandidates = eliminateByXWings();
+                }
+
+                if (!hasEliminatedCandidates) break;
+            }
         }
 
         return nextMove;
@@ -265,36 +273,35 @@ public class SudokuSolver {
     public static int assessDifficulty(ISudoku p) {
         ISudoku nextPuzzle = p;
         SudokuSolver sv = new SudokuSolver(p);
-        sv.setSimplest();
-        int level = 1;
+        sv.setSmartest();
+        int maxReasonLevel = -1;
+        int maxNumberOfIterations = 1;
         while (!nextPuzzle.isSolved() && !nextPuzzle.isInconsistent()) {
             Map.Entry<Coord, String> nextMove = sv.nextMove();
             if (nextMove != null) {
-                nextPuzzle = nextPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
-                // TODO: Alternatively, examine the solution steps in the elimination reasons
-                sv.resetToNewPuzzle(nextPuzzle);
-            } else {
-                if (!sv.doEliminationIntersectionRadiation) {
-                    sv.setEliminateIntersectionRadiation();
-                    level++;
-                } else {
-                    if (!sv.doEliminationNakedPairs) {
-                        sv.setEliminateNakedPairs();
-                        // TODO: we should have bonus points for extended naked pairs
-                        level++;
-                    } else {
-                        if (!sv.doEliminationXWings) {
-                            sv.setEliminateXWings();
-                            // TODO: swordfish should count higher
-                            level++;
-                        } else {
-                            return -1;
-                        }
-                    }
+                // TODO: reasons could be recursive if dependent on other non-trivial cells
+                List<EliminationReason> reasons = sv.getPossibilitiesContainer().getEliminationReasons(nextMove.getKey());
+                for (EliminationReason r : reasons) {
+                    maxReasonLevel = Math.max(maxReasonLevel, r.getDifficulty());
                 }
+
+                // Bonus when multiple rounds needed
+                maxNumberOfIterations = Math.max(maxNumberOfIterations, sv.numberOfEliminationIterations);
+
+                nextPuzzle = nextPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
+
+                sv.resetToNewPuzzle(nextPuzzle);
+           } else {
+                break;
             }
         }
-        return level;
+
+        // Bonus when multiple rounds were needed in some step
+        maxReasonLevel = maxReasonLevel + maxNumberOfIterations - 1;
+
+        if (!nextPuzzle.isSolved()) return -1;
+
+        return maxReasonLevel;
     }
 
 

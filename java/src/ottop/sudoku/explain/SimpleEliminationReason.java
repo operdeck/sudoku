@@ -40,4 +40,9 @@ public class SimpleEliminationReason extends EliminationReason {
         return List.of(removedByGroup);
     }
 
+    @Override
+    public int getDifficulty() {
+        return 1;
+    }
+
 }

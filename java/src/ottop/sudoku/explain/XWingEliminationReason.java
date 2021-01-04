@@ -29,7 +29,13 @@ public class XWingEliminationReason extends EliminationReason {
     public String toString() {
         StringBuilder result = new StringBuilder(super.toString());
         result.append(" from ").append(removedFromGroup).append(" because it has to be in the intersections of ");
-        result.append(groups1).append(" X ").append(groups2).append(" (X-Wing)");
+
+        String name = "Extended X-Wing";
+        if (groups1.size() == 2) name = "X-Wing";
+        if (groups1.size() == 3) name = "Swordfish";
+        if (groups1.size() == 4) name = "Jellyfish";
+
+        result.append(groups1).append(" X ").append(groups2).append(" (" + name + ")");
         return result.toString();
     }
 
@@ -44,5 +50,11 @@ public class XWingEliminationReason extends EliminationReason {
         }
         xwingCells.retainAll(allGroup2);
         return xwingCells;
+    }
+
+    @Override
+    public int getDifficulty() {
+        // XWing will be 5, Swordfish 6, Jellyfish 7 etc.
+        return 3 + groups1.size();
     }
 }

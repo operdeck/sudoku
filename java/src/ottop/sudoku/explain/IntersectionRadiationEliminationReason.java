@@ -43,4 +43,9 @@ public class IntersectionRadiationEliminationReason extends EliminationReason {
     public Set<Coord> getHighlightSubArea() {
         return intersection.getIntersection();
     }
+
+    @Override
+    public int getDifficulty() {
+        return 2;
+    }
 }

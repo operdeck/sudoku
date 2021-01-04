@@ -47,4 +47,9 @@ public class NakedGroupEliminationReason extends EliminationReason {
     public Set<Coord> getHighlightSubArea() {
         return nakedPairCells;
     }
+
+    @Override
+    public int getDifficulty() {
+        return isExtended ? 4 : 3;
+    }
 }

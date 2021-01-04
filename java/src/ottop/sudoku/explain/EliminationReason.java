@@ -62,4 +62,6 @@ public abstract class EliminationReason {
     public Set<Coord> getHighlightSubArea() {
         return null;
     }
+
+    public abstract int getDifficulty();
 }

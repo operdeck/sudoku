@@ -11,7 +11,7 @@ public class Sudoku10x10Test {
     public void checkSymbolCodeMapping() {
         ISudoku p = PuzzleDB.puzzelbrein12_2020;
 
-        System.out.println(p);
+        //System.out.println(p);
         assertEquals(11, p.getSymbolCodeRange());
         assertEquals("3", p.symbolCodeToSymbol(3));
         assertEquals(" ", p.symbolCodeToSymbol(0));

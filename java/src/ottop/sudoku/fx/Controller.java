@@ -90,10 +90,16 @@ public class Controller {
                 .setEliminateXWings(cbXWings.isSelected());
         currentSolver.eliminatePossibilities();
 
-        currentEliminationReasons = null;
         currentHighlightedGroups = null;
         currentHighlightedSubArea = null;
-        lvEliminationSteps.getItems().clear();
+
+        if (highlight == null) {
+            currentEliminationReasons = null;
+            lvEliminationSteps.getItems().clear();
+            labelPosition.setText("");
+        } else {
+            labelPosition.setText(String.valueOf(highlight));
+        }
 
         updateWholeDisplay(highlight);
     }
@@ -126,9 +132,6 @@ public class Controller {
 
         // Puzzle itself
         myPuzzle.drawPuzzleOnCanvas(gameCanvas, highlight, currentHighlightedSubArea);
-
-        // Cursor
-        labelPosition.setText("");
 
         // Hints & help
         showPuzzleHints();
@@ -227,7 +230,7 @@ public class Controller {
         int y = (int) Math.floor(myPuzzle.getHeight() * mouseEvent.getY() / gameCanvas.getHeight());
         if (x >= 0 && x <= myPuzzle.getWidth()) {
             if (y >= 0 && y <= myPuzzle.getHeight()) {
-                labelPosition.setText("" + new Coord(x, y));
+                labelPosition.setText(String.valueOf(new Coord(x, y)));
             }
         }
     }
@@ -249,21 +252,19 @@ public class Controller {
         }
     }
 
-    public void canvasMouseClick(MouseEvent mouseEvent) {
-        int x = (int) Math.floor(myPuzzle.getWidth() * mouseEvent.getX() / gameCanvas.getWidth());
-        int y = (int) Math.floor(myPuzzle.getHeight() * mouseEvent.getY() / gameCanvas.getHeight());
-        currentHighlightedCell = new Coord(x, y);
-        labelPosition.setText(currentHighlightedCell.toString());
+    private void explainCell(Coord cell)
+    {
+        labelPosition.setText(String.valueOf(cell));
         lvEliminationSteps.getItems().clear();
         currentHighlightedGroups = null;
         currentHighlightedSubArea = null;
 
         // explain
-        if (cbPencilMarks.isSelected() && !myPuzzle.isOccupied(currentHighlightedCell)) {
+        if (cbPencilMarks.isSelected() && !myPuzzle.isOccupied(cell)) {
             PossibilitiesContainer possibilitiesContainer =
                     currentSolver.getPossibilitiesContainer();
 
-            currentEliminationReasons = possibilitiesContainer.getEliminationReasons(currentHighlightedCell);
+            currentEliminationReasons = possibilitiesContainer.getEliminationReasons(cell);
             if (null != currentEliminationReasons) {
                 for (EliminationReason reason : currentEliminationReasons) {
                     lvEliminationSteps.getItems().add(reason.toString());
@@ -271,6 +272,14 @@ public class Controller {
             }
         }
         lvEliminationSteps.setDisable(null == currentEliminationReasons || currentEliminationReasons.size() == 0);
+    }
+
+    public void canvasMouseClick(MouseEvent mouseEvent) {
+        int x = (int) Math.floor(myPuzzle.getWidth() * mouseEvent.getX() / gameCanvas.getWidth());
+        int y = (int) Math.floor(myPuzzle.getHeight() * mouseEvent.getY() / gameCanvas.getHeight());
+        currentHighlightedCell = new Coord(x, y);
+
+        explainCell(currentHighlightedCell);
 
         updateWholeDisplay(currentHighlightedCell); // highlight
     }
@@ -279,6 +288,7 @@ public class Controller {
         Map.Entry<Coord, String> move = currentSolver.nextMove();
         if (move != null) {
             Coord coord = move.getKey();
+            explainCell(coord);
             ISudoku newPuzzle = myPuzzle.doMove(coord, move.getValue());
             if (newPuzzle != null) {
                 setPuzzle(newPuzzle, coord);

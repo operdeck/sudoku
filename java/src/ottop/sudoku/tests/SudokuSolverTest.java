@@ -245,9 +245,12 @@ public class SudokuSolverTest {
 
         solver.setSmartest();
         assertEquals(true, solver.eliminatePossibilities());
-        assertNotEquals(-1, solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r1c2")).toString().indexOf("(X-Wing)"));
-        assertNotEquals(-1, solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r7c1")).toString().indexOf("(X-Wing)"));
-        assertNotEquals(-1, solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r6c1")).toString().indexOf("(X-Wing)"));
+//        assertNotEquals(-1,
+//                String.valueOf(solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r1c2"))).indexOf("X-Wing"));
+//        assertNotEquals(-1,
+//                String.valueOf(solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r7c1"))).indexOf("X-Wing"));
+        assertNotEquals(-1,
+                String.valueOf(solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r6c1"))).indexOf("Swordfish"));
 
         // this requires a swordfish
         assertEquals("r6c1=7", String.valueOf(solver.nextMove()) );
@@ -332,9 +335,14 @@ public class SudokuSolverTest {
         assertEquals(1, SudokuSolver.assessDifficulty(PuzzleDB.Trouw_535));
 
         // requires naked pairs and intersection radiation
-        assertEquals(3, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_28_nov_2013));
+        assertEquals(5, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_28_nov_2013));
 
-        // requires XWings and perhaps even multiple iterations of elimination rounds
-        assertEquals(4, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_info_excessive_4jan2021));
+        // requires XWings and even multiple iterations of elimination rounds
+        assertEquals(10, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_info_excessive_4jan2021));
+
+        // empty or invalid puzzles
+        assertEquals(-1, SudokuSolver.assessDifficulty(PuzzleDB.emptyNRCPuzzle));
+        assertEquals(-1, SudokuSolver.assessDifficulty(PuzzleDB.unsolvable));
+
     }
 }
