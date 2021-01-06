@@ -216,6 +216,7 @@ public class Controller {
                 }
             }
         }
+        explainCell(currentHighlightedCell);
     }
 
     public void undoAction(ActionEvent actionEvent) {
@@ -254,24 +255,26 @@ public class Controller {
 
     private void explainCell(Coord cell)
     {
-        labelPosition.setText(String.valueOf(cell));
+        if (cell != null) labelPosition.setText(String.valueOf(cell));
         lvEliminationSteps.getItems().clear();
         currentHighlightedGroups = null;
         currentHighlightedSubArea = null;
 
         // explain
-        if (cbPencilMarks.isSelected() && !myPuzzle.isOccupied(cell)) {
-            PossibilitiesContainer possibilitiesContainer =
-                    currentSolver.getPossibilitiesContainer();
+        if (cell != null) {
+            if (cbPencilMarks.isSelected() && !myPuzzle.isOccupied(cell)) {
+                PossibilitiesContainer possibilitiesContainer =
+                        currentSolver.getPossibilitiesContainer();
 
-            currentEliminationReasons = possibilitiesContainer.getEliminationReasons(cell);
-            if (null != currentEliminationReasons) {
-                for (EliminationReason reason : currentEliminationReasons) {
-                    lvEliminationSteps.getItems().add(reason.toString());
+                currentEliminationReasons = possibilitiesContainer.getEliminationReasons(cell);
+                if (null != currentEliminationReasons) {
+                    for (EliminationReason reason : currentEliminationReasons) {
+                        lvEliminationSteps.getItems().add(reason.toString());
+                    }
                 }
             }
+            lvEliminationSteps.setDisable(null == currentEliminationReasons || currentEliminationReasons.size() == 0);
         }
-        lvEliminationSteps.setDisable(null == currentEliminationReasons || currentEliminationReasons.size() == 0);
     }
 
     public void canvasMouseClick(MouseEvent mouseEvent) {

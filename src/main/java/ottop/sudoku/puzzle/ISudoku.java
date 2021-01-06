@@ -12,7 +12,7 @@ public interface ISudoku {
 
     boolean isInconsistent();
 
-    void resetState(); // a puzzle is a board with a set of occupied cells
+    void initAllGroups(); // a puzzle is a board with a set of occupied cells
 
     String symbolCodeToSymbol(int n);
 

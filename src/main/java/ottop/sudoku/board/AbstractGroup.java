@@ -9,9 +9,9 @@ import java.util.Map.Entry;
 
 public abstract class AbstractGroup implements Comparable<AbstractGroup> {
     protected static int EMPTYSYMBOLCODE = 0; // 0 by definition, code for empty cell is 0
-    private final boolean[] hasSymbolCode; // map that tells which symbols are currently contained
-    private final Map<Coord, Integer> coords; // the cell coordinates in this group, mapped to internal index
-    private final int[] groupSymbolCodes; // current cell state
+    private boolean[] hasSymbolCode; // map that tells which symbols are currently contained
+    private Map<Coord, Integer> coords; // the cell coordinates in this group, mapped to internal index
+    private int[] groupSymbolCodes; // current cell state
     private final String groupID;
 
     /*
@@ -40,6 +40,11 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
         this.startX = startX;
         this.startY = startY;
         this.groupID = id;
+
+        resetGroup(myPuzzle);
+    }
+
+    public void resetGroup(ISudoku myPuzzle) {
         this.groupSize = myPuzzle.getSymbolCodeRange() - 1;
         this.hasSymbolCode = new boolean[myPuzzle.getSymbolCodeRange()];
         this.groupSymbolCodes = new int[this.groupSize];
@@ -186,13 +191,13 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
         // all possible bitmaps (total of 512, 2^9), are a superset of the bitmap of
         // a set of possibilities. Combine the mapped coordinates of those.
         Map<Integer, Set<Coord>> newCombinationsMap = new HashMap<>();
-        for (Set<Integer> key : map.keySet()) {
+        for (Set<Integer> key : map.keySet()) { // TODO: loop over entry set instead? Avoid the get later on.
             int keyAsBitSet = toBitSet(key);
             for (int counter = 0; counter < range; counter++) {
                 // bitwise operation to verify that all of "key" are contained in the digit set represented by "i"
                 if ((counter | (~keyAsBitSet & mask)) == mask) {
                     Set<Coord> coords = newCombinationsMap.computeIfAbsent(counter, k -> new HashSet<>());
-                    Set<Coord> originalCoords = map.get(key);
+                    Set<Coord> originalCoords = map.get(key); // TODO: get twice can be removed both...
                     if (originalCoords != null) {
                         coords.addAll(map.get(key));
                     }

@@ -16,17 +16,23 @@ public class Sudoku10x10 extends AbstractSudoku {
                        String row7, String row8,
                        String row9, String row10) {
         super(name);
+
+        // TODO: super call
+
         possibleSymbols = new String[]{" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
         this.board = readCommaSeparatedBoard(new String[]{row1, row2, row3, row4, row5, row6, row7, row8, row9, row10});
-        resetState();
+        initAllGroups();
     }
 
     // For cloning to new puzzle
     private Sudoku10x10(String name, String[] symbols, int[][] board) {
         super(name);
+
+        // TODO: super call
+
         possibleSymbols = symbols;
         this.board = board;
-        resetState();
+        initAllGroups();
     }
 
     @Override
@@ -42,8 +48,8 @@ public class Sudoku10x10 extends AbstractSudoku {
             }
         }
         for (int i = 0; i < 10; i++) {
-            groups.add(new RowGroup(0, i, this, "Row " + (1 + i)));
-            groups.add(new ColumnGroup(i, 0, this, "Column " + (1 + i)));
+            groups.add(new RowGroup(0, i, this));
+            groups.add(new ColumnGroup(i, 0, this));
         }
     }
 

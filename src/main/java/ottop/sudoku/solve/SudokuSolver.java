@@ -92,7 +92,7 @@ public class SudokuSolver {
 
     private void resetToNewPuzzle(ISudoku p) {
         myPuzzle = p;
-        p.resetState();
+        p.initAllGroups();
 
         // This will just do basic elimination. Additional elimination steps done
         // via next move or solve. Or by calling elimination explicitly.
@@ -240,6 +240,8 @@ public class SudokuSolver {
                 boolean hasEliminatedCandidates = false;
 
                 if (doEliminationNakedPairs && !hasEliminatedCandidates) {
+                    // TODO: consider doing the extended naked pairs as a 2nd step only
+                    // if first does not give new candidates
                     hasEliminatedCandidates = eliminateNakedPairs();
                 }
                 if (doEliminationIntersectionRadiation && !hasEliminatedCandidates) {
@@ -256,12 +258,17 @@ public class SudokuSolver {
         return nextMove;
     }
 
+    // TODO: this is ONLY used in tests right now
     public ISudoku solve() {
         ISudoku nextPuzzle = myPuzzle;
         while (!nextPuzzle.isSolved() && !nextPuzzle.isInconsistent()) {
             Map.Entry<Coord, String> nextMove = nextMove();
             if (nextMove != null) {
+
+                // TODO: instead of completely new puzzles this could update existing one
                 nextPuzzle = nextPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
+
+                // TODO: instead of a full reset an update might be possible
                 resetToNewPuzzle(nextPuzzle);
             } else {
                 return null;
@@ -288,8 +295,10 @@ public class SudokuSolver {
                 // Bonus when multiple rounds needed
                 maxNumberOfIterations = Math.max(maxNumberOfIterations, sv.numberOfEliminationIterations);
 
+                // TODO: consider just updating
                 nextPuzzle = nextPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
 
+                // TODO: consider doing interatively
                 sv.resetToNewPuzzle(nextPuzzle);
            } else {
                 break;

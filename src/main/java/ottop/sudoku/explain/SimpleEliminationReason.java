@@ -14,6 +14,8 @@ public class SimpleEliminationReason extends EliminationReason {
         this.removedByGroup = removedByGroup;
     }
 
+    // TODO: seems to be fairly expensive. We could introduce an EliminationReasons class that
+    // keeps an internal cache of coord --> reason just for the simple reasons.
     // If there is another symbol at the same coord and by the same group, combine the symbols
     public List<EliminationReason> combine(List<EliminationReason> eliminationReasons) {
         if (eliminationReasons != null) {

@@ -13,17 +13,25 @@ import ottop.sudoku.board.AbstractGroup;
 import java.util.*;
 
 public abstract class AbstractSudoku implements ISudoku {
-    final String name;
     ISudoku previousPuzzle = null;
-    List<AbstractGroup> groups;
-    int[][] board; // [x][y]
+
+    final String name;
+    // I think below two should be final and can be if we refactor the constructors
     String[] possibleSymbols;
     Coord[] allCells;
+
+    int[][] board; // [x][y]
+
+    // Groups are stateful
+
+    List<AbstractGroup> groups;
     List<AbstractGroup> groupsWithBoundaries = new ArrayList<>();
 
     public AbstractSudoku(String name) {
         this.name = name;
         board = new int[getWidth()][getHeight()];
+
+        // TODO: below is the reset functionality
 
         List<Coord> cells = new ArrayList<>();
         for (int x = 0; x < getWidth(); x++) {
@@ -32,10 +40,15 @@ public abstract class AbstractSudoku implements ISudoku {
             }
         }
         this.allCells = cells.toArray(new Coord[0]);
+
+        // TODO: should call init groups now
     }
 
     @Override
-    public void resetState() {
+    public void initAllGroups() { // TODO: this really is just reset ALL groups
+
+        // separate method not needed - just use initAllGroups
+
         initGroups();
     }
 
@@ -64,6 +77,12 @@ public abstract class AbstractSudoku implements ISudoku {
         return isSolved;
     }
 
+    // TODO: see if we can do a move w/o recreating the whole board.
+    // - only if not occupied - if occupied then reset like we do now
+    // - shallow copy of the current board into previous puzzle, perhaps null groups etc.
+    //   really only keep the current "board"
+    // - put the symbol at coord
+    // - reset the groups you're part of
     @Override
     public ISudoku doMove(Coord coord, String symbol) { // x, y start at 0
         //if (isOccupied(yNew, xNew)) return null;
@@ -91,7 +110,9 @@ public abstract class AbstractSudoku implements ISudoku {
 
     @Override
     public ISudoku undoMove() {
-        // Reset state here?
+        // TODO: of DoMove becomes cheaper then undo will have to
+        // reset the full puzzle. Only board should be deep copied.
+
         return previousPuzzle;
     }
 

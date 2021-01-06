@@ -93,17 +93,21 @@ public class SudokuMain {
 
         //SudokuReader sr = new Kaggle1MSudokuReader();
         //SudokuReader sr = new HardestSudokuDatabaseReader();
-        SudokuReader sr = new MagicTourReader();
 
-        while (sr.hasNext()) {
-            ISudoku p = sr.next();
-            //System.out.println(p);
 
-            //SudokuSolver solver = new SudokuSolver(p);
-            //ISudoku solvedPuzzle = solver.setSmartest().solve();
-            //if (solvedPuzzle != null && solvedPuzzle.isSolved()) {
-            System.out.println("Puzzle " + p.getName() +
-                    " level " + SudokuSolver.assessDifficulty(p)); // + solvedPuzzle);
+        while (true) {
+            SudokuReader sr = new MagicTourReader();
+
+            while (sr.hasNext()) {
+                ISudoku p = sr.next();
+                //System.out.println(p);
+
+                //SudokuSolver solver = new SudokuSolver(p);
+                //ISudoku solvedPuzzle = solver.setSmartest().solve();
+                //if (solvedPuzzle != null && solvedPuzzle.isSolved()) {
+                System.out.println("Puzzle " + p.getName() +
+                        " level " + SudokuSolver.assessDifficulty(p)); // + solvedPuzzle);
+            }
         }
     }
 }

@@ -8,6 +8,8 @@ import ottop.sudoku.board.SquareGroup;
 import java.util.ArrayList;
 
 public class StandardSudoku extends AbstractSudoku {
+
+    // TODO: consider one with one super long string
     public StandardSudoku(String name,
                           String row1, String row2, String row3,
                           String row4, String row5, String row6,
@@ -19,18 +21,24 @@ public class StandardSudoku extends AbstractSudoku {
 
     // For cloning to new puzzle
     protected StandardSudoku(String name, String[] symbols, int[][] board) {
+
+        // TODO: super call
+
         super(name);
         possibleSymbols = symbols;
         this.board = board;
-        resetState();
+        initAllGroups();
     }
 
     // From subclasses that are 9x9 but use different symbols
     protected StandardSudoku(String name, String[] symbols, String[] sudokuRows) {
+
+        // TODO: super call
+
         super(name);
         possibleSymbols = symbols;
         this.board = readSingleCharBoard(sudokuRows);
-        resetState();
+        initAllGroups();
     }
 
     public StandardSudoku(String puzzleName, String puzzleData) {
@@ -58,8 +66,8 @@ public class StandardSudoku extends AbstractSudoku {
             }
         }
         for (int i = 0; i < 9; i++) {
-            groups.add(new RowGroup(0, i, this, "Row " + (1 + i)));
-            groups.add(new ColumnGroup(i, 0, this, "Column " + (1 + i)));
+            groups.add(new RowGroup(0, i, this));
+            groups.add(new ColumnGroup(i, 0, this));
         }
     }
 
