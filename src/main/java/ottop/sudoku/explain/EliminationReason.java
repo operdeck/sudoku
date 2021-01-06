@@ -10,6 +10,9 @@ import java.util.Set;
 
 public abstract class EliminationReason {
     protected final Set<String> symbols;
+
+    // TODO: or just one Coord? And then we can have a map of Coord --> Reasons?
+
     protected final Set<Coord> coords;
 
     protected EliminationReason(String symbol, Set<Coord> coords) {
@@ -54,6 +57,8 @@ public abstract class EliminationReason {
         eliminationReasons.add(this);
         return eliminationReasons;
     }
+
+    // TODO: getReasonGroups / getReasonCells
 
     public List<AbstractGroup> getHighlightGroups() {
         return null;

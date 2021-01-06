@@ -33,6 +33,19 @@ public class StandardSudoku extends AbstractSudoku {
         resetState();
     }
 
+    public StandardSudoku(String puzzleName, String puzzleData) {
+        this(puzzleName,
+                puzzleData.substring(0, 9),
+                puzzleData.substring(9, 18),
+                puzzleData.substring(18, 27),
+                puzzleData.substring(27, 36),
+                puzzleData.substring(36, 45),
+                puzzleData.substring(45, 54),
+                puzzleData.substring(54, 63),
+                puzzleData.substring(63, 72),
+                puzzleData.substring(72, 81));
+    }
+
     protected void initGroups() {
         groups = new ArrayList<>();
 

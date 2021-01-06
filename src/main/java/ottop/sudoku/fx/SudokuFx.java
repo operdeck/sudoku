@@ -18,7 +18,7 @@ public class SudokuFx extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader fxmlLoader = new FXMLLoader();
-        Parent root = FXMLLoader.load(getClass().getResource("SudokuUI.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/SudokuUI.fxml"));
 
         myController = Controller.theController;
         myController.setPuzzle(PuzzleDB.emptyStandardPuzzle);
