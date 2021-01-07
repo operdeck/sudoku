@@ -1,9 +1,10 @@
-package ottop.sudoku.solve;
+package ottop.sudoku.solver;
 
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.Coord;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -20,7 +21,7 @@ public class GroupIntersection {
         grps[1] = b;
     }
 
-    public static Set<GroupIntersection> createGroupIntersections(AbstractGroup[] groups) {
+    public static Set<GroupIntersection> createGroupIntersections(List<AbstractGroup> groups) {
         Set<GroupIntersection> intersections = new LinkedHashSet<>();
         for (AbstractGroup a : groups) {
             for (AbstractGroup b : groups) {

@@ -38,7 +38,7 @@ public interface ISudoku {
 
     boolean canUndo();
 
-    AbstractGroup[] getGroups();
+    List<AbstractGroup> getGroups();
 
     List<AbstractGroup> getGroups(Coord coord);
 

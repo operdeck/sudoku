@@ -1,4 +1,4 @@
-package ottop.sudoku.solve;
+package ottop.sudoku.solver;
 
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.explain.EliminationReason;
@@ -213,6 +213,25 @@ public class SudokuSolver {
         return updated;
     }
 
+    public boolean checkForcedChains()
+    {
+        // Given an original puzzle O
+        // Find a coord C with possibilities Di (> 1, start with C's with only 2)
+        // Do move for all possibilities Mi giving new puzzles Pi
+        // Apply only forced moves to all of Pi giving Fi until no more moves
+        // When all done:
+        //    if there is an i for which Fi is solved then we accidentally guessed a solution
+        //    if there is an i for which Fi is invalid then Mi is not a valid move
+        //    otherwise for all i that do not result in an invalid puzzle Fi
+        //        if there is a coordinate K that is empty in O and that is not empty in all of Fi
+        //           if that has the SAME value in all of Fi then we have a move: at C place Di (return)
+        // Otherwise no move :(
+        //
+
+
+        return true;
+    }
+
     public Map.Entry<Coord, String> nextMove() {
         Map.Entry<Coord, String> nextMove = null;
         possibilitiesContainer = new PossibilitiesContainer(myPuzzle);
@@ -367,7 +386,7 @@ public class SudokuSolver {
         return results;
     }
 
-    // All possible moves
+//     All possible moves
     public SortedSet<String> getPossibleMoves() {
         SortedSet<String> moves = new TreeSet<>();
         moves.addAll(getNakedSingles());

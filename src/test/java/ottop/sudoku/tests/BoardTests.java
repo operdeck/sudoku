@@ -20,6 +20,6 @@ public class BoardTests {
                 ".........",
                 ".........");
 
-        assertEquals(27, emptyPuzzle.getGroups().length);
+        assertEquals(27, emptyPuzzle.getGroups().size());
     }
 }

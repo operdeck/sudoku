@@ -1,6 +1,6 @@
 package ottop.sudoku.board;
 
-import ottop.sudoku.solve.PossibilitiesContainer;
+import ottop.sudoku.solver.PossibilitiesContainer;
 import ottop.sudoku.explain.NakedGroupEliminationReason;
 import ottop.sudoku.puzzle.ISudoku;
 

@@ -1,7 +1,7 @@
 package ottop.sudoku.explain;
 
 import ottop.sudoku.board.Coord;
-import ottop.sudoku.solve.GroupIntersection;
+import ottop.sudoku.solver.GroupIntersection;
 import ottop.sudoku.board.AbstractGroup;
 
 import java.util.List;

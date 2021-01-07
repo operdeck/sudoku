@@ -9,9 +9,9 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import ottop.sudoku.board.Coord;
-import ottop.sudoku.solve.PossibilitiesContainer;
+import ottop.sudoku.solver.PossibilitiesContainer;
 import ottop.sudoku.PuzzleDB;
-import ottop.sudoku.solve.SudokuSolver;
+import ottop.sudoku.solver.SudokuSolver;
 import ottop.sudoku.explain.EliminationReason;
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.SingleCellGroup;
@@ -41,6 +41,7 @@ public class Controller {
     private ISudoku myPuzzle;
 
     private Coord currentHighlightedCell = null;
+
     private List<AbstractGroup> currentHighlightedGroups = null;
     private Set<Coord> currentHighlightedSubArea = null;
     private SudokuSolver currentSolver = null;
@@ -69,6 +70,7 @@ public class Controller {
         String clickedSymbol = ((Button) actionEvent.getSource()).getText();
 
         ISudoku newPuzzle = myPuzzle.doMove(currentHighlightedCell, clickedSymbol);
+        // TODO: record "manual" move
         if (newPuzzle != null) {
             setPuzzle(newPuzzle, currentHighlightedCell);
         }
@@ -167,34 +169,34 @@ public class Controller {
             if (currentHighlightedCell != null && !myPuzzle.isOccupied(currentHighlightedCell)) {
                 notes.appendText(currentHighlightedCell + ":\n");
 
-                boolean hasPossibleMoves = false;
+//                boolean hasPossibleMoves = false;
                 PossibilitiesContainer possibilitiesContainer = currentSolver.getPossibilitiesContainer();
-                if (null != possibilitiesContainer) {
-                    Map<Coord, String> nakedSingles = possibilitiesContainer.getAllNakedSingles();
-                    if (nakedSingles != null && nakedSingles.size()>0) {
-                        String symbol = nakedSingles.get(currentHighlightedCell);
-                        if (symbol != null) {
-                            notes.appendText("Naked Single: " + symbol + "\n");
-                            hasPossibleMoves = true;
-                        }
-                    }
-
-                    Map<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValues = possibilitiesContainer.getAllUniqueValues();
-                    if (uniqueValues != null && uniqueValues.size()>0) {
-                        Map.Entry<String, List<AbstractGroup>> symbol = uniqueValues.get(currentHighlightedCell);
-                        if (symbol != null) {
-                            notes.appendText("Unique Value: " + symbol.getKey() + " in " + symbol.getValue() + "\n");
-                            hasPossibleMoves = true;
-                        }
-                    }
-                }
-                if (!hasPossibleMoves && possibilitiesContainer != null) {
+//                if (null != possibilitiesContainer) {
+//                    Map<Coord, String> nakedSingles = possibilitiesContainer.getAllNakedSingles();
+//                    if (nakedSingles != null && nakedSingles.size()>0) {
+//                        String symbol = nakedSingles.get(currentHighlightedCell);
+//                        if (symbol != null) {
+//                            notes.appendText("Naked Single: " + symbol + "\n");
+//                            hasPossibleMoves = true;
+//                        }
+//                    }
+//
+//                    Map<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValues = possibilitiesContainer.getAllUniqueValues();
+//                    if (uniqueValues != null && uniqueValues.size()>0) {
+//                        Map.Entry<String, List<AbstractGroup>> symbol = uniqueValues.get(currentHighlightedCell);
+//                        if (symbol != null) {
+//                            notes.appendText("Unique Value: " + symbol.getKey() + " in " + symbol.getValue() + "\n");
+//                            hasPossibleMoves = true;
+//                        }
+//                    }
+//                }
+                if (possibilitiesContainer != null) {
                     notes.appendText("Candidates: " +
                             possibilitiesContainer.getCandidatesAtCell(currentHighlightedCell) + "\n");
                 }
             } else {
-                notes.appendText("Naked Singles: " + currentSolver.getNakedSingles() + "\n");
-                notes.appendText("Unique Values: " + currentSolver.getUniqueValues() + "\n");
+                //notes.appendText("Naked Singles: " + currentSolver.getNakedSingles() + "\n");
+                //notes.appendText("Unique Values: " + currentSolver.getUniqueValues() + "\n");
             }
 
             if (cbPencilMarks.isSelected()) {

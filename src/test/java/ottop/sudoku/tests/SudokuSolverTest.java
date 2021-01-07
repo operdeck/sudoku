@@ -7,7 +7,7 @@ import ottop.sudoku.PuzzleDB;
 import ottop.sudoku.puzzle.ISudoku;
 import ottop.sudoku.puzzle.NRCSudoku;
 import ottop.sudoku.puzzle.StandardSudoku;
-import ottop.sudoku.solve.SudokuSolver;
+import ottop.sudoku.solver.SudokuSolver;
 
 import java.util.Map;
 import java.util.Set;
@@ -332,7 +332,7 @@ public class SudokuSolverTest {
     @Test
     public void testDifficultyLevel()
     {
-        assertEquals(1, SudokuSolver.assessDifficulty(PuzzleDB.Trouw_535));
+        assertEquals(2, SudokuSolver.assessDifficulty(PuzzleDB.Trouw_535));
 
         // requires naked pairs and intersection radiation
         assertEquals(5, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_28_nov_2013));

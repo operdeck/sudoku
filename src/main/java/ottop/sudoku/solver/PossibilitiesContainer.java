@@ -1,10 +1,12 @@
-package ottop.sudoku.solve;
+package ottop.sudoku.solver;
 
 import org.jetbrains.annotations.NotNull;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.explain.EliminationReason;
+import ottop.sudoku.explain.NakedSingle;
 import ottop.sudoku.explain.SimpleEliminationReason;
 import ottop.sudoku.board.AbstractGroup;
+import ottop.sudoku.explain.UniqueValue;
 import ottop.sudoku.puzzle.ISudoku;
 
 import java.util.*;
@@ -18,7 +20,7 @@ public class PossibilitiesContainer {
 
     public PossibilitiesContainer(ISudoku p) {
         myPuzzle = p;
-        AbstractGroup[] groups = p.getGroups();
+        List<AbstractGroup> groups = p.getGroups();
         for (Coord c : p.getAllCells()) {
             // TODO: strange call, maybe just check groups of cell
             candidatesPerCell.put(c, getCandidatesInArea(c, groups));
@@ -50,15 +52,26 @@ public class PossibilitiesContainer {
         return p;
     }
 
+    // Add moves on the fly if there are any
     public List<EliminationReason> getEliminationReasons(Coord c) {
-        return removalReasons.get(c);
+        List<EliminationReason> reasonsPlusCandidateMove = new ArrayList<>();
+        reasonsPlusCandidateMove.addAll(removalReasons.get(c));
+        String symbol = getNakedSingleAt(c);
+        if (symbol != null) {
+            reasonsPlusCandidateMove.add(new NakedSingle(symbol, c));
+        }
+        Map.Entry<String, List<AbstractGroup>> uniqueValue = getUniqueValueAt(c);
+        if (uniqueValue != null) {
+            reasonsPlusCandidateMove.add(new UniqueValue(uniqueValue.getKey(), c, uniqueValue.getValue()));
+        }
+        return reasonsPlusCandidateMove;
     }
 
     private void recordEliminationReason(Coord coord, EliminationReason reason) {
         removalReasons.put(coord, reason.combine(removalReasons.get(coord)));
     }
 
-    private Set<Integer> getCandidatesInArea(Coord coord, AbstractGroup[] groups) {
+    private Set<Integer> getCandidatesInArea(Coord coord, List<AbstractGroup> groups) {
         int symbolCodeRange = myPuzzle.getSymbolCodeRange();
         Set<Integer> s = new HashSet<>();
 
@@ -123,39 +136,57 @@ public class PossibilitiesContainer {
         return null;
     }
 
+    private String getNakedSingleAt(Coord coord) {
+        if (!myPuzzle.isOccupied(coord)) {
+            Set<Integer> cellPossibilities = getCandidatesAtCell(coord);
+            if (cellPossibilities != null) {
+                if (cellPossibilities.size() == 1) {
+                    Integer symbolCode = cellPossibilities.iterator().next();
+                    return myPuzzle.symbolCodeToSymbol(symbolCode);
+                }
+            }
+        }
+        return null;
+    }
+
     private Map<Coord, String> getNakedSingles(boolean all) {
         Map<Coord, String> result = new TreeMap<>();
         for (Coord coord: myPuzzle.getAllCells()) {
-            if (!myPuzzle.isOccupied(coord)) {
-                Set<Integer> cellPossibilities = getCandidatesAtCell(coord);
-                if (cellPossibilities != null) {
-                    if (cellPossibilities.size() == 1) {
-                        Integer symbolCode = cellPossibilities.iterator().next();
-                        result.put(coord, myPuzzle.symbolCodeToSymbol(symbolCode));
-                        if (!all) return result;
-                    }
-                }
+            String symbol = getNakedSingleAt(coord);
+            if (symbol != null) {
+                result.put(coord, symbol);
+                if (!all) return result;
             }
         }
         return result;
     }
 
     public Map<Coord, Map.Entry<String, List<AbstractGroup>>> getAllUniqueValues() {
-        return getUniqueValues(true);
+        return getUniqueValues(true, myPuzzle.getGroups());
     }
 
     public Map.Entry<Coord, Map.Entry<String, List<AbstractGroup>>> getFirstUniqueValue() {
-        Map<Coord, Map.Entry<String, List<AbstractGroup>>> results = getUniqueValues(false);
+        Map<Coord, Map.Entry<String, List<AbstractGroup>>> results = getUniqueValues(false, myPuzzle.getGroups());
         if (results.size() >= 1) {
             return results.entrySet().iterator().next();
         }
         return null;
     }
 
-    private Map<Coord, Map.Entry<String, List<AbstractGroup>>> getUniqueValues(boolean all) {
+    // TODO: this is not super efficient - will consider too many coordinates
+    private Map.Entry<String, List<AbstractGroup>> getUniqueValueAt(Coord c) {
+        Map<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValues = getUniqueValues(true, myPuzzle.getGroups(c));
+        if (uniqueValues != null && uniqueValues.size()>0) {
+            Map.Entry<String, List<AbstractGroup>> uniqueValue = uniqueValues.get(c);
+            return uniqueValue;
+        }
+        return null;
+    }
+
+    private Map<Coord, Map.Entry<String, List<AbstractGroup>>> getUniqueValues(boolean all, List<AbstractGroup> groups) {
         Map<Coord, Map.Entry<String, List<AbstractGroup>>> result = new TreeMap<>();
 
-        for (AbstractGroup g: myPuzzle.getGroups()) {
+        for (AbstractGroup g: groups) {
             for (Coord c: g.getCoords()) {
                 if (!myPuzzle.isOccupied(c)) {
                     Set<Integer> remainingPossibilities = new HashSet<>(getCandidatesAtCell(c));
@@ -174,6 +205,9 @@ public class PossibilitiesContainer {
                                     new ArrayList<>()));
                         }
                         result.get(c).getValue().add(g);
+//                        recordEliminationReason(c, new UniqueValue(myPuzzle.symbolCodeToSymbol(symbolCode), c,
+//                                result.get(c).getValue()));
+                        if (!all) return result;
                     }
                 }
             }

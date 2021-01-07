@@ -5,7 +5,7 @@ import ottop.sudoku.board.Coord;
 import ottop.sudoku.PuzzleDB;
 import ottop.sudoku.puzzle.ISudoku;
 import ottop.sudoku.puzzle.StandardSudoku;
-import ottop.sudoku.solve.SudokuSolver;
+import ottop.sudoku.solver.SudokuSolver;
 
 import java.util.Map;
 
@@ -71,7 +71,7 @@ public class StandardSudokuTest {
     @Test
     public void checkGroups() {
         ISudoku p = PuzzleDB.Trouw_535;
-        assertEquals(27, p.getGroups().length);
+        assertEquals(27, p.getGroups().size());
     }
 
     @Test

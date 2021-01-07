@@ -129,8 +129,8 @@ public abstract class AbstractSudoku implements ISudoku {
     }
 
     @Override
-    public AbstractGroup[] getGroups() {
-        return groups.toArray(new AbstractGroup[0]);
+    public List<AbstractGroup> getGroups() {
+        return groups;
     }
 
     @Override

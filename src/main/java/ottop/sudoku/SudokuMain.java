@@ -3,17 +3,13 @@ package ottop.sudoku;
 // As computer security expert Ben Laurie has stated, ui.SudokuMain is "a denial of service attack on human intellect"
 
 import ottop.sudoku.puzzle.ISudoku;
-import ottop.sudoku.puzzle.NRCSudoku;
-import ottop.sudoku.puzzle.StandardSudoku;
 import ottop.sudoku.reader.SudokuReader;
 import ottop.sudoku.reader.SudokuResourceReader;
-import ottop.sudoku.solve.SudokuSolver;
+import ottop.sudoku.solver.SudokuSolver;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
+import java.time.Duration;
+import java.time.Instant;
 
 // Massive collections of Sudoku's here. Not currently used but perhaps
 // can pick the ones with higher ratings.
@@ -98,6 +94,10 @@ public class SudokuMain {
         while (true) {
             SudokuReader sr = new MagicTourReader();
 
+            Instant start = Instant.now();
+            int nSolved = 0;
+            int nUnsolved = 0;
+
             while (sr.hasNext()) {
                 ISudoku p = sr.next();
                 //System.out.println(p);
@@ -105,9 +105,16 @@ public class SudokuMain {
                 //SudokuSolver solver = new SudokuSolver(p);
                 //ISudoku solvedPuzzle = solver.setSmartest().solve();
                 //if (solvedPuzzle != null && solvedPuzzle.isSolved()) {
-                System.out.println("Puzzle " + p.getName() +
-                        " level " + SudokuSolver.assessDifficulty(p)); // + solvedPuzzle);
+                int result = SudokuSolver.assessDifficulty(p);
+                if (result < 0) nSolved++; else nUnsolved++;
+
+//                System.out.println("Puzzle " + p.getName() +
+//                        " level " + SudokuSolver.assessDifficulty(p)); // + solvedPuzzle);
             }
+
+            Instant finish = Instant.now();
+            long timeElapsed = Duration.between(start, finish).toMillis();
+            System.out.println("Solved " + nSolved + "/" + (nSolved+nUnsolved) + " in " + timeElapsed/1000.0 + " secs");
         }
     }
 }
