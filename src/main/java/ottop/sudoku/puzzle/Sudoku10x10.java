@@ -15,30 +15,17 @@ public class Sudoku10x10 extends AbstractSudoku {
                        String row5, String row6,
                        String row7, String row8,
                        String row9, String row10) {
-        super(name);
-
-        // TODO: super call
-
-        possibleSymbols = new String[]{" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
-        this.board = readCommaSeparatedBoard(new String[]{row1, row2, row3, row4, row5, row6, row7, row8, row9, row10});
-        initAllGroups();
+        this(name,
+                new String[]{" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"},
+                new String[]{row1, row2, row3, row4, row5, row6, row7, row8, row9, row10});
     }
 
-    // For cloning to new puzzle
-    private Sudoku10x10(String name, String[] symbols, int[][] board) {
-        super(name);
-
-        // TODO: super call
-
-        possibleSymbols = symbols;
-        this.board = board;
-        initAllGroups();
+    protected Sudoku10x10(String name, String[] symbols, String[] sudokuRows) {
+        super(name, symbols, readCommaSeparatedBoard(sudokuRows, 10, 10, symbols));
     }
 
     @Override
     void initGroups() {
-        groups = new ArrayList<>();
-
         int cnt = 0;
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 2; x++) {
@@ -51,11 +38,6 @@ public class Sudoku10x10 extends AbstractSudoku {
             groups.add(new RowGroup(0, i, this));
             groups.add(new ColumnGroup(i, 0, this));
         }
-    }
-
-    @Override
-    protected ISudoku newInstance(String name, int[][] brd) {
-        return new Sudoku10x10(name, possibleSymbols, brd);
     }
 
     @Override

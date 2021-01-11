@@ -226,7 +226,7 @@ public class PuzzleDB {
         for (Field f : allFields) {
             ISudoku p = (ISudoku) f.get(db);
             if (name.equals(p.getName())) {
-                return p;
+                return p.clone();
             }
         }
         return null;

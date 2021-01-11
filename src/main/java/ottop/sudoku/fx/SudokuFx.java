@@ -21,8 +21,8 @@ public class SudokuFx extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/SudokuUI.fxml"));
 
         myController = Controller.theController;
-        myController.setPuzzle(PuzzleDB.emptyStandardPuzzle);
         myController.initialize();
+        myController.newPuzzle(PuzzleDB.emptyStandardPuzzle);
 
         primaryStage.setTitle("U-Kudos");
         primaryStage.setScene(new Scene(root));

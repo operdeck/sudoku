@@ -3,6 +3,7 @@ package ottop.sudoku.puzzle;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import ottop.sudoku.board.AbstractGroup;
+import ottop.sudoku.board.Coord;
 import ottop.sudoku.board.SquareGroup;
 
 // The Four-Square Sudoku is a standard puzzle with four extra shaded 3x3 squares on
@@ -11,10 +12,6 @@ import ottop.sudoku.board.SquareGroup;
 // The Four-Square Sudoku is also known as Hyper-Sudoku or NRC-Sudoku.
 
 public class NRCSudoku extends StandardSudoku {
-    // For cloning to new puzzle
-    private NRCSudoku(String name, String[] symbols, int[][] brd) {
-        super(name, symbols, brd);
-    }
 
     public NRCSudoku(String name,
                      String row1, String row2, String row3,
@@ -38,19 +35,10 @@ public class NRCSudoku extends StandardSudoku {
     }
 
     @Override
-    protected ISudoku newInstance(String name, int[][] brd) {
-        return new NRCSudoku(name, possibleSymbols, brd);
-    }
-
-    @Override
-    protected Paint getCellBackground(int x, int y, boolean isBuddy, boolean isInHighlightedSubArea) {
-        if (((x >= 1 && x <= 3) || (x >= 5 && x <= 7)) && ((y >= 1 && y <= 3) || (y >= 5 && y <= 7))) {
-            if (isInHighlightedSubArea) return Color.BURLYWOOD;
-            if (isBuddy) return Color.DARKGREEN;
-            return Color.SEAGREEN;
-        } else {
-            return super.getCellBackground(x, y, isBuddy, isInHighlightedSubArea);
-        }
+    public boolean isAtOverlay(Coord c) {
+        int x = c.getX();
+        int y = c.getY();
+        return (((x >= 1 && x <= 3) || (x >= 5 && x <= 7)) && ((y >= 1 && y <= 3) || (y >= 5 && y <= 7)));
     }
 
 }

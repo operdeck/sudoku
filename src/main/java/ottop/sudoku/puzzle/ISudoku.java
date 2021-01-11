@@ -1,18 +1,23 @@
 package ottop.sudoku.puzzle;
 
-import javafx.scene.canvas.Canvas;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.board.AbstractGroup;
+import ottop.sudoku.solver.Updateable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public interface ISudoku {
-    boolean isSolved();
+public interface ISudoku extends Cloneable {
+    ISudoku clone();
+
+    boolean isComplete();
 
     boolean isInconsistent();
 
-    void initAllGroups(); // a puzzle is a board with a set of occupied cells
+    default boolean isSolved() {
+        return isComplete() && !isInconsistent();
+    }
 
     String symbolCodeToSymbol(int n);
 
@@ -32,24 +37,27 @@ public interface ISudoku {
 
     Coord[] getAllCells();
 
-    ISudoku doMove(Coord coord, String symbol);
+    boolean doMove(Coord coord, String symbol);
 
-    ISudoku undoMove();
+    Coord undoMove();
+
+    Map.Entry<Coord, String> redoMove();
 
     boolean canUndo();
 
+    boolean canRedo();
+
     List<AbstractGroup> getGroups();
 
-    List<AbstractGroup> getGroups(Coord coord);
+    List<AbstractGroup> getBuddyGroups(Coord coord);
+
+    Set<Coord> getBuddies(Coord coord);
 
     String getName();
+    
+    boolean isAtOverlay(Coord c);
 
-    // TODO: consider moving out the draw functions to some Fx class
+    List<AbstractGroup> getGroupsWithVisualBoundary();
 
-    void drawPuzzleOnCanvas(Canvas canvas, Coord highlight, Set<Coord> currentHighlightedSubArea);
-
-    void drawGroup(Canvas canvas, AbstractGroup g);
-
-    void drawPossibilities(Canvas canvas, Coord c, Set<Integer> values);
-
+    void setSolver(Updateable solver);
 }

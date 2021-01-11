@@ -21,7 +21,7 @@ public class UniqueValue extends EliminationReason {
 
     public String toString() {
         StringBuilder result = new StringBuilder("Unique value: ").append(symbols.iterator().next());
-        result.append(" in groups ").append(uniqueInGroups);
+        result.append(" in ").append(uniqueInGroups);
         return result.toString();
     }
 

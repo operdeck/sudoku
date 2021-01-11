@@ -1,38 +1,32 @@
 package ottop.sudoku.puzzle;
 
-import javafx.geometry.VPos;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.board.AbstractGroup;
+import ottop.sudoku.solver.Updateable;
 
 import java.util.*;
 
 public abstract class AbstractSudoku implements ISudoku {
-    ISudoku previousPuzzle = null;
-
     final String name;
-    // I think below two should be final and can be if we refactor the constructors
-    String[] possibleSymbols;
+    final List<String> possibleSymbols;
     Coord[] allCells;
+    int[][] board; // [x][y] to symbolCode
 
-    int[][] board; // [x][y]
+    // Groups also keep state of which cells in the group are occupied
 
-    // Groups are stateful
+    List<AbstractGroup> groups = new ArrayList<>();
+    final List<AbstractGroup> groupsWithBoundaries = new ArrayList<>();
 
-    List<AbstractGroup> groups;
-    List<AbstractGroup> groupsWithBoundaries = new ArrayList<>();
+    Updateable solver = null;
+    List<Coord> undoStack = new ArrayList<>();
+    int undoStackPointer = -1;
 
-    public AbstractSudoku(String name) {
+    public AbstractSudoku(String name, String[] symbols, int[][] board) {
         this.name = name;
-        board = new int[getWidth()][getHeight()];
+        this.possibleSymbols = Arrays.asList(symbols);
+        this.board = board; // new int[getWidth()][getHeight()];
 
-        // TODO: below is the reset functionality
-
+        // Static list of all coordinates in the board
         List<Coord> cells = new ArrayList<>();
         for (int x = 0; x < getWidth(); x++) {
             for (int y = 0; y < getHeight(); y++) {
@@ -41,18 +35,39 @@ public abstract class AbstractSudoku implements ISudoku {
         }
         this.allCells = cells.toArray(new Coord[0]);
 
-        // TODO: should call init groups now
-    }
-
-    @Override
-    public void initAllGroups() { // TODO: this really is just reset ALL groups
-
-        // separate method not needed - just use initAllGroups
-
+        // Groups of cells - different for different Sudoku types
         initGroups();
     }
 
     abstract void initGroups();
+
+    @Override
+    public ISudoku clone() {
+        AbstractSudoku c = null;
+        try {
+            c = (AbstractSudoku) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+
+        c.allCells = this.allCells.clone();
+
+        // Deep copy of board
+        c.board = new int[board.length][];
+        for (int i = 0; i < board.length; i++) {
+            c.board[i] = Arrays.copyOf(board[i], board[i].length);
+        }
+
+        c.initGroups();
+
+//        c.undoStack = new ArrayList<>();
+//        c.undoStackPointer = -1;
+
+        return c;
+    }
+
+    @Override
+    public void setSolver(Updateable s) { solver = s; }
 
     @Override
     public String toString() {
@@ -69,51 +84,87 @@ public abstract class AbstractSudoku implements ISudoku {
     }
 
     @Override
-    public boolean isSolved() {
-        boolean isSolved = true;
+    public boolean isComplete() {
         for (AbstractGroup g : groups) {
-            if (!g.solved()) isSolved = false;
+            if (!g.isComplete()) return false;
         }
-        return isSolved;
+        return true;
     }
 
-    // TODO: see if we can do a move w/o recreating the whole board.
-    // - only if not occupied - if occupied then reset like we do now
-    // - shallow copy of the current board into previous puzzle, perhaps null groups etc.
-    //   really only keep the current "board"
-    // - put the symbol at coord
-    // - reset the groups you're part of
     @Override
-    public ISudoku doMove(Coord coord, String symbol) { // x, y start at 0
-        //if (isOccupied(yNew, xNew)) return null;
-        int[][] newBoard = new int[getWidth()][getHeight()];
-        for (Coord c : getAllCells()) {
-            if (c.equals(coord)) {
-                newBoard[c.getX()][c.getY()] = symbolToSymbolCode(symbol);
-            } else {
-                newBoard[c.getX()][c.getY()] = board[c.getX()][c.getY()];
-            }
+    public boolean doMove(Coord coord, String symbol) { // x, y start at 0
+
+        board[coord.getX()][coord.getY()] = symbolToSymbolCode(symbol);
+        for (AbstractGroup g: getBuddyGroups(coord)) {
+            g.resetGroup(this);
         }
 
-        ISudoku nextPuzzle = newInstance(this.name, newBoard);
-        ((AbstractSudoku) nextPuzzle).previousPuzzle = this; // link new puzzle state to current
+        // Put on undo stack, remove any entries after (because of undo/redo)
 
-        return nextPuzzle;
+        undoStackPointer++;
+        undoStack.add(undoStackPointer, coord);
+        while (canRedo()) {
+            undoStack.remove(undoStack.size()-1);
+        }
+
+        // Update all candidates
+        solver.update();
+
+        return true;
     }
-
-    abstract protected ISudoku newInstance(String name, int[][] brd);
 
     @Override
     public boolean canUndo() {
-        return previousPuzzle != null;
+        return undoStackPointer >= 0;
     }
 
     @Override
-    public ISudoku undoMove() {
-        // TODO: of DoMove becomes cheaper then undo will have to
-        // reset the full puzzle. Only board should be deep copied.
+    public boolean canRedo() {
+        return (undoStack.size()-1) > undoStackPointer;
+    }
 
-        return previousPuzzle;
+    @Override
+    public Coord undoMove() {
+        if (canUndo()) {
+            Coord coord = undoStack.get(undoStackPointer);
+
+            board[coord.getX()][coord.getY()] = 0;
+            for (AbstractGroup g: getBuddyGroups(coord)) {
+                g.resetGroup(this);
+            }
+
+            undoStackPointer--;
+
+            // Update all candidates
+            solver.update();
+
+            if (undoStackPointer >= 0) {
+                return undoStack.get(undoStackPointer); // last move
+            }
+            return null;
+        }
+        return null;
+    }
+
+    @Override
+    public Map.Entry<Coord, String> redoMove() {
+        if (canRedo()) {
+            undoStackPointer++;
+
+            Coord coord = undoStack.get(undoStackPointer);
+            int symbolCode = getSymbolCodeAtCoordinates(coord);
+
+            board[coord.getX()][coord.getY()] = symbolCode;
+            for (AbstractGroup g: getBuddyGroups(coord)) {
+                g.resetGroup(this);
+            }
+
+            // Update all candidates
+            solver.update();
+
+            return new AbstractMap.SimpleEntry<>(coord, symbolCodeToSymbol(symbolCode));
+        }
+        return null;
     }
 
     @Override
@@ -134,7 +185,7 @@ public abstract class AbstractSudoku implements ISudoku {
     }
 
     @Override
-    public List<AbstractGroup> getGroups(Coord c) {
+    public List<AbstractGroup> getBuddyGroups(Coord c) {
         List<AbstractGroup> grps = new ArrayList<>();
         for (AbstractGroup g : groups) {
             if (g.isInGroup(c)) {
@@ -142,6 +193,12 @@ public abstract class AbstractSudoku implements ISudoku {
             }
         }
         return grps;
+    }
+
+    @Override
+    public List<AbstractGroup> getGroupsWithVisualBoundary()
+    {
+        return groupsWithBoundaries;
     }
 
     @Override
@@ -156,7 +213,7 @@ public abstract class AbstractSudoku implements ISudoku {
 
     @Override
     public int getSymbolCodeRange() {
-        return possibleSymbols.length;
+        return possibleSymbols.size();
     }
 
     @Override
@@ -176,186 +233,68 @@ public abstract class AbstractSudoku implements ISudoku {
 
     @Override
     public String symbolCodeToSymbol(int i) {
-        return possibleSymbols[i];
+        return possibleSymbols.get(i);
     }
 
     @Override
     public int symbolToSymbolCode(String symbol) {
-        return Math.max(0, Arrays.asList(possibleSymbols).indexOf(symbol));
+        return Math.max(0, possibleSymbols.indexOf(symbol));
     }
 
     @Override
-    public void drawPuzzleOnCanvas(Canvas canvas, Coord highlight, Set<Coord> currentHighlightedSubArea) {
-        // Canvas
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        double canvasHeight = canvas.getHeight();
-        double canvasWidth = canvas.getWidth();
-
-        // Big white background
-        gc.setFill(Color.WHITE);
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(1);
-        gc.fillRect(0, 0, canvasWidth, canvasHeight);
-
-        // For buddy cells
-        Set<Coord> buddies = getBuddies(highlight);
-
-        // Background of individual cells
-        for (Coord c: allCells) {
-            gc.setFill(getCellBackground(c.getX(), c.getY(),
-                    (buddies != null) && buddies.contains(c),
-                    (currentHighlightedSubArea != null) && currentHighlightedSubArea.contains(c)));
-            gc.fillRect(getCellX(canvas, c.getX()), getCellY(canvas, c.getY()),
-                    getCellWidth(canvas), getCellHeight(canvas));
-        }
-
-        // Symbols
-        Font cellText = Font.font("Helvetica", 15);
-        gc.setFont(cellText);
-        gc.setTextAlign(TextAlignment.CENTER);
-        gc.setTextBaseline(VPos.CENTER);
-
-        for (Coord c : getAllCells()) {
-            gc.setStroke(Color.BLUE);
-            gc.strokeRect(getCellX(canvas, c.getX()), getCellY(canvas, c.getY()), getCellWidth(canvas), getCellHeight(canvas));
-            if (isOccupied(c)) {
-                if (c.equals(highlight)) {
-                    // highlight last move
-                    gc.setStroke(Color.DARKGRAY);
-                } else {
-                    gc.setStroke(Color.BLACK);
-                }
-                gc.strokeText(String.valueOf(getSymbolAtCoordinates(c)),
-                        getCellX(canvas, c.getX() + 0.5), getCellY(canvas, c.getY() + 0.5));
-            }
-        }
-
-        // Group boundaries
-        gc.setStroke(Color.BLUE);
-        gc.setLineWidth(3);
-        for (AbstractGroup g: getGroupsWithVisualBoundary()) {
-            drawGroup(canvas, g);
-        }
-    }
-
-    protected List<AbstractGroup> getGroupsWithVisualBoundary() {
-        return groupsWithBoundaries;
+    public boolean isAtOverlay(Coord c) {
+        return false;
     }
 
     @Override
-    public void drawGroup(Canvas canvas, AbstractGroup g) {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        Set<Coord> coords = g.getCoords();
-        int xMin=Integer.MAX_VALUE, yMin=Integer.MAX_VALUE;
-        int xMax=Integer.MIN_VALUE, yMax= Integer.MIN_VALUE;
-        for (Coord c: coords) {
-           xMin = Math.min(xMin, c.getX());
-           xMax = Math.max(xMax, c.getX());
-           yMin = Math.min(yMin, c.getY());
-           yMax = Math.max(yMax, c.getY());
-        }
-        gc.strokeRect(getCellX(canvas, xMin), getCellY(canvas, yMin),
-                (xMax-xMin+1)*getCellWidth(canvas), (yMax-yMin+1)*getCellHeight(canvas));
-
-    }
-
-    private Set<Coord> getBuddies(Coord highlight) {
+    public Set<Coord> getBuddies(Coord coord) {
         Set<Coord> buddies = new TreeSet<>();
 
-        if (highlight != null) {
+        if (coord != null) {
             for (AbstractGroup g : groups) {
-                if (g.getCoords().contains(highlight)) {
+                if (g.getCoords().contains(coord)) {
                     buddies.addAll(g.getCoords());
                 }
             }
-            buddies.remove(highlight); // you are not your own buddy
+            buddies.remove(coord); // you are not your own buddy
         }
 
         return buddies;
     }
 
-    @Override
-    public void drawPossibilities(Canvas canvas, Coord c, Set<Integer> symbolCodes) {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setStroke(Color.DARKGRAY);
-        gc.setLineWidth(0.5);
-        Font smallText = Font.font("Helvetica", 8);
-        gc.setFont(smallText);
-        gc.setTextAlign(TextAlignment.CENTER);
-        gc.setTextBaseline(VPos.CENTER);
+    static int[][] readCommaSeparatedBoard(String[] sudokuRows, int width, int height, String[] symbols) {
+        if (sudokuRows.length != height)
+            throw new IllegalArgumentException("Initialization must have " + height + " rows");
 
-        int n = getSymbolCodeRange() - 1; // minus empty cell code
-        int nmarkerrows = (int) Math.sqrt(n);
-        int nmarkercols = (int) Math.ceil(n / (double) nmarkerrows);
+        int[][] brd = new int[width][height];
 
-        for (int symbolCode : symbolCodes) {
-            int subrow = (symbolCode - 1) / nmarkercols;
-            int subcol = (symbolCode - 1) % nmarkercols;
-            gc.strokeText(symbolCodeToSymbol(symbolCode),
-                    getCellX(canvas, c.getX() + 0.15 + 0.7 * subcol / (double) (nmarkercols - 1)),
-                    getCellY(canvas, c.getY() + 0.15 + 0.7 * subrow / (double) (nmarkerrows - 1)));
-        }
-    }
-
-    double getCellX(Canvas canvas, double x) {
-        return (5 + x * getCellWidth(canvas));
-    }
-
-    double getCellY(Canvas canvas, double y) {
-        return (5 + y * getCellHeight(canvas));
-    }
-
-    double getCellWidth(Canvas canvas) {
-        double canvasWidth = canvas.getWidth();
-        return (canvasWidth - 10) / getWidth();
-    }
-
-    double getCellHeight(Canvas canvas) {
-        double canvasHeight = canvas.getHeight();
-        return (canvasHeight - 10) / getHeight();
-    }
-
-    // TODO: we could automatically detect overlapping groups
-    protected Paint getCellBackground(int x, int y, boolean isBuddy, boolean isInHighlightedSubArea) {
-        if (isInHighlightedSubArea) return Color.BURLYWOOD;
-        if (isBuddy) return Color.LIGHTGRAY;
-
-        return Color.WHITE;
-    }
-
-    protected int[][] readSingleCharBoard(String[] sudokuRows) {
-        if (sudokuRows.length != getHeight())
-            throw new IllegalArgumentException("Initialization must have " + getHeight() + " rows");
-
-        int[][] brd = new int[getWidth()][getHeight()];
-
-        for (int y = 0; y < getHeight(); y++) {
+        for (int y = 0; y < height; y++) {
             String s = sudokuRows[y];
-            if (s.length() != getWidth())
-                throw new IllegalArgumentException("Initialization must have " + getWidth() + " chars for each row");
-            for (int x = 0; x < s.length(); x++) {
-                String symbol = s.substring(x, x + 1);
-                brd[x][y] = symbolToSymbolCode(symbol);
+            String[] aRow = s.split(",");
+            if (aRow.length != width)
+                throw new IllegalArgumentException("Initialization must have " + width + " chars for each row");
+            for (int x = 0; x < width; x++) {
+                String symbol = aRow[x];
+                brd[x][y] = Math.max(0, Arrays.asList(symbols).indexOf(symbol));
             }
         }
 
         return brd;
     }
 
-    protected int[][] readCommaSeparatedBoard(String[] sudokuRows) {
-        if (sudokuRows.length != getHeight())
-            throw new IllegalArgumentException("Initialization must have " + getHeight() + " rows");
+    static int[][] readSingleCharBoard(String[] sudokuRows, int width, int height, String[] symbols) {
+        if (sudokuRows.length != height)
+            throw new IllegalArgumentException("Initialization must have " + height + " rows");
 
-        int[][] brd = new int[getWidth()][getHeight()];
+        int[][] brd = new int[width][height];
 
-        for (int y = 0; y < getHeight(); y++) {
+        for (int y = 0; y < height; y++) {
             String s = sudokuRows[y];
-            String[] aRow = s.split(",");
-            if (aRow.length != getWidth())
-                throw new IllegalArgumentException("Initialization must have " + getWidth() + " chars for each row");
-            for (int x = 0; x < getWidth(); x++) {
-                String symbol = aRow[x];
-                brd[x][y] = symbolToSymbolCode(symbol);
+            if (s.length() != width)
+                throw new IllegalArgumentException("Initialization must have " + width + " chars for each row");
+            for (int x = 0; x < s.length(); x++) {
+                String symbol = s.substring(x, x + 1);
+                brd[x][y] = Math.max(0, Arrays.asList(symbols).indexOf(symbol));
             }
         }
 

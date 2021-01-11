@@ -5,6 +5,7 @@ import ottop.sudoku.board.Coord;
 import ottop.sudoku.PuzzleDB;
 import ottop.sudoku.puzzle.ISudoku;
 import ottop.sudoku.puzzle.StandardSudoku;
+import ottop.sudoku.solver.SolveStats;
 import ottop.sudoku.solver.SudokuSolver;
 
 import java.util.Map;
@@ -12,6 +13,24 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 public class StandardSudokuTest {
+    @Test
+    public void testCounts() {
+        ISudoku emptyPuzzle = new StandardSudoku("Anonymous",
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                ".........",
+                ".........");
+
+        assertEquals(27, emptyPuzzle.getGroups().size());
+        assertEquals(3, emptyPuzzle.getBuddyGroups(new Coord("r2c2")).size());
+        assertEquals(20, emptyPuzzle.getBuddies(new Coord("r2c2")).size());
+    }
+
     @Test
     public void checkBoard() {
         StandardSudoku p = new StandardSudoku("Test",
@@ -24,7 +43,7 @@ public class StandardSudokuTest {
                 "..6..45..",
                 ".8...2...",
                 ".........");
-        assertFalse(p.isSolved());
+        assertFalse(p.isComplete());
         assertEquals(9, p.getHeight());
         assertEquals(9, p.getWidth());
         assertFalse(p.canUndo());
@@ -51,7 +70,7 @@ public class StandardSudokuTest {
                 "123456789",
                 "123456789",
                 "123456789");
-        assertFalse(p.isSolved());
+        assertTrue(p.isComplete());
         assertTrue(p.isInconsistent());
 
         StandardSudoku p2 = new StandardSudoku("Solved puzzle",
@@ -64,7 +83,7 @@ public class StandardSudokuTest {
                 "786235914",
                 "154796823",
                 "239841567");
-        assertTrue(p2.isSolved());
+        assertTrue(p2.isComplete());
         assertFalse(p2.isInconsistent());
     }
 
@@ -82,14 +101,12 @@ public class StandardSudokuTest {
         assertFalse(p.isOccupied(new Coord("r4c4")));
         assertFalse(p.canUndo());
 
-        assertEquals("[1@r2c5, 1@r4c6, 1@r8c8, 3@r3c7, 3@r5c2, 3@r7c3, 5@r5c8, 6@r8c1, 8@r4c9, 8@r9c1, 9@r9c2]",
-                s.getUniqueValues().toString());
-        assertEquals("[7@r4c4, 7@r6c9]",
-                s.getNakedSingles().toString());
-        assertEquals("[1@r2c5, 1@r4c6, 1@r8c8, 3@r3c7, 3@r5c2, 3@r7c3, 5@r5c8, 6@r8c1, 7@r4c4, 7@r6c9, 8@r4c9, 8@r9c1, 9@r9c2]",
-                s.getPossibleMoves().toString());
+        assertEquals("[r2c5, r3c7, r4c6, r4c9, r5c2, r5c8, r7c3, r8c1, r8c8, r9c1, r9c2]",
+                String.valueOf(s.getAllUniqueValues().keySet()));
+        assertEquals("[r4c4, r6c9]",
+                String.valueOf(s.getAllNakedSingles().keySet()));
 
-        Map.Entry<Coord, String> move = s.nextMove(); // should give first lone symbol
+        Map.Entry<Coord, String> move = s.nextMove(new SolveStats()); // should give first lone symbol
 
         assertNotNull(move);
         assertEquals("r4c4=7", move.toString());
@@ -98,8 +115,8 @@ public class StandardSudokuTest {
         assertEquals("7", move.getValue());
         assertEquals("r4c4", move.getKey().toString());
 
-        ISudoku nextPuzzle = p.doMove(new Coord("r4c4"), "7");
-        assertTrue(nextPuzzle.canUndo());
-        assertTrue(nextPuzzle.isOccupied(new Coord("r4c4")));
+        p.doMove(new Coord("r4c4"), "7");
+        assertTrue(p.canUndo());
+        assertTrue(p.isOccupied(new Coord("r4c4")));
     }
 }

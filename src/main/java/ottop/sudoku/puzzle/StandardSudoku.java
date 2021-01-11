@@ -6,10 +6,10 @@ import ottop.sudoku.board.RowGroup;
 import ottop.sudoku.board.SquareGroup;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class StandardSudoku extends AbstractSudoku {
 
-    // TODO: consider one with one super long string
     public StandardSudoku(String name,
                           String row1, String row2, String row3,
                           String row4, String row5, String row6,
@@ -19,26 +19,9 @@ public class StandardSudoku extends AbstractSudoku {
                 new String[]{row1, row2, row3, row4, row5, row6, row7, row8, row9});
     }
 
-    // For cloning to new puzzle
-    protected StandardSudoku(String name, String[] symbols, int[][] board) {
-
-        // TODO: super call
-
-        super(name);
-        possibleSymbols = symbols;
-        this.board = board;
-        initAllGroups();
-    }
-
     // From subclasses that are 9x9 but use different symbols
     protected StandardSudoku(String name, String[] symbols, String[] sudokuRows) {
-
-        // TODO: super call
-
-        super(name);
-        possibleSymbols = symbols;
-        this.board = readSingleCharBoard(sudokuRows);
-        initAllGroups();
+        super(name, symbols, readSingleCharBoard(sudokuRows, 9, 9, symbols));
     }
 
     public StandardSudoku(String puzzleName, String puzzleData) {
@@ -55,8 +38,6 @@ public class StandardSudoku extends AbstractSudoku {
     }
 
     protected void initGroups() {
-        groups = new ArrayList<>();
-
         int cnt = 0;
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
@@ -71,10 +52,6 @@ public class StandardSudoku extends AbstractSudoku {
         }
     }
 
-    protected ISudoku newInstance(String name, int[][] brd) {
-        return new StandardSudoku(name, possibleSymbols, brd);
-    }
-
     @Override
     public int getWidth() {
         return 9;
@@ -84,5 +61,7 @@ public class StandardSudoku extends AbstractSudoku {
     public int getHeight() {
         return 9;
     }
+
+
 
 }
