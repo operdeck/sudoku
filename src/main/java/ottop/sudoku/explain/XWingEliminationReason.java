@@ -6,7 +6,7 @@ import ottop.sudoku.board.AbstractGroup;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class XWingEliminationReason extends EliminationReason {
+public class XWingEliminationReason extends Explanation {
 
     private final AbstractGroup removedFromGroup;
     private final Set<AbstractGroup> groups1;

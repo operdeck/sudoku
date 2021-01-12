@@ -8,26 +8,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class EliminationReason {
+public abstract class Explanation {
     protected final Set<String> symbols;
 
     // TODO: or just one Coord? And then we can have a map of Coord --> Reasons?
 
     protected final Set<Coord> coords;
 
-    protected EliminationReason(String symbol, Set<Coord> coords) {
+    protected Explanation(String symbol, Set<Coord> coords) {
         this.symbols = new HashSet<>();
         this.symbols.add(symbol);
         this.coords = coords;
     }
 
-    protected EliminationReason(Set<String> symbols, Coord coord) {
+    protected Explanation(Set<String> symbols, Coord coord) {
         this.symbols = symbols;
         this.coords = new HashSet<>();
         this.coords.add(coord);
     }
 
-    protected EliminationReason(String symbol, Coord coord) {
+    protected Explanation(String symbol, Coord coord) {
         this.symbols = new HashSet<>();
         this.symbols.add(symbol);
         this.coords = new HashSet<>();
@@ -50,7 +50,7 @@ public abstract class EliminationReason {
         return result.toString();
     }
 
-    public List<EliminationReason> combine(List<EliminationReason> eliminationReasons) {
+    public List<Explanation> combine(List<Explanation> eliminationReasons) {
         if (eliminationReasons == null) {
             eliminationReasons = new ArrayList<>();
         }

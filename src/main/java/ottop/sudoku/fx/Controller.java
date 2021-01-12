@@ -12,7 +12,7 @@ import ottop.sudoku.board.Coord;
 import ottop.sudoku.PuzzleDB;
 import ottop.sudoku.solver.SolveStats;
 import ottop.sudoku.solver.SudokuSolver;
-import ottop.sudoku.explain.EliminationReason;
+import ottop.sudoku.explain.Explanation;
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.SingleCellGroup;
 import ottop.sudoku.puzzle.ISudoku;
@@ -48,7 +48,7 @@ public class Controller {
     private Coord currentHighlightedCell = null;
 
     // Set by selecting a row in the reasons dialog
-    private EliminationReason currentEliminationReason = null;
+    private Explanation currentEliminationReason = null;
 
 //    private List<AbstractGroup> currentHighlightedGroups = null;
 //    private Set<Coord> currentHighlightedSubArea = null;
@@ -60,7 +60,7 @@ public class Controller {
     public void initialize() {
         ChangeListener<String> listener = (observableValue, oldValue, newValue) -> {
             int selectionIdx = lvEliminationSteps.getSelectionModel().getSelectedIndex();
-            List<EliminationReason> reasons = currentSolver.getEliminationReasons(currentHighlightedCell);
+            List<Explanation> reasons = currentSolver.getEliminationReasons(currentHighlightedCell);
 
             if (reasons != null && selectionIdx >= 0 && selectionIdx<reasons.size()) {
                 currentEliminationReason = reasons.get(selectionIdx);
@@ -273,10 +273,10 @@ public class Controller {
         // Update list with elimination steps
         clearEliminationReasons();
         if (cbPencilMarks.isSelected() && currentHighlightedCell != null) {
-            List<EliminationReason> reasons =
+            List<Explanation> reasons =
                     currentSolver.getEliminationReasons(currentHighlightedCell);
             if (null != reasons) {
-                for (EliminationReason reason : reasons) {
+                for (Explanation reason : reasons) {
                     lvEliminationSteps.getItems().add(reason.toString());
                 }
             }

@@ -1,13 +1,11 @@
 package ottop.sudoku.explain;
 
-import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.Coord;
 
-import java.util.List;
 import java.util.Set;
 
-public class NakedSingle extends EliminationReason {
-    public NakedSingle(String symbol, Coord coord) {
+public class NakedSingleSolution extends Explanation {
+    public NakedSingleSolution(String symbol, Coord coord) {
         super(symbol, coord);
     }
 

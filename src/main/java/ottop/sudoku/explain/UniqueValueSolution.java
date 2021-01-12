@@ -6,10 +6,10 @@ import ottop.sudoku.board.Coord;
 import java.util.List;
 import java.util.Set;
 
-public class UniqueValue extends EliminationReason {
+public class UniqueValueSolution extends Explanation {
     List<AbstractGroup> uniqueInGroups;
 
-    public UniqueValue(String s, Coord coord, List<AbstractGroup> uniqueInGroups) {
+    public UniqueValueSolution(String s, Coord coord, List<AbstractGroup> uniqueInGroups) {
         super(s, coord);
         this.uniqueInGroups = uniqueInGroups;
     }

@@ -1,23 +1,22 @@
 package ottop.sudoku.explain;
 
 import ottop.sudoku.board.Coord;
-import ottop.sudoku.solver.GroupIntersection;
 import ottop.sudoku.board.AbstractGroup;
 
 import java.util.List;
 import java.util.Set;
 
-public class IntersectionRadiationEliminationReason extends EliminationReason {
+public class IntersectionRadiationEliminationReason extends Explanation {
 
     private final AbstractGroup mustBeInGroup;
     private final AbstractGroup removedFromGroup;
-    private final GroupIntersection intersection;
+    private final Set<Coord> intersection;
 
     public IntersectionRadiationEliminationReason(String symbol,
                                                   Set<Coord> removedFromCells,
                                                   AbstractGroup mustBeInGroup,
                                                   AbstractGroup removedFromGroup,
-                                                  GroupIntersection intersection) {
+                                                  Set<Coord> intersection) {
         super(symbol, removedFromCells);
         this.mustBeInGroup = mustBeInGroup;
         this.removedFromGroup = removedFromGroup;
@@ -41,7 +40,7 @@ public class IntersectionRadiationEliminationReason extends EliminationReason {
     }
 
     public Set<Coord> getHighlightSubArea() {
-        return intersection.getIntersection();
+        return intersection;
     }
 
     @Override

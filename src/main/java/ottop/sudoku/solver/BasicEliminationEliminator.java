@@ -2,7 +2,7 @@ package ottop.sudoku.solver;
 
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.Coord;
-import ottop.sudoku.explain.EliminationReason;
+import ottop.sudoku.explain.Explanation;
 import ottop.sudoku.explain.SimpleEliminationReason;
 import ottop.sudoku.puzzle.ISudoku;
 
@@ -10,7 +10,7 @@ import java.util.*;
 
 public class BasicEliminationEliminator extends Eliminator {
 
-    public BasicEliminationEliminator(ISudoku myPuzzle, Map<Coord, Set<Integer>> candidatesPerCell, Map<Coord, List<EliminationReason>> removalReasons) {
+    public BasicEliminationEliminator(ISudoku myPuzzle, Map<Coord, Set<Integer>> candidatesPerCell, Map<Coord, List<Explanation>> removalReasons) {
         super(myPuzzle, candidatesPerCell, removalReasons);
     }
 

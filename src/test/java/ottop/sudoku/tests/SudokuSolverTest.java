@@ -5,6 +5,7 @@ import org.junit.Test;
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.PuzzleDB;
+import ottop.sudoku.explain.Explanation;
 import ottop.sudoku.puzzle.ISudoku;
 import ottop.sudoku.puzzle.NRCSudoku;
 import ottop.sudoku.puzzle.StandardSudoku;
@@ -84,6 +85,16 @@ public class SudokuSolverTest {
         return moves;
     }
 
+    // Elimination reasons as a list of strings
+    private String eliminationReasons(SudokuSolver s, Coord c) {
+        List<Explanation> reasons = s.getEliminationReasons(c);
+        StringBuilder sb = new StringBuilder();
+        for (Explanation e : reasons) {
+            sb.append(e).append("\n");
+        }
+        return sb.toString();
+    }
+
     @Test
     public void testBasicElimination() {
         assertEquals(65, getTotalNumberOfCellsWithPencilMarks()); // is just empty squares
@@ -161,10 +172,10 @@ public class SudokuSolverTest {
     @Test
     public void testPuzzleNeedsIntersectionRadiation() {
         solver = (new SudokuSolver(PuzzleDB.Parool_18nov)).setSimplest();
-        assertNull(solver.solve());
+        assertFalse(solver.solve());
 
         solver.setEliminateIntersectionRadiation();
-        assertNotNull(solver.solve());
+        assertTrue(solver.solve());
     }
 
     @Test
@@ -209,7 +220,7 @@ public class SudokuSolverTest {
     @Test
     public void testUnsolvable() {
         solver = new SudokuSolver(PuzzleDB.unsolvable);
-        assertNull(solver.solve());
+        assertFalse(solver.solve());
     }
 
     @Test
@@ -277,8 +288,6 @@ public class SudokuSolverTest {
         p.doMove(new Coord("r4c6"), "8");
         p.doMove(new Coord("r8c6"), "5");
 
-
-
         // Now, there are
         //  x-wing of 8s at r3c2, r3c9, r9c2, r9c9
         //  x-wing of 2s at r4c2, r7c2, r4c8, r7c8
@@ -287,10 +296,15 @@ public class SudokuSolverTest {
         solver.setSmartest();
         solver.solve();
 
-//        assertNotEquals(-1,
-//                String.valueOf(solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r1c2"))).indexOf("X-Wing"));
-//        assertNotEquals(-1,
-//                String.valueOf(solver.getPossibilitiesContainer().getEliminationReasons(new Coord("r7c1"))).indexOf("X-Wing"));
+        // TODO: there seems to be no X-Wing involved here. Also, seeing the same intersection twice.
+        assertEquals("pipo",
+                String.valueOf(eliminationReasons(solver, new Coord("r1c2"))));
+
+        assertNotEquals(-1,
+                String.valueOf(solver.getEliminationReasons(new Coord("r1c2"))).indexOf("X-Wing"));
+        assertNotEquals(-1,
+                String.valueOf(solver.getEliminationReasons(new Coord("r7c1"))).indexOf("X-Wing"));
+
         assertNotEquals(-1,
                 String.valueOf(solver.getEliminationReasons(new Coord("r6c1"))).indexOf("Swordfish"));
 

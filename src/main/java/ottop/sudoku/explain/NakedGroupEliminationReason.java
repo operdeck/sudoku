@@ -6,7 +6,7 @@ import ottop.sudoku.board.AbstractGroup;
 import java.util.List;
 import java.util.Set;
 
-public class NakedGroupEliminationReason extends EliminationReason {
+public class NakedGroupEliminationReason extends Explanation {
 
     private final AbstractGroup removedFromGroup;
     private final boolean isExtended;

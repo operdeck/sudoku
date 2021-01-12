@@ -3,8 +3,6 @@ package ottop.sudoku.solver;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.explain.*;
 import ottop.sudoku.board.AbstractGroup;
-import ottop.sudoku.board.ColumnGroup;
-import ottop.sudoku.board.RowGroup;
 import ottop.sudoku.puzzle.ISudoku;
 
 import java.util.*;
@@ -20,7 +18,7 @@ public class SudokuSolver implements Updateable {
     // Map of cell to a set of possible values. The values are the
     // internal representation of the cell symbols.
     private Map<Coord, Set<Integer>> candidatesPerCell = null;
-    private final Map<Coord, List<EliminationReason>> removalReasons = new HashMap<>();
+    private final Map<Coord, List<Explanation>> eliminationReasons = new HashMap<>();
 
     // TODO instead of this,
     // keep a list of Eliminator objects that are used for elimination
@@ -80,369 +78,54 @@ public class SudokuSolver implements Updateable {
         return this;
     }
 
-    private void calculateCandidates()
+    private void recalculateCandidates()
     {
         candidatesPerCell = new HashMap<>();
-        removalReasons.clear();
+
+        // Clear out the reasons for the non-occupied cells
+        // TODO: this may not work out for undo/redo sequences
+        for (Coord c: myPuzzle.getAllCells()) {
+            if (!myPuzzle.isOccupied(c)) {
+                eliminationReasons.put(c, null);
+            }
+        }
 
         // TODO maybe fill all cell candidates with all symbols
 
-        // This will just do basic elimination. Additional elimination steps done
-        // via next move or solve. Or by calling elimination explicitly.
-//        possibilitiesContainer = new PossibilitiesContainer(myPuzzle);
-
         Eliminator simpleEliminator =
-                new BasicEliminationEliminator(myPuzzle, candidatesPerCell, removalReasons);
+                new BasicEliminationEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
         simpleEliminator.eliminate();
 
-        // TODO: apply other eliminators in same style
-
-        eliminatePossibilities();
-
-//        int n=0;
-//        for (Map.Entry<Coord, Set<Integer>> x:candidatesPerCell.entrySet()) {
-//            n+=x.getValue().size();
-//        }
-//        System.out.println("Calc candidates... " + n);
-
+        updateCandidates();
     }
 
-    private Set<Integer> getCandidatesInArea(Set<Coord> subarea) {
-        if (candidatesPerCell == null) calculateCandidates();
-
-        Set<Integer> p = new HashSet<>();
-        for (Coord c : subarea) {
-            p.addAll(candidatesPerCell.get(c));
-        }
-        return p;
-    }
-
-    // TODO: maybe becomes obsolete eventually
-    void recordEliminationReason(Coord coord, EliminationReason reason) {
-        removalReasons.put(coord,
-                reason.combine(removalReasons.get(coord)));
-    }
-
-    private boolean removePossibility(int symbolCode, Set<Coord> coords, EliminationReason reason) {
-        boolean anyRemoved = false;
-        for (Coord c : coords) {
-            boolean removedAtCurrentCoord = false;
-            Set<Integer> currentPossibilities = candidatesPerCell.get(c);
-            if (currentPossibilities != null) {
-                if (currentPossibilities.remove(symbolCode)) {
-                    anyRemoved = true;
-                    removedAtCurrentCoord = true;
-                }
-            }
-            if (removedAtCurrentCoord) {
-                recordEliminationReason(c, reason);
-            }
-        }
-        return anyRemoved;
-    }
-
-    private boolean eliminatePossibilities() {
+    private boolean updateCandidates() {
         // Basic radiation will be done always
 
         boolean hasEliminated = false;
 
         if (doEliminationNakedPairs) {
-            if (eliminateNakedPairs()) hasEliminated=true;
+            Eliminator e = new NakedGroupEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+            if (e.eliminate()) hasEliminated = true;
+//            if (eliminateNakedPairs()) hasEliminated=true;
         }
         if (doEliminationIntersectionRadiation) {
-            if (eliminateByRadiationFromIntersections()) hasEliminated=true;
+            Eliminator e = new IntersectionRadiationEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+            if (e.eliminate()) hasEliminated = true;
+//            if (eliminateByRadiationFromIntersections()) hasEliminated=true;
         }
         if (doEliminationXWings) {
-           if (eliminateByXWings()) hasEliminated=true;
+            Eliminator e = new XWingEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+            if (e.eliminate()) hasEliminated = true;
+//           if (eliminateByXWings()) hasEliminated=true;
         }
 
         return hasEliminated;
     }
 
-    private boolean removePossibilities(Set<Integer> symbolCodes, Coord coord, EliminationReason reason) {
-        boolean anyRemoved = false;
-        for (int symbolCode : symbolCodes) {
-            Set<Integer> currentPossibilities = candidatesPerCell.get(coord);
-            if (currentPossibilities != null) {
-                if (currentPossibilities.remove(symbolCode)) {
-                    anyRemoved = true;
-                }
-            }
-        }
-        if (anyRemoved) {
-            recordEliminationReason(coord, reason);
-        }
-        return anyRemoved;
-    }
 
-    private boolean eliminateByRadiationFromIntersections() {
-        boolean updated = false;
-        // TODO maybe not even need to explicitly create these intersections
-        // TODO intersections can be smaller anyway
-        Set<GroupIntersection> groupIntersections =
-                GroupIntersection.createGroupIntersections(myPuzzle.getGroups());
 
-        for (GroupIntersection intersection : groupIntersections) {
-            Set<Integer> possibilitiesAtGroupIntersection =
-                    getCandidatesInArea(intersection.getIntersection());
-            for (int symbolCode = 1; symbolCode < myPuzzle.getSymbolCodeRange(); symbolCode++) {
-                if (possibilitiesAtGroupIntersection.contains(symbolCode)) {
-                    @SuppressWarnings("unchecked")
-                    Set<Coord>[] groupCoordSet = new Set[2];
-                    @SuppressWarnings("unchecked")
-                    Set<Integer>[] pr = new Set[2];
-                    for (int i = 0; i < 2; i++) {
-                        groupCoordSet[i] = new HashSet<>(intersection.getIntersectionGroup(i).getCoords());
-                        groupCoordSet[i].removeAll(intersection.getIntersection());
-                        pr[i] = getCandidatesInArea(groupCoordSet[i]);
-                    }
-                    for (int i = 0; i < 2; i++) {
-                        if (!pr[i].contains(symbolCode)) {
-                            // If 'digit' is not possible anywhere else in this group, then it
-                            // has to be in the intersection. Which means it cannot be
-                            // anywhere else in the other group either.
-                            if (removePossibility(symbolCode,
-                                    groupCoordSet[1 - i],
-                                    new IntersectionRadiationEliminationReason(myPuzzle.symbolCodeToSymbol(symbolCode),
-                                            groupCoordSet[1 - i],
-                                            intersection.getIntersectionGroup(i),
-                                            intersection.getIntersectionGroup(1 - i),
-                                            intersection))) updated = true;
-                        }
-                    }
-                }
-            }
-        }
-        return updated;
-    }
 
-    private boolean eliminateNakedPairs() {
-        boolean updated = false;
-
-        for (AbstractGroup g : myPuzzle.getGroups()) {
-            // create map from sets of possibilities to the coordinates (in this group) that have those (same) possibilities
-            Map<Set<Integer>, Set<Coord>> nakedGroupMap = new LinkedHashMap<>();
-            for (Coord c : g.getCoords()) {
-                if (!myPuzzle.isOccupied(c)) {
-                    Set<Integer> pc = candidatesPerCell.get(c);
-                    Set<Coord> coordSet = nakedGroupMap.computeIfAbsent(pc, k -> new HashSet<>());
-                    coordSet.add(c);
-                }
-            }
-
-            // find groups of cells that all have the same possibilities, and which is of the same size as the
-            // nr of possibilities: the possibilities can be removed from the rest of the group
-            if (eliminateInGroup(g, nakedGroupMap, false)) updated = true;
-
-            // Combine elements in this map. For example, if there are entries
-            // {26} --> [a], {27} --> [c], {26} --> [c] can be combined
-            // to a new entry {267} --> [abc]
-            combineNakedGroups(g, nakedGroupMap);
-
-            // Do further elimination (in two steps just to improve reporting)
-            if (eliminateInGroup(g, nakedGroupMap, true)) updated = true;
-
-        }
-
-        return updated;
-    }
-
-    private boolean eliminateInGroup(AbstractGroup g,
-                                     Map<Set<Integer>, Set<Coord>> nakedGroupMap,
-                                     boolean isExtended) {
-        boolean hasEliminated = false;
-
-        for (Map.Entry<Set<Integer>, Set<Coord>> entry : nakedGroupMap.entrySet()) {
-            Set<Integer> nakedGroupSymbolCodes = entry.getKey();
-            Set<Coord> nakedGroupCoords = entry.getValue();
-            Set<String> nakedGroupSymbols = new HashSet<>();
-            for (Integer p : nakedGroupSymbolCodes) {
-                nakedGroupSymbols.add(myPuzzle.symbolCodeToSymbol(p));
-            }
-            if (nakedGroupSymbolCodes.size() > 1 && nakedGroupSymbolCodes.size() == nakedGroupCoords.size()) {
-                for (Coord c : g.getCoords()) {
-                    if (!myPuzzle.isOccupied(c)) {
-                        if (!nakedGroupCoords.contains(c)) {
-
-                            // naked pair symbols to be removed at c but find the
-                            // intersection with the remaining possibilities so only
-                            // really remove the ones not already removed earlier
-                            Set<Integer> currentPossibilities = candidatesPerCell.get(c);
-                            Set<Integer> actualRemovals = new HashSet<>(nakedGroupSymbolCodes);
-                            actualRemovals.retainAll(currentPossibilities);
-
-                            // translate actual removals to symbols
-                            Set<String> actualRemovalSymbols = new HashSet<>();
-                            for (Integer p : actualRemovals) {
-                                actualRemovalSymbols.add(myPuzzle.symbolCodeToSymbol(p));
-                            }
-
-                            if (removePossibilities(actualRemovals, c,
-                                    new NakedGroupEliminationReason(actualRemovalSymbols, c,
-                                            g,
-                                            nakedGroupSymbols, nakedGroupCoords, isExtended))) hasEliminated = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return hasEliminated;
-    }
-
-    private void combineNakedGroups(AbstractGroup g, Map<Set<Integer>, Set<Coord>> nakedGroupMap) {
-        final int range = (1 << g.getGroupSize()); // range of possibilities for 9 digits: 2^9
-        final int mask = range - 1;
-
-        // Representing the possibilities in a bitmap (9 digits), find out which of
-        // all possible bitmaps (total of 512, 2^9), are a superset of the bitmap of
-        // a set of possibilities. Combine the mapped coordinates of those.
-        Map<Integer, Set<Coord>> newCombinationsMap = new HashMap<>();
-        for (Set<Integer> key : nakedGroupMap.keySet()) { // TODO: loop over entry set instead? Avoid the get later on.
-            int keyAsBitSet = toBitSet(key);
-            for (int counter = 0; counter < range; counter++) {
-                // bitwise operation to verify that all of "key" are contained in the digit set represented by "i"
-                if ((counter | (~keyAsBitSet & mask)) == mask) {
-                    Set<Coord> coords = newCombinationsMap.computeIfAbsent(counter, k -> new HashSet<>());
-                    Set<Coord> originalCoords = nakedGroupMap.get(key); // TODO: get twice can be removed both...
-                    if (originalCoords != null) {
-                        coords.addAll(nakedGroupMap.get(key));
-                    }
-                }
-            }
-        }
-
-        // Iterate through the combinations and if they are candidates for naked pair
-        // reduction, add them to the original map.
-        for (Map.Entry<Integer, Set<Coord>> entry : newCombinationsMap.entrySet()) {
-            int possibilitiesAsBitSet = entry.getKey();
-            Set<Coord> coordinates = entry.getValue();
-
-            // Only add the coordinates if the size of the set of coordinates leaves
-            // at least 1 unfilled cell in this group
-            if (coordinates.size() > 1 && coordinates.size() < (g.getGroupSize() - g.getGroupOccupiedSize())) {
-                if (getBitSetSize(possibilitiesAsBitSet) == coordinates.size()) {
-                    nakedGroupMap.put(fromBitSet(possibilitiesAsBitSet), coordinates);
-                }
-            }
-        }
-    }
-
-    private static int getBitSetSize(int possibilitiesAsBitSet) {
-        int result = 0;
-        while (possibilitiesAsBitSet != 0) {
-            if ((possibilitiesAsBitSet & 1) != 0) result++;
-            possibilitiesAsBitSet = possibilitiesAsBitSet >> 1;
-        }
-        return result;
-    }
-
-    private static int toBitSet(Set<Integer> key) {
-        int result = 0;
-        for (int i : key) {
-            result += (1 << (i - 1));
-        }
-        return result;
-    }
-
-    private static Set<Integer> fromBitSet(int i) {
-        Set<Integer> result = new HashSet<>();
-        int val = 1;
-        while (i != 0) {
-            if ((i & 1) != 0) result.add(val);
-            i = i >> 1;
-            val++;
-        }
-        return result;
-    }
-
-    // Get indices of rows where given symbol is a candidate
-    private Set<Integer> getRowSet(AbstractGroup g, int symbolCode) {
-        Set<Integer> set = new TreeSet<>();
-
-        for (Coord c : g.getCoords()) {
-            if (candidatesPerCell.get(c).contains(symbolCode)) {
-                set.add(c.getY());
-            }
-        }
-
-        return set;
-    }
-
-    private Set<Integer> getColSet(AbstractGroup g, int symbolCode) {
-        Set<Integer> set = new TreeSet<>();
-
-        for (Coord c : g.getCoords()) {
-            if (candidatesPerCell.get(c).contains(symbolCode)) {
-                set.add(c.getX());
-            }
-        }
-
-        return set;
-    }
-
-    private boolean eliminateByXWings() {
-        boolean updated = false;
-        for (int symbolCode = 1; symbolCode < myPuzzle.getSymbolCodeRange(); symbolCode++) {
-            // For each symbolCode, figure out in which rows of each column it occurs. Then
-            // get the set of columns that have the same row set. Same for rows x cols.
-            // For those entries that have the same size of {columns} x {rows}, we now
-            // know that 'symbolCode' has to be in (one or more of) the intersections of those,
-            // so it can be eliminated from the possibilities in each of those groups
-            // outside of the intersections.
-
-            Map<Set<AbstractGroup>, Set<AbstractGroup>> xWingMap = new HashMap<>();
-            for (AbstractGroup g : myPuzzle.getGroups()) {
-                Set<AbstractGroup> intersectingGroups = null;
-                if (g instanceof ColumnGroup) {
-                    // list of rows intersecting with column g
-                    intersectingGroups = toRowGroups(getRowSet(g, symbolCode));
-                } else if (g instanceof RowGroup) {
-                    // list of columns intersecting with row g
-                    intersectingGroups = toColumnGroups(getColSet(g, symbolCode));
-                }
-                if (intersectingGroups != null && !intersectingGroups.isEmpty()) {
-                    Set<AbstractGroup> grps = xWingMap.computeIfAbsent(intersectingGroups, k -> new TreeSet<>());
-                    grps.add(g);
-                }
-            }
-
-            // For all keys k
-            // if there is another key that k is a full subset of
-            // then add all values of k to that one too
-            for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> k: xWingMap.entrySet()) {
-                for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> l: xWingMap.entrySet()) {
-                    if (k != l) {
-                        if (l.getKey().containsAll(k.getKey())) {
-                            l.getValue().addAll(k.getValue());
-                        }
-                    }
-                }
-            }
-
-            // Now, with this map, if the set of rows is of the same size as the set of
-            // columns that have identical row sets, eliminate 'symbolCode' from other cells
-            // in the rows. Same for col vs row.
-            for (Map.Entry<Set<AbstractGroup>, Set<AbstractGroup>> entry : xWingMap.entrySet()) {
-                if (entry.getKey().size() > 1 &&
-                        entry.getKey().size() == entry.getValue().size()) { // becomes * 2 now ??
-                    for (AbstractGroup g : entry.getKey()) {
-                        // Eliminate 'symbolCode' from this row 'g' except for the groups it intersects
-                        Set<Coord> candidateRemovals = new TreeSet<>(g.getCoords());
-                        for (AbstractGroup other : entry.getValue()) {
-                            candidateRemovals.removeAll(other.getCoords());
-                        }
-                        if (removePossibility(symbolCode, candidateRemovals,
-                                new XWingEliminationReason(myPuzzle.symbolCodeToSymbol(symbolCode),
-                                        candidateRemovals,
-                                        g,
-                                        entry.getKey(), entry.getValue()))) updated = true;
-                    }
-                }
-            }
-        }
-        return updated;
-    }
 
     private boolean checkForcedChains()
     {
@@ -464,7 +147,7 @@ public class SudokuSolver implements Updateable {
     }
 
     public Map<Coord, String> getAllNakedSingles() {
-        if (candidatesPerCell == null) calculateCandidates();
+        if (candidatesPerCell == null) recalculateCandidates();
 
         return getNakedSingles(true);
     }
@@ -503,7 +186,7 @@ public class SudokuSolver implements Updateable {
     }
 
     public Map<Coord, Map.Entry<String, List<AbstractGroup>>> getAllUniqueValues() {
-        if (candidatesPerCell == null) calculateCandidates();
+        if (candidatesPerCell == null) recalculateCandidates();
 
         return getUniqueValues(true, myPuzzle.getGroups());
     }
@@ -550,7 +233,7 @@ public class SudokuSolver implements Updateable {
                                     new ArrayList<>()));
                         }
                         result.get(c).getValue().add(g);
-//                        recordEliminationReason(c, new UniqueValue(myPuzzle.symbolCodeToSymbol(symbolCode), c,
+//                        recordEliminationReason(c, new UniqueValueSolution(myPuzzle.symbolCodeToSymbol(symbolCode), c,
 //                                result.get(c).getValue()));
                         if (!all) return result;
                     }
@@ -563,7 +246,7 @@ public class SudokuSolver implements Updateable {
 
 
     public Map.Entry<Coord, String> nextMove(SolveStats stats) {
-        if (candidatesPerCell == null) calculateCandidates();
+        if (candidatesPerCell == null) recalculateCandidates();
 
         Map.Entry<Coord, String> nextMove = null;
 //        possibilitiesContainer = new PossibilitiesContainer(myPuzzle);
@@ -586,19 +269,7 @@ public class SudokuSolver implements Updateable {
 
             // no move? try different types of elimination, possibly iteratively
             if (nextMove == null) {
-                boolean hasEliminatedCandidates = false;
-
-                if (doEliminationNakedPairs && !hasEliminatedCandidates) {
-                    // TODO: consider doing the extended naked pairs as a 2nd step only
-                    // if first does not give new candidates
-                    hasEliminatedCandidates = eliminateNakedPairs();
-                }
-                if (doEliminationIntersectionRadiation && !hasEliminatedCandidates) {
-                    hasEliminatedCandidates = eliminateByRadiationFromIntersections();
-                }
-                if (doEliminationXWings && !hasEliminatedCandidates) {
-                    hasEliminatedCandidates = eliminateByXWings();
-                }
+                boolean hasEliminatedCandidates = updateCandidates();
 
                 if (!hasEliminatedCandidates) break;
             }
@@ -609,7 +280,7 @@ public class SudokuSolver implements Updateable {
 
     // TODO: this is ONLY used in tests right now - consider moving there
     public boolean solve() {
-        if (candidatesPerCell == null) calculateCandidates();
+        if (candidatesPerCell == null) recalculateCandidates();
 
         SolveStats stats = new SolveStats();
         while (!myPuzzle.isComplete() && !myPuzzle.isInconsistent()) {
@@ -619,27 +290,27 @@ public class SudokuSolver implements Updateable {
             //System.out.println("Next move: " + nextMove);
 
             if (nextMove != null) {
-                return myPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
+                myPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
             } else {
                 return false;
             }
         }
-        return false;
+        return myPuzzle.isSolved();
     }
 
     // Add moves on the fly if there are any
-    public List<EliminationReason> getEliminationReasons(Coord c) {
-        if (candidatesPerCell == null) calculateCandidates();
+    public List<Explanation> getEliminationReasons(Coord c) {
+        if (candidatesPerCell == null) recalculateCandidates();
 
-        List<EliminationReason> reasonsPlusCandidateMove = new ArrayList<>();
-        reasonsPlusCandidateMove.addAll(removalReasons.get(c));
+        List<Explanation> reasonsPlusCandidateMove = new ArrayList<>();
+        reasonsPlusCandidateMove.addAll(eliminationReasons.get(c));
         String symbol = getNakedSingleAt(c);
         if (symbol != null) {
-            reasonsPlusCandidateMove.add(new NakedSingle(symbol, c));
+            reasonsPlusCandidateMove.add(new NakedSingleSolution(symbol, c));
         } else {
             Map.Entry<String, List<AbstractGroup>> uniqueValue = getUniqueValueAt(c);
             if (uniqueValue != null) {
-                reasonsPlusCandidateMove.add(new UniqueValue(uniqueValue.getKey(), c,
+                reasonsPlusCandidateMove.add(new UniqueValueSolution(uniqueValue.getKey(), c,
                         uniqueValue.getValue()));
             }
         }
@@ -658,8 +329,8 @@ public class SudokuSolver implements Updateable {
 
             if (nextMove != null) {
                 // TODO: reasons could be recursive if dependent on other non-trivial cells
-                List<EliminationReason> reasons = sv.getEliminationReasons(nextMove.getKey());
-                for (EliminationReason r : reasons) {
+                List<Explanation> reasons = sv.getEliminationReasons(nextMove.getKey());
+                for (Explanation r : reasons) {
                     maxReasonLevel = Math.max(maxReasonLevel, r.getDifficulty());
                 }
 
@@ -684,43 +355,18 @@ public class SudokuSolver implements Updateable {
     }
 
 
-    // Get rows corresponding to indices
-    private Set<AbstractGroup> toRowGroups(Set<Integer> rowset) {
-        Set<AbstractGroup> result = new TreeSet<>();
-        for (AbstractGroup g : myPuzzle.getGroups()) {
-            if (g instanceof RowGroup) {
-                if (rowset.contains(((RowGroup) g).getRow())) {
-                    result.add(g);
-                }
-            }
-        }
-        return result;
-    }
-
-    private Set<AbstractGroup> toColumnGroups(Set<Integer> colset) {
-        Set<AbstractGroup> result = new TreeSet<>();
-        for (AbstractGroup g : myPuzzle.getGroups()) {
-            if (g instanceof ColumnGroup) {
-                if (colset.contains(((ColumnGroup) g).getColumn())) {
-                    result.add(g);
-                }
-            }
-        }
-        return result;
-    }
-
 //    public PossibilitiesContainer getPossibilitiesContainer() {
 //        return possibilitiesContainer;
 //    }
 
     public Set<Integer> getCandidatesAtCell(Coord c) {
-    if (candidatesPerCell == null) calculateCandidates();
+    if (candidatesPerCell == null) recalculateCandidates();
 
     return candidatesPerCell.get(c);
     }
 
     @Override
     public void update() {
-        calculateCandidates();
+        recalculateCandidates();
     }
 }
