@@ -32,14 +32,16 @@ public class NakedGroupEliminator extends Eliminator {
             // nr of possibilities: the possibilities can be removed from the rest of the group
             if (eliminateInGroup(g, nakedGroupMap, false)) updated = true;
 
-            // Combine elements in this map. For example, if there are entries
-            // {26} --> [a], {27} --> [c], {26} --> [c] can be combined
-            // to a new entry {267} --> [abc]
-            combineNakedGroups(g, nakedGroupMap);
+            // Extended naked groups are much more expensive to find
+            if (true || !updated) {
+                // Combine elements in this map. For example, if there are entries
+                // {26} --> [a], {27} --> [c], {26} --> [c] can be combined
+                // to a new entry {267} --> [abc]
+                combineNakedGroups(g, nakedGroupMap);
 
-            // Do further elimination (in two steps just to improve reporting)
-            if (eliminateInGroup(g, nakedGroupMap, true)) updated = true;
-
+                // Do further elimination (in two steps just to improve reporting)
+                if (eliminateInGroup(g, nakedGroupMap, true)) updated = true;
+            }
         }
 
         return updated;

@@ -5,12 +5,18 @@ import ottop.sudoku.puzzle.ISudoku;
 import java.util.*;
 
 public abstract class AbstractGroup implements Comparable<AbstractGroup> {
-    protected static int EMPTYSYMBOLCODE = 0; // 0 by definition, code for empty cell is 0
+    static final int EMPTYSYMBOLCODE = 0; // 0 by definition, code for empty cell is 0
+    private final Map<Coord, Integer> coords; // the cell coordinates in this group, mapped to internal index
+    private final String groupID;
+    final int groupSize; // number of cells in a group, identical to number of distinct symbols - 1
+    final int startX;
+    final int startY;
+
+    // Below depends on state of puzzle - which cells are occupied
+
     private boolean[] hasSymbolCode; // map that tells which symbols are currently contained
-    private Map<Coord, Integer> coords; // the cell coordinates in this group, mapped to internal index
     private int[] groupSymbolCodes; // current cell state
     private int groupOccupiedSize; // nr of occupied cells in group
-    private final String groupID;
 
     /*
     For a standard SudokuMain:
@@ -30,20 +36,25 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
                  startY+internalIndexToRelativeY(i)));
 
      */
-    protected int groupSize; // number of cells in a group, identical to number of distinct symbols -1 for empty
-    protected int startX;
-    protected int startY;
 
-    public AbstractGroup(int startX, int startY, ISudoku myPuzzle, String id) {
+
+    public AbstractGroup(int startX, int startY, int size, String id) {
         this.startX = startX;
         this.startY = startY;
         this.groupID = id;
+        this.groupSize = size;
 
-        resetGroup(myPuzzle);
+        coords = new HashMap<>();
+        for (int internalIndex = 0; internalIndex < groupSize; internalIndex++) {
+            int absX = startX + internalIndexToRelativeX(internalIndex);
+            int absY = startY + internalIndexToRelativeY(internalIndex);
+            coords.put(new Coord(absX, absY), internalIndex);
+        }
+
+        //resetGroup(myPuzzle);
     }
 
     public void resetGroup(ISudoku myPuzzle) {
-        this.groupSize = myPuzzle.getSymbolCodeRange() - 1;
         this.hasSymbolCode = new boolean[myPuzzle.getSymbolCodeRange()];
         this.groupSymbolCodes = new int[this.groupSize];
 
@@ -56,12 +67,6 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
             }
         }
 
-        coords = new HashMap<>();
-        for (int internalIndex = 0; internalIndex < groupSize; internalIndex++) {
-            int absX = startX + internalIndexToRelativeX(internalIndex);
-            int absY = startY + internalIndexToRelativeY(internalIndex);
-            coords.put(new Coord(absX, absY), internalIndex);
-        }
     }
 
     public abstract int internalIndexToRelativeX(int idx);

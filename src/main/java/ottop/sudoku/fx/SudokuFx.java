@@ -6,6 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import ottop.sudoku.PuzzleDB;
+import ottop.sudoku.puzzle.StandardSudoku;
 
 public class SudokuFx extends Application {
 
@@ -22,7 +23,7 @@ public class SudokuFx extends Application {
 
         myController = Controller.theController;
         myController.initialize();
-        myController.newPuzzle(PuzzleDB.emptyStandardPuzzle);
+        myController.newPuzzle(new StandardSudoku("Empty Standard Sudoku"));
 
         primaryStage.setTitle("U-Kudos");
         primaryStage.setScene(new Scene(root));

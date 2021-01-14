@@ -5,8 +5,8 @@ import ottop.sudoku.puzzle.ISudoku;
 
 public class SquareGroup extends AbstractGroup {
 
-    public SquareGroup(int startX, int startY, ISudoku myPuzzle, String id) {
-        super(startX, startY, myPuzzle, id);
+    public SquareGroup(int startX, int startY, String id) {
+        super(startX, startY, 9, id);
     }
 
     @Override

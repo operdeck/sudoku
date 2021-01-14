@@ -7,6 +7,7 @@ import ottop.sudoku.board.RectangularGroup;
 import ottop.sudoku.board.RowGroup;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Sudoku10x10 extends AbstractSudoku {
     public Sudoku10x10(String name,
@@ -25,19 +26,23 @@ public class Sudoku10x10 extends AbstractSudoku {
     }
 
     @Override
-    void initGroups() {
+    public List<AbstractGroup> createGroups() {
+        List<AbstractGroup> grps = new ArrayList<>();
+        groupsWithBoundaries = new ArrayList<>();
         int cnt = 0;
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 2; x++) {
-                AbstractGroup g = new RectangularGroup(x * 5, y * 2, this, "Rect " + (++cnt));
-                groups.add(g);
+                AbstractGroup g = new RectangularGroup(x * 5, y * 2, 10,"Rect " + (++cnt));
+                grps.add(g);
                 groupsWithBoundaries.add(g);
             }
         }
         for (int i = 0; i < 10; i++) {
-            groups.add(new RowGroup(0, i, this));
-            groups.add(new ColumnGroup(i, 0, this));
+            grps.add(new RowGroup(0, i, 10));
+            grps.add(new ColumnGroup(i, 0, 10));
         }
+
+        return grps;
     }
 
     @Override

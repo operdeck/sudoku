@@ -4,6 +4,7 @@ import ottop.sudoku.board.Coord;
 import ottop.sudoku.board.AbstractGroup;
 
 import java.util.List;
+import java.util.Set;
 
 public class SimpleEliminationReason extends Explanation {
 
@@ -11,6 +12,11 @@ public class SimpleEliminationReason extends Explanation {
 
     public SimpleEliminationReason(String symbol, Coord removedFromCell, AbstractGroup removedByGroup) {
         super(symbol, removedFromCell);
+        this.removedByGroup = removedByGroup;
+    }
+
+    public SimpleEliminationReason(Set<String> symbols, Coord removedFromCell, AbstractGroup removedByGroup) {
+        super(symbols, removedFromCell);
         this.removedByGroup = removedByGroup;
     }
 

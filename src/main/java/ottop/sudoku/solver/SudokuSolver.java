@@ -96,10 +96,10 @@ public class SudokuSolver implements Updateable {
                 new BasicEliminationEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
         simpleEliminator.eliminate();
 
-        updateCandidates();
+        //oneRoundOfCandidateElimination();
     }
 
-    private boolean updateCandidates() {
+    private boolean oneRoundOfCandidateElimination() {
         // Basic radiation will be done always
 
         boolean hasEliminated = false;
@@ -107,24 +107,18 @@ public class SudokuSolver implements Updateable {
         if (doEliminationNakedPairs) {
             Eliminator e = new NakedGroupEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
             if (e.eliminate()) hasEliminated = true;
-//            if (eliminateNakedPairs()) hasEliminated=true;
         }
-        if (doEliminationIntersectionRadiation) {
+        if (!hasEliminated && doEliminationIntersectionRadiation) {
             Eliminator e = new IntersectionRadiationEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
             if (e.eliminate()) hasEliminated = true;
-//            if (eliminateByRadiationFromIntersections()) hasEliminated=true;
         }
-        if (doEliminationXWings) {
+        if (!hasEliminated && doEliminationXWings) {
             Eliminator e = new XWingEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
             if (e.eliminate()) hasEliminated = true;
-//           if (eliminateByXWings()) hasEliminated=true;
         }
 
         return hasEliminated;
     }
-
-
-
 
 
     private boolean checkForcedChains()
@@ -211,7 +205,7 @@ public class SudokuSolver implements Updateable {
         return null;
     }
 
-    private Map<Coord, Map.Entry<String, List<AbstractGroup>>> getUniqueValues(boolean all, List<AbstractGroup> groups) {
+    private Map<Coord, Map.Entry<String, List<AbstractGroup>>> getUniqueValues(boolean all, AbstractGroup[] groups) {
         Map<Coord, Map.Entry<String, List<AbstractGroup>>> result = new TreeMap<>();
 
         for (AbstractGroup g: groups) {
@@ -246,16 +240,16 @@ public class SudokuSolver implements Updateable {
 
 
     public Map.Entry<Coord, String> nextMove(SolveStats stats) {
-        if (candidatesPerCell == null) recalculateCandidates();
+        if (candidatesPerCell == null) {
+            recalculateCandidates();
+        }
 
+        stats.startFindMove();
         Map.Entry<Coord, String> nextMove = null;
-//        possibilitiesContainer = new PossibilitiesContainer(myPuzzle);
-
         while (!myPuzzle.isComplete() && nextMove == null) {
             stats.addIteration();
 
             // TODO: multiple iterations could count as higher level
-            //System.out.println("Elimination round " + eliminationRound);
 
             // see if there is a move, naked singles first
             nextMove = getFirstNakedSingle();
@@ -269,11 +263,12 @@ public class SudokuSolver implements Updateable {
 
             // no move? try different types of elimination, possibly iteratively
             if (nextMove == null) {
-                boolean hasEliminatedCandidates = updateCandidates();
+                boolean hasEliminatedCandidates = oneRoundOfCandidateElimination();
 
                 if (!hasEliminatedCandidates) break;
             }
         }
+        stats.endFindMove();
 
         return nextMove;
     }
@@ -285,9 +280,6 @@ public class SudokuSolver implements Updateable {
         SolveStats stats = new SolveStats();
         while (!myPuzzle.isComplete() && !myPuzzle.isInconsistent()) {
             Map.Entry<Coord, String> nextMove = nextMove(stats);
-
-            //System.out.println("Puzzle: " + String.valueOf(nextPuzzle));
-            //System.out.println("Next move: " + nextMove);
 
             if (nextMove != null) {
                 myPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
@@ -318,12 +310,13 @@ public class SudokuSolver implements Updateable {
     }
 
     public static int assessDifficulty(ISudoku p) {
-        ISudoku shadowPuzzle = p.clone();
+        ISudoku shadowPuzzle = p; // clone should not be necessary at all
+        //System.out.println("Difficulty " + p.getName());
         SudokuSolver sv = new SudokuSolver(shadowPuzzle);
         SolveStats s = new SolveStats();
         sv.setSmartest();
         int maxReasonLevel = -1;
-        int maxNumberOfIterations = 1;
+        //int maxNumberOfIterations = 1;
         while (!shadowPuzzle.isComplete() && !shadowPuzzle.isInconsistent()) {
             Map.Entry<Coord, String> nextMove = sv.nextMove(s);
 
@@ -331,6 +324,8 @@ public class SudokuSolver implements Updateable {
                 // TODO: reasons could be recursive if dependent on other non-trivial cells
                 List<Explanation> reasons = sv.getEliminationReasons(nextMove.getKey());
                 for (Explanation r : reasons) {
+//                    System.out.println("Difficulty " + r.getDifficulty() + ":" + r);
+//                    System.out.println("Stats** " + String.valueOf(s));
                     maxReasonLevel = Math.max(maxReasonLevel, r.getDifficulty());
                 }
 
@@ -338,16 +333,14 @@ public class SudokuSolver implements Updateable {
                 //maxNumberOfIterations = Math.max(maxNumberOfIterations, sv.numberOfEliminationIterations);
 
                 shadowPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
-
-                System.out.println("** original " + p.isSolved() + p.isComplete());
-                System.out.println("** shadow " + shadowPuzzle.isSolved() + shadowPuzzle.isComplete());
            } else {
                 break;
             }
         }
 
         // Bonus when multiple rounds were needed in some step
-        maxReasonLevel = maxReasonLevel + maxNumberOfIterations - 1;
+//        System.out.println("Stats** " + String.valueOf(s));
+        maxReasonLevel = maxReasonLevel + s.getIterations() - 1;
 
         if (!shadowPuzzle.isSolved()) return -1;
 

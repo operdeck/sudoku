@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PuzzleDB {
-    public static ISudoku emptyStandardPuzzle = new StandardSudoku("Empty standard SudokuMain",
+    private static ISudoku emptyStandardPuzzle = new StandardSudoku("Empty standard Sudoku",
             ".........",
             ".........",
             ".........",
@@ -18,7 +18,7 @@ public class PuzzleDB {
             ".........",
             ".........");
 
-    public static ISudoku emptyNRCPuzzle = new NRCSudoku("Empty NRC SudokuMain",
+    private static ISudoku emptyNRCPuzzle = new NRCSudoku("Empty NRC Sudoku",
             ".........",
             ".........",
             ".........",
@@ -40,7 +40,7 @@ public class PuzzleDB {
             ".........",
             ".........");
 
-    public static ISudoku Parool_18nov = new StandardSudoku("Parool_18nov",
+    private static ISudoku Parool_18nov = new StandardSudoku("Parool_18nov",
             "........8",
             "..9..2.7.",
             ".64.38...",
@@ -210,23 +210,32 @@ public class PuzzleDB {
 
     // TODO include some others from the puzzle book
 
-    public static String[] getPuzzles() throws IllegalAccessException {
+    public static String[] getPuzzleNames() {
         Field[] allFields = PuzzleDB.class.getDeclaredFields();
         List<String> puzzleNames = new ArrayList<>();
         PuzzleDB db = new PuzzleDB();
         for (Field f : allFields) {
-            puzzleNames.add(((ISudoku) f.get(db)).getName());
+            try {
+                puzzleNames.add(((ISudoku) f.get(db)).getName());
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
         }
         return puzzleNames.toArray(new String[0]);
     }
 
-    public static ISudoku getPuzzleByName(String name) throws IllegalAccessException {
+    public static ISudoku getPuzzleByName(String name) {
         Field[] allFields = PuzzleDB.class.getDeclaredFields();
         PuzzleDB db = new PuzzleDB();
         for (Field f : allFields) {
-            ISudoku p = (ISudoku) f.get(db);
-            if (name.equals(p.getName())) {
-                return p.clone();
+            ISudoku p;
+            try {
+                p = (ISudoku) f.get(db);
+                if (name.equals(p.getName())) {
+                    return p.clone();
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
             }
         }
         return null;

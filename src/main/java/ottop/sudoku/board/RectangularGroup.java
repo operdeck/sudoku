@@ -4,8 +4,8 @@ import ottop.sudoku.puzzle.ISudoku;
 
 public class RectangularGroup extends AbstractGroup {
 
-    public RectangularGroup(int startX, int startY, ISudoku myPuzzle, String id) {
-        super(startX, startY, myPuzzle, id);
+    public RectangularGroup(int startX, int startY, int size, String id) {
+        super(startX, startY, size, id);
     }
 
     @Override

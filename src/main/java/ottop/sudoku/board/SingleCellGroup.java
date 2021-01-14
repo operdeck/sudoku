@@ -3,8 +3,8 @@ package ottop.sudoku.board;
 import ottop.sudoku.puzzle.ISudoku;
 
 public class SingleCellGroup extends AbstractGroup {
-    public SingleCellGroup(Coord cell, ISudoku p) {
-        super(cell.getX(), cell.getY(), p, "Cell: " + cell.toString());
+    public SingleCellGroup(Coord cell) {
+        super(cell.getX(), cell.getY(), 1, "Cell: " + cell.toString());
     }
 
     @Override

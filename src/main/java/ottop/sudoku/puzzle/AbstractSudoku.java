@@ -8,17 +8,20 @@ import java.util.*;
 
 public abstract class AbstractSudoku implements ISudoku {
     final String name;
-    final List<String> possibleSymbols;
+    final List<String> possibleSymbols; // [0] = symbol for empty cell, 1..N are for the real symbols
     Coord[] allCells;
+
+    // TODO: consider making this String. Drop symbolCode all over the place.
     int[][] board; // [x][y] to symbolCode
+    Map<Coord, AbstractGroup[]> buddyGroups;
 
     // Groups also keep state of which cells in the group are occupied
 
-    List<AbstractGroup> groups = new ArrayList<>();
-    final List<AbstractGroup> groupsWithBoundaries = new ArrayList<>();
+    AbstractGroup[] groups = null;
+    List<AbstractGroup> groupsWithBoundaries = null;
 
     Updateable solver = null;
-    List<Coord> undoStack = new ArrayList<>();
+    List<Map.Entry<Coord, String>> undoStack = new ArrayList<>();
     int undoStackPointer = -1;
 
     public AbstractSudoku(String name, String[] symbols, int[][] board) {
@@ -36,10 +39,22 @@ public abstract class AbstractSudoku implements ISudoku {
         this.allCells = cells.toArray(new Coord[0]);
 
         // Groups of cells - different for different Sudoku types
-        initGroups();
+        this.groups = createGroups().toArray(new AbstractGroup[0]);
+
+        // Buddy groups are the groups a cell is part of
+        buddyGroups = new HashMap<>();
+        for (Coord c: allCells) {
+            List<AbstractGroup> grps = new ArrayList<>();
+            for (AbstractGroup g : groups) {
+                if (g.isInGroup(c)) {
+                    grps.add(g);
+                }
+            }
+            buddyGroups.put(c, grps.toArray(new AbstractGroup[0]));
+        }
     }
 
-    abstract void initGroups();
+    abstract List<AbstractGroup> createGroups();
 
     @Override
     public ISudoku clone() {
@@ -58,16 +73,37 @@ public abstract class AbstractSudoku implements ISudoku {
             c.board[i] = Arrays.copyOf(board[i], board[i].length);
         }
 
-        c.initGroups();
+        // Reset state
 
-//        c.undoStack = new ArrayList<>();
-//        c.undoStackPointer = -1;
+        for (AbstractGroup g: c.groups) {
+            g.resetGroup(c);
+        }
+
+        c.undoStack.clear();
+        c.undoStackPointer = -1;
 
         return c;
     }
 
     @Override
-    public void setSolver(Updateable s) { solver = s; }
+    public void setSolver(Updateable s) {
+        solver = s;
+
+        // Undo moves
+
+        while (undoStackPointer >= 0) {
+            Map.Entry<Coord, String> move = undoStack.get(undoStackPointer);
+            board[move.getKey().getX()][move.getKey().getY()] = 0;
+            undoStackPointer--;
+        }
+        undoStack.clear();
+
+        // Reset state
+
+        for (AbstractGroup g: groups) {
+            g.resetGroup(this);
+        }
+    }
 
     @Override
     public String toString() {
@@ -80,13 +116,25 @@ public abstract class AbstractSudoku implements ISudoku {
             }
             result.append("\n");
         }
+
+/*
+        result.append("Possible symbols: ").append(possibleSymbols).append("\n");
+        result.append("All cells: ").append(allCells).append("\n");
+        result.append("All groups: ").append(groups).append("\n");
+        result.append("Groups with boundaries: ").append(groupsWithBoundaries).append("\n");
+        result.append("Solver: ").append(solver).append("\n");
+        result.append("Undo stack: (").append(undoStackPointer).append(") ").append(undoStack).append("\n");
+*/
+
         return result.toString();
     }
 
     @Override
     public boolean isComplete() {
-        for (AbstractGroup g : groups) {
-            if (!g.isComplete()) return false;
+        for (int x=0; x<getWidth(); x++) {
+            for (int y=0; y<getHeight(); y++) {
+                if (board[x][y] == 0) return false;
+            }
         }
         return true;
     }
@@ -102,7 +150,7 @@ public abstract class AbstractSudoku implements ISudoku {
         // Put on undo stack, remove any entries after (because of undo/redo)
 
         undoStackPointer++;
-        undoStack.add(undoStackPointer, coord);
+        undoStack.add(undoStackPointer, new AbstractMap.SimpleEntry<>(coord, symbol));
         while (canRedo()) {
             undoStack.remove(undoStack.size()-1);
         }
@@ -124,9 +172,10 @@ public abstract class AbstractSudoku implements ISudoku {
     }
 
     @Override
-    public Coord undoMove() {
+    public Map.Entry<Coord, String> undoMove() {
         if (canUndo()) {
-            Coord coord = undoStack.get(undoStackPointer);
+            Map.Entry<Coord, String> lastMove = undoStack.get(undoStackPointer);
+            Coord coord = lastMove.getKey();
 
             board[coord.getX()][coord.getY()] = 0;
             for (AbstractGroup g: getBuddyGroups(coord)) {
@@ -138,10 +187,7 @@ public abstract class AbstractSudoku implements ISudoku {
             // Update all candidates
             solver.update();
 
-            if (undoStackPointer >= 0) {
-                return undoStack.get(undoStackPointer); // last move
-            }
-            return null;
+            return lastMove;
         }
         return null;
     }
@@ -151,8 +197,10 @@ public abstract class AbstractSudoku implements ISudoku {
         if (canRedo()) {
             undoStackPointer++;
 
-            Coord coord = undoStack.get(undoStackPointer);
-            int symbolCode = getSymbolCodeAtCoordinates(coord);
+            Map.Entry<Coord, String> move = undoStack.get(undoStackPointer);
+            Coord coord = move.getKey();
+
+            int symbolCode = symbolToSymbolCode(move.getValue());
 
             board[coord.getX()][coord.getY()] = symbolCode;
             for (AbstractGroup g: getBuddyGroups(coord)) {
@@ -162,7 +210,7 @@ public abstract class AbstractSudoku implements ISudoku {
             // Update all candidates
             solver.update();
 
-            return new AbstractMap.SimpleEntry<>(coord, symbolCodeToSymbol(symbolCode));
+            return move;
         }
         return null;
     }
@@ -180,19 +228,13 @@ public abstract class AbstractSudoku implements ISudoku {
     }
 
     @Override
-    public List<AbstractGroup> getGroups() {
+    public AbstractGroup[] getGroups() {
         return groups;
     }
 
     @Override
-    public List<AbstractGroup> getBuddyGroups(Coord c) {
-        List<AbstractGroup> grps = new ArrayList<>();
-        for (AbstractGroup g : groups) {
-            if (g.isInGroup(c)) {
-                grps.add(g);
-            }
-        }
-        return grps;
+    public AbstractGroup[] getBuddyGroups(Coord c) {
+        return buddyGroups.get(c);
     }
 
     @Override

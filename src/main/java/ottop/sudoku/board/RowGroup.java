@@ -4,8 +4,8 @@ import ottop.sudoku.puzzle.ISudoku;
 
 public class RowGroup extends AbstractGroup {
 
-    public RowGroup(int startX, int startY, ISudoku myPuzzle) {
-        super(startX, startY, myPuzzle, "Row " + (1+startY));
+    public RowGroup(int startX, int startY, int size) {
+        super(startX, startY, size,"Row " + (1+startY));
     }
 
     @Override

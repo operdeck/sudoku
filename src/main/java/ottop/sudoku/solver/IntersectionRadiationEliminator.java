@@ -66,7 +66,7 @@ public class IntersectionRadiationEliminator extends Eliminator {
             grps[1] = b;
         }
 
-        public static Set<GroupIntersection> createGroupIntersections(List<AbstractGroup> groups) {
+        public static Set<GroupIntersection> createGroupIntersections(AbstractGroup[] groups) {
             Set<GroupIntersection> intersections = new LinkedHashSet<>();
             for (AbstractGroup a : groups) {
                 for (AbstractGroup b : groups) {

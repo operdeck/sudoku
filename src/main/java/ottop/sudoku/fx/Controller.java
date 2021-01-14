@@ -75,21 +75,14 @@ public class Controller {
         lvEliminationSteps.getSelectionModel().selectedItemProperty().addListener(listener);
 
         // List of puzzles
-        try {
-            String[] puzzles = PuzzleDB.getPuzzles();
-            cbPuzzleDB.getItems().setAll(puzzles);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
+        String[] puzzles = PuzzleDB.getPuzzleNames();
+        cbPuzzleDB.getItems().setAll(puzzles);
     }
 
     public void symbolClicked(ActionEvent actionEvent) {
         String clickedSymbol = ((Button) actionEvent.getSource()).getText();
 
         myPuzzle.doMove(currentHighlightedCell, clickedSymbol);
-
-
     }
 
     // TODO: support arrow keys move around in canvas
@@ -115,6 +108,8 @@ public class Controller {
 //        System.out.println("After, solver=" + currentSolver);
 
         // Puzzle canvas and controls
+        currentHighlightedCell = null;
+
         redrawWholeDisplay();
     }
 
@@ -178,7 +173,7 @@ public class Controller {
         if (currentHighlightedCell != null) {
             gc.setStroke(Color.RED);
             gc.setLineWidth(3);
-            FxUtils.drawGroup(gameCanvas, myPuzzle, new SingleCellGroup(currentHighlightedCell, myPuzzle));
+            FxUtils.drawGroup(gameCanvas, myPuzzle, new SingleCellGroup(currentHighlightedCell));
         }
 
         undoButton.setDisable(!myPuzzle.canUndo());
@@ -203,6 +198,9 @@ public class Controller {
             digitButtonBar.getButtons().add(symbolButton);
         }
 
+        // Hints / reasons
+        clearEliminationReasons();
+
         // Puzzle itself
         redrawBoard();
     }
@@ -217,10 +215,13 @@ public class Controller {
     }
 
     public void undoAction(ActionEvent actionEvent) {
-        currentHighlightedCell = myPuzzle.undoMove();
-        showEliminationReasons();
+        Map.Entry<Coord, String> move = myPuzzle.undoMove();
+        if (move != null) {
+            currentHighlightedCell = move.getKey();
+            showEliminationReasons();
 
-        redrawBoard();
+            redrawBoard();
+        }
     }
 
     // Just a mouse over - show coordinates
@@ -240,13 +241,9 @@ public class Controller {
 
         if (!puzzleName.equals(myPuzzle.getName())) { // event triggers very often
             ISudoku p;
-            try {
-                p = PuzzleDB.getPuzzleByName(puzzleName);
-                if (p != null) {
-                    newPuzzle(p);
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
+            p = PuzzleDB.getPuzzleByName(puzzleName);
+            if (p != null) {
+                newPuzzle(p);
             }
         }
     }
@@ -289,9 +286,10 @@ public class Controller {
         if (move != null) {
             Coord coord = move.getKey();
 
-            myPuzzle.doMove(coord, move.getValue());
             currentHighlightedCell = coord;
             showEliminationReasons();
+
+            myPuzzle.doMove(coord, move.getValue());
 
             redrawBoard(); // redraw to wipe out any reason highlights
         }

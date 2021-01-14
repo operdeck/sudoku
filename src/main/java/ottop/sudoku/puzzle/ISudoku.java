@@ -39,7 +39,7 @@ public interface ISudoku extends Cloneable {
 
     boolean doMove(Coord coord, String symbol);
 
-    Coord undoMove();
+    Map.Entry<Coord, String> undoMove();
 
     Map.Entry<Coord, String> redoMove();
 
@@ -47,9 +47,9 @@ public interface ISudoku extends Cloneable {
 
     boolean canRedo();
 
-    List<AbstractGroup> getGroups();
+    AbstractGroup[] getGroups();
 
-    List<AbstractGroup> getBuddyGroups(Coord coord);
+    AbstractGroup[] getBuddyGroups(Coord coord);
 
     Set<Coord> getBuddies(Coord coord);
 

@@ -51,11 +51,11 @@ public class FxUtils {
             if (p.isAtOverlay(c)) {
                 background = Color.SEAGREEN;
                 if (highlightedSubArea != null && highlightedSubArea.contains(c)) background = Color.BURLYWOOD;
-                if (highlight != null && p.getBuddies(highlight).contains(c)) background = Color.DARKGREEN;
+                else if (highlight != null && p.getBuddies(highlight).contains(c)) background = Color.DARKGREEN;
             } else {
                 background = Color.WHITE;
                 if (highlightedSubArea != null && highlightedSubArea.contains(c)) background = Color.BURLYWOOD;
-                if (highlight != null && p.getBuddies(highlight).contains(c)) background = Color.LIGHTGRAY;
+                else if (highlight != null && p.getBuddies(highlight).contains(c)) background = Color.LIGHTGRAY;
             }
             gc.setFill(background);
             gc.fillRect(getCellX(canvas, p, c.getX()), getCellY(canvas, p, c.getY()),

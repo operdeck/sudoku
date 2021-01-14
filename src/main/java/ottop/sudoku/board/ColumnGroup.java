@@ -5,8 +5,8 @@ import ottop.sudoku.puzzle.ISudoku;
 public class ColumnGroup extends AbstractGroup {
 
     // TODO drop id argument, generate it yourself
-    public ColumnGroup(int startX, int startY, ISudoku myPuzzle) {
-        super(startX, startY, myPuzzle, "Column "+(1+startX));
+    public ColumnGroup(int startX, int startY, int size) {
+        super(startX, startY, size, "Column "+(1+startX));
     }
 
     @Override

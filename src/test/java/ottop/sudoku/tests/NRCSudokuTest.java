@@ -23,10 +23,10 @@ public class NRCSudokuTest {
                 ".........",
                 ".........");
 
-        assertEquals(31, emptyPuzzle.getGroups().size());
-        assertEquals(3, emptyPuzzle.getBuddyGroups(new Coord("r1c1")).size());
+        assertEquals(31, emptyPuzzle.getGroups().length);
+        assertEquals(3, emptyPuzzle.getBuddyGroups(new Coord("r1c1")).length);
         assertEquals(20, emptyPuzzle.getBuddies(new Coord("r1c1")).size());
-        assertEquals(4, emptyPuzzle.getBuddyGroups(new Coord("r2c2")).size());
+        assertEquals(4, emptyPuzzle.getBuddyGroups(new Coord("r2c2")).length);
         assertEquals(23, emptyPuzzle.getBuddies(new Coord("r2c2")).size());
     }
 }

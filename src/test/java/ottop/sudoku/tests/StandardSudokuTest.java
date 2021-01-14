@@ -26,8 +26,8 @@ public class StandardSudokuTest {
                 ".........",
                 ".........");
 
-        assertEquals(27, emptyPuzzle.getGroups().size());
-        assertEquals(3, emptyPuzzle.getBuddyGroups(new Coord("r2c2")).size());
+        assertEquals(27, emptyPuzzle.getGroups().length);
+        assertEquals(3, emptyPuzzle.getBuddyGroups(new Coord("r2c2")).length);
         assertEquals(20, emptyPuzzle.getBuddies(new Coord("r2c2")).size());
     }
 
@@ -70,8 +70,11 @@ public class StandardSudokuTest {
                 "123456789",
                 "123456789",
                 "123456789");
+        SudokuSolver s = new SudokuSolver(p); // without this, the inconsistency test does not work
+
         assertTrue(p.isComplete());
         assertTrue(p.isInconsistent());
+        assertFalse(p.isSolved());
 
         StandardSudoku p2 = new StandardSudoku("Solved puzzle",
                 "827154396",
@@ -83,14 +86,17 @@ public class StandardSudokuTest {
                 "786235914",
                 "154796823",
                 "239841567");
+        SudokuSolver s2 = new SudokuSolver(p2); // without this, the inconsistency test does not work
+
         assertTrue(p2.isComplete());
         assertFalse(p2.isInconsistent());
+        assertTrue(p2.isSolved());
     }
 
     @Test
     public void checkGroups() {
         ISudoku p = PuzzleDB.Trouw_535;
-        assertEquals(27, p.getGroups().size());
+        assertEquals(27, p.getGroups().length);
     }
 
     @Test

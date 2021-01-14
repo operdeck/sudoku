@@ -1,10 +1,11 @@
 package ottop.sudoku.puzzle;
 
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.board.SquareGroup;
+
+import java.util.ArrayList;
+import java.util.List;
 
 // The Four-Square Sudoku is a standard puzzle with four extra shaded 3x3 squares on
 // the Sudoku board, for which each shaded region must also contain each digit from
@@ -21,17 +22,19 @@ public class NRCSudoku extends StandardSudoku {
     }
 
     @Override
-    public void initGroups() {
-        super.initGroups();
+    public List<AbstractGroup> createGroups() {
+        List<AbstractGroup> grps = super.createGroups();
 
         // add special 'NRC' groups
         int cnt = 0;
         for (int y = 0; y < 2; y++) {
             for (int x = 0; x < 2; x++) {
-                AbstractGroup newGrp = new SquareGroup(x * 4 + 1, y * 4 + 1, this, "NRC Group " + (++cnt));
-                groups.add(newGrp);
+                AbstractGroup newGrp = new SquareGroup(x * 4 + 1, y * 4 + 1, "NRC Group " + (++cnt));
+                grps.add(newGrp);
             }
         }
+
+        return grps;
     }
 
     @Override

@@ -37,19 +37,29 @@ public class StandardSudoku extends AbstractSudoku {
                 puzzleData.substring(72, 81));
     }
 
-    protected void initGroups() {
+    public StandardSudoku(String puzzleName) {
+        this(puzzleName, " ".repeat(81));
+    }
+
+    @Override
+    List<AbstractGroup> createGroups() {
+        List<AbstractGroup> grps = new ArrayList<>();
+        groupsWithBoundaries = new ArrayList<>();
+
         int cnt = 0;
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
-                AbstractGroup g = new SquareGroup(x * 3, y * 3, this, "Group " + (++cnt));
-                groups.add(g);
+                AbstractGroup g = new SquareGroup(x * 3, y * 3, "Group " + (++cnt));
+                grps.add(g);
                 groupsWithBoundaries.add(g);
             }
         }
         for (int i = 0; i < 9; i++) {
-            groups.add(new RowGroup(0, i, this));
-            groups.add(new ColumnGroup(i, 0, this));
+            grps.add(new RowGroup(0, i, 9));
+            grps.add(new ColumnGroup(i, 0,  9));
         }
+
+        return grps;
     }
 
     @Override

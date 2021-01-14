@@ -53,35 +53,23 @@ public class SudokuSolverTest {
         return count;
     }
 
-    // Just a list of strings for the UI
-    private SortedSet<String> getNakedSingles() {
-        SortedSet<String> results = new TreeSet<>();
-        Map<Coord, String> nakedSingles = solver.getAllNakedSingles();
-
-        for (Map.Entry<Coord, String> nakedSingle: nakedSingles.entrySet()) {
-            results.add(nakedSingle.getValue() + "@" + nakedSingle.getKey());
-        }
-
-        return results;
-    }
-
-    // Just a list of strings for the UI
-    private SortedSet<String> getUniqueValues() {
-        SortedSet<String> results = new TreeSet<>();
-        Map<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValues = solver.getAllUniqueValues();
-
-        for (Map.Entry<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValue: uniqueValues.entrySet()) {
-            results.add(uniqueValue.getValue().getKey() + "@" + uniqueValue.getKey());
-        }
-
-        return results;
-    }
-
     // All possible moves
     private SortedSet<String> getPossibleMoves() {
+        SolveStats stats = new SolveStats();
+        solver.nextMove(stats);
+
         SortedSet<String> moves = new TreeSet<>();
-        moves.addAll(getNakedSingles());
-        moves.addAll(getUniqueValues());
+
+        Map<Coord, String> nakedSingles = solver.getAllNakedSingles();
+        for (Map.Entry<Coord, String> nakedSingle: nakedSingles.entrySet()) {
+            moves.add(nakedSingle.getValue() + "@" + nakedSingle.getKey());
+        }
+
+        Map<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValues = solver.getAllUniqueValues();
+        for (Map.Entry<Coord, Map.Entry<String, List<AbstractGroup>>> uniqueValue: uniqueValues.entrySet()) {
+            moves.add(uniqueValue.getValue().getKey() + "@" + uniqueValue.getKey());
+        }
+
         return moves;
     }
 
@@ -97,11 +85,12 @@ public class SudokuSolverTest {
 
     @Test
     public void testBasicElimination() {
+        // TODO: this changes if we split naked groups in simple/advanced
+
         assertEquals(65, getTotalNumberOfCellsWithPencilMarks()); // is just empty squares
         assertEquals(311, getTotalNumberOfPencilMarks());
 
-        assertEquals(1, getNakedSingles().size());
-        assertEquals(6, getUniqueValues().size());
+        assertEquals(7, getPossibleMoves().size());
     }
 
     @Test
@@ -109,12 +98,14 @@ public class SudokuSolverTest {
 
         solver.setSimplest().setEliminateIntersectionRadiation();
 
+        // TODO: these tests only work if we somehow force all elimination steps
+        // TODO: maybe not the best test for this
+        // TODO: do a more specific test see eliminator tests
+
         assertEquals(65, getTotalNumberOfCellsWithPencilMarks()); // empty cells remain the same
         assertEquals(261, getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
-        assertEquals(1, getNakedSingles().size());
-
-        assertEquals(9, getUniqueValues().size()); // increased after this elimination step
+        assertEquals(10, getPossibleMoves().size());
     }
 
     @Test
@@ -125,8 +116,7 @@ public class SudokuSolverTest {
         assertEquals(65, getTotalNumberOfCellsWithPencilMarks()); // empty cells remain the same
         assertEquals(264, getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
-        assertEquals(10, getNakedSingles().size());
-        assertEquals(13, getUniqueValues().size()); // increased after this elimination step
+        assertEquals(23, getPossibleMoves().size());
     }
 
     @Test
@@ -136,8 +126,7 @@ public class SudokuSolverTest {
         assertEquals(65, getTotalNumberOfCellsWithPencilMarks()); // empty cells remain the same
         assertEquals(184, getTotalNumberOfPencilMarks()); // possibilities strongly reduced
 
-        assertEquals(12, getNakedSingles().size());
-        assertEquals(23, getUniqueValues().size()); // increased after this elimination step
+        assertEquals(12, getPossibleMoves().size());
     }
 
     @Test
@@ -161,17 +150,23 @@ public class SudokuSolverTest {
 
     @Test
     public void testRepeatedSolves() {
-        solver = new SudokuSolver(PuzzleDB.Trouw_535);
-        assertNotNull(solver.solve());
+        ISudoku p = PuzzleDB.Trouw_535;
+        solver = new SudokuSolver(p);
+        assertTrue(solver.solve());
+        assertNotNull(p);
+        assertTrue(p.isSolved());
 
         // Doing the same thing again should work if no state is left behind in the puzzle itself
         solver = new SudokuSolver(PuzzleDB.Trouw_535);
-        assertNotNull(solver.solve());
+        assertFalse(p.isSolved());
+        assertTrue(solver.solve());
+        assertNotNull(p);
+        assertTrue(p.isSolved());
     }
 
     @Test
     public void testPuzzleNeedsIntersectionRadiation() {
-        solver = (new SudokuSolver(PuzzleDB.Parool_18nov)).setSimplest();
+        solver = (new SudokuSolver(PuzzleDB.getPuzzleByName("Parool_18nov"))).setSimplest();
         assertFalse(solver.solve());
 
         solver.setEliminateIntersectionRadiation();
@@ -194,6 +189,7 @@ public class SudokuSolverTest {
         solver = (new SudokuSolver(p)).setEliminateIntersectionRadiation();
         assertEquals(0, getPossibleMoves().size());
 
+        // This fails now... why?!
         solver.setEliminateNakedPairs();
         assertEquals(2, getPossibleMoves().size());
     }
@@ -210,7 +206,8 @@ public class SudokuSolverTest {
                 "...295.86",
                 "..81369..",
                 "962748315");
-        solver = (new SudokuSolver(p)).setEliminateIntersectionRadiation(true).setEliminateNakedPairs(true);
+
+        solver = (new SudokuSolver(p)).setEliminateIntersectionRadiation().setEliminateNakedPairs();
         assertEquals(0, getPossibleMoves().size());
 
         solver.setEliminateXWings();
@@ -228,6 +225,9 @@ public class SudokuSolverTest {
         ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
         solver = new SudokuSolver(p);
         solver.setSmartest();
+
+        // TODO I think state is left behind in "p"
+        // System.out.println(String.valueOf(p));
 
         p.doMove(new Coord("r1c1"), "1");
         p.doMove(new Coord("r3c5"), "2");
@@ -261,10 +261,13 @@ public class SudokuSolverTest {
 //        assertEquals(false, solver.eliminatePossibilities());
 //        assertEquals(47, getTotalNumberOfPencilMarks());
 
-        // this is only possible after first XWing then Naked pairs
-        assertEquals("r2c1=2", String.valueOf(solver.nextMove(new SolveStats())) );
+        // this is only possible after first XWing then (extended) Naked pairs
+        SolveStats stats = new SolveStats();
+        assertEquals("r7c1=8", String.valueOf(solver.nextMove(stats)) );
+        assertEquals("Rounds: 4", String.valueOf(stats));
 
         // eventually, just make sure it is completely solved
+        solver.solve();
         assertEquals("Extreme Sudoku Excessive 4/1/21:\n" +
                 "196437852\n" +
                 "274859613\n" +
@@ -274,13 +277,17 @@ public class SudokuSolverTest {
                 "758162349\n" +
                 "821376495\n" +
                 "647985231\n" +
-                "539214768\n", String.valueOf(solver.solve()));
+                "539214768\n", String.valueOf(p));
     }
 
     @Test
     public void testSwordfish() {
         ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
         solver = new SudokuSolver(p);
+        solver.setSmartest();
+
+        // TODO I think state is left behind in "p"
+        //System.out.println(String.valueOf(p));
 
         p.doMove(new Coord("r1c1"), "1");
         p.doMove(new Coord("r3c5"), "2");
@@ -293,25 +300,32 @@ public class SudokuSolverTest {
         //  x-wing of 2s at r4c2, r7c2, r4c8, r7c8
         //  swordfish of 4s at r1c4, r1c7, r1c8, r6c7, r6c8, r7c4, r7c7, r7c8
 
-        solver.setSmartest();
-        solver.solve();
 
-        // TODO: there seems to be no X-Wing involved here. Also, seeing the same intersection twice.
-        assertEquals("pipo",
-                String.valueOf(eliminationReasons(solver, new Coord("r1c2"))));
+        // Verify there are X-Wings (or higher dimensions) in the solutions
+
+//        assertEquals("pipo",
+//                String.valueOf(eliminationReasons(solver, new Coord("r1c2"))));
+//
+//        System.out.println(eliminationReasons(solver, new Coord("r1c2"))+"\n");
+//        System.out.println(eliminationReasons(solver, new Coord("r7c2"))+"\n");
+//        System.out.println(eliminationReasons(solver, new Coord("r6c1"))+"\n");
 
         assertNotEquals(-1,
                 String.valueOf(solver.getEliminationReasons(new Coord("r1c2"))).indexOf("X-Wing"));
         assertNotEquals(-1,
-                String.valueOf(solver.getEliminationReasons(new Coord("r7c1"))).indexOf("X-Wing"));
-
+                String.valueOf(solver.getEliminationReasons(new Coord("r7c2"))).indexOf("X-Wing"));
         assertNotEquals(-1,
                 String.valueOf(solver.getEliminationReasons(new Coord("r6c1"))).indexOf("Swordfish"));
 
-        // this requires a swordfish
-        assertEquals("r8c3=7", String.valueOf(solver.nextMove(new SolveStats())) );
+        // Solving requires a swordfish
+        SolveStats stats = new SolveStats();
+        assertEquals("r6c1=7", String.valueOf(solver.nextMove(stats)) );
+
+        // But only requires one iteration
+        assertEquals("Rounds: 1", String.valueOf(stats));
 
         // eventually, just make sure it is completely solved
+        solver.solve();
         assertEquals("Extreme Sudoku Excessive 4/1/21:\n" +
                 "196437852\n" +
                 "274859613\n" +
@@ -390,17 +404,18 @@ public class SudokuSolverTest {
     @Test
     public void testDifficultyLevel()
     {
-        assertEquals(2, SudokuSolver.assessDifficulty(PuzzleDB.Trouw_535));
+        // This one can be solved with just basic elimination and naked singles
+        assertEquals(1, SudokuSolver.assessDifficulty(PuzzleDB.Trouw_535));
 
-        // requires naked pairs and intersection radiation
+        // Requires naked trio and also a 2nd round
         assertEquals(5, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_28_nov_2013));
 
-        // requires XWings and even multiple iterations of elimination rounds
-        // the exact number seems to vary...
+        // Requires a swordfish and multiple rounds
+        // AARGH sometimes 9 sometimes 10
         assertTrue(SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_info_excessive_4jan2021) >= 9);
 
         // empty or invalid puzzles
-        assertEquals(-1, SudokuSolver.assessDifficulty(PuzzleDB.emptyNRCPuzzle));
+        assertEquals(-1, SudokuSolver.assessDifficulty(PuzzleDB.getPuzzleByName("Empty NRC Sudoku")));
         assertEquals(-1, SudokuSolver.assessDifficulty(PuzzleDB.unsolvable));
 
     }
