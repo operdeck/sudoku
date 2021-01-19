@@ -3,6 +3,7 @@ package ottop.sudoku;
 import ottop.sudoku.puzzle.*;
 
 import java.lang.reflect.Field;
+import java.rmi.StubNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -207,6 +208,28 @@ public class PuzzleDB {
             "..1..6..5",
             ".4..8..3.",
             "5..2..7..");
+
+    private static ISudoku intersection_rad_sudokuessentials = new StandardSudoku("Intersection Rad Example",
+            "  6  35  ",
+            "1  7  3 6",
+            "8 7 5  24",
+            "4  6 79 2",
+            "   1 9   ",
+            "6 85 2  7",
+            "36  7 2 1",
+            "7 4  1  5",
+            "  12  7  ");
+
+    private static ISudoku forcing_chains_sadman = new StandardSudoku("Forcing chains example",
+            "8 6495  1",
+            " 3 87659 ",
+            "59    86 ",
+            "453168279",
+            " 69 4  58",
+            "7 85 94 6",
+            "34 6  985",
+            "68 953 4 ",
+            "9 5 846 3");
 
     // TODO include some others from the puzzle book
 

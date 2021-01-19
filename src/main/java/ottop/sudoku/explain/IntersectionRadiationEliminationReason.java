@@ -27,6 +27,26 @@ public class IntersectionRadiationEliminationReason extends Explanation {
 //                                            intersection.getIntersectionGroup(i) + " in one of " +
 //                                            intersection + " (Intersection Radiation)")) updated = true;
 
+    // TODO: doesnt work well, combines too many reasons
+
+//    public List<Explanation> combine(Coord coord, List<Explanation> eliminationReasons) {
+//        if (eliminationReasons != null) {
+//            for (Explanation e : eliminationReasons) {
+//                if (e instanceof IntersectionRadiationEliminationReason) {
+//                    IntersectionRadiationEliminationReason re = (IntersectionRadiationEliminationReason) e;
+//                    if (e.coords.equals(this.coords) &&
+//                            re.mustBeInGroup.equals(this.mustBeInGroup) &&
+//                            re.removedFromGroup.equals(this.removedFromGroup)) {
+//                        e.symbols.addAll(this.symbols);
+//                        return eliminationReasons;
+//                    }
+//                }
+//            }
+//        }
+//
+//        return super.combine(coord, eliminationReasons);
+//    }
+
     public String toString() {
         StringBuilder result = new StringBuilder(super.toString());
         result.append(" because it has to be in the intersection of ")

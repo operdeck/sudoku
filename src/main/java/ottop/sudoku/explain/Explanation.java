@@ -50,7 +50,7 @@ public abstract class Explanation {
         return result.toString();
     }
 
-    public List<Explanation> combine(List<Explanation> eliminationReasons) {
+    public List<Explanation> combine(Coord coord, List<Explanation> eliminationReasons) {
         if (eliminationReasons == null) {
             eliminationReasons = new ArrayList<>();
         }

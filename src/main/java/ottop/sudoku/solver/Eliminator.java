@@ -25,7 +25,7 @@ public abstract class Eliminator {
 
     void recordEliminationReason(Coord coord, Explanation reason) {
         removalReasons.put(coord,
-                reason.combine(removalReasons.get(coord)));
+                reason.combine(coord, removalReasons.get(coord)));
     }
 
     boolean removePossibility(int symbolCode, Set<Coord> coords, Explanation reason) {

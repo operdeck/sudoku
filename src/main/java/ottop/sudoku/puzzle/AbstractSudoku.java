@@ -11,7 +11,7 @@ public abstract class AbstractSudoku implements ISudoku {
     final List<String> possibleSymbols; // [0] = symbol for empty cell, 1..N are for the real symbols
     Coord[] allCells;
 
-    // TODO: consider making this String. Drop symbolCode all over the place.
+    // TODO: consider making this String. Drop symbolCode all over the place. Drop stateful groups.
     int[][] board; // [x][y] to symbolCode
     Map<Coord, AbstractGroup[]> buddyGroups;
 
@@ -112,7 +112,12 @@ public abstract class AbstractSudoku implements ISudoku {
         if (name != null && name.length() > 0) result.append(name).append(":\n");
         for (int y = 0; y < getHeight(); y++) {
             for (int x = 0; x < getWidth(); x++) {
-                result.append(getSymbolAtCoordinates(new Coord(x, y)));
+                Coord c = new Coord(x, y);
+                if (isOccupied(c)) {
+                    result.append(getSymbolAtCoordinates(c));
+                } else {
+                    result.append(".");
+                }
             }
             result.append("\n");
         }

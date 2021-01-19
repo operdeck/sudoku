@@ -27,6 +27,8 @@ public class SudokuSolver implements Updateable {
     private boolean doEliminationNakedPairs;
     private boolean doEliminationIntersectionRadiation;
     private boolean doEliminationXWings;
+    private boolean doForcingChains;
+    private boolean earlyStopping = true;
 
     public SudokuSolver(ISudoku p) {
         myPuzzle = p;
@@ -64,10 +66,21 @@ public class SudokuSolver implements Updateable {
         return this;
     }
 
+    public SudokuSolver setForcingChains() {
+        return setForcingChains(true);
+    }
+
+    public SudokuSolver setForcingChains(boolean onOff) {
+        doForcingChains = onOff;
+        candidatesPerCell = null; // flags that this cache needs reinitialization
+        return this;
+    }
+
     public SudokuSolver setSimplest() {
         setEliminateNakedPairs(false);
         setEliminateIntersectionRadiation(false);
         setEliminateXWings(false);
+        setForcingChains(false);
         return this;
     }
 
@@ -75,6 +88,13 @@ public class SudokuSolver implements Updateable {
         setEliminateNakedPairs(true);
         setEliminateIntersectionRadiation(true);
         setEliminateXWings(true);
+//        setForcingChains(true);
+        return this;
+    }
+
+    public SudokuSolver setEarlyStop(boolean onOff) {
+        this.earlyStopping = onOff;
+        candidatesPerCell = null; // flags that this cache needs reinitialization
         return this;
     }
 
@@ -94,9 +114,12 @@ public class SudokuSolver implements Updateable {
 
         Eliminator simpleEliminator =
                 new BasicEliminationEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
-        simpleEliminator.eliminate();
 
-        //oneRoundOfCandidateElimination();
+        boolean hasEliminated = simpleEliminator.eliminate();
+
+        if (!hasEliminated | !earlyStopping) {
+            oneRoundOfCandidateElimination();
+        }
     }
 
     private boolean oneRoundOfCandidateElimination() {
@@ -104,16 +127,20 @@ public class SudokuSolver implements Updateable {
 
         boolean hasEliminated = false;
 
-        if (doEliminationNakedPairs) {
-            Eliminator e = new NakedGroupEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
-            if (e.eliminate()) hasEliminated = true;
-        }
-        if (!hasEliminated && doEliminationIntersectionRadiation) {
+        if ((!hasEliminated || !earlyStopping) && doEliminationIntersectionRadiation) {
             Eliminator e = new IntersectionRadiationEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
             if (e.eliminate()) hasEliminated = true;
         }
-        if (!hasEliminated && doEliminationXWings) {
+        if ((!hasEliminated || !earlyStopping) && doEliminationNakedPairs) {
+            Eliminator e = new NakedGroupEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+            if (e.eliminate()) hasEliminated = true;
+        }
+        if ((!hasEliminated || !earlyStopping) && doEliminationXWings) {
             Eliminator e = new XWingEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+            if (e.eliminate()) hasEliminated = true;
+        }
+        if ((!hasEliminated || !earlyStopping) && doForcingChains) {
+            Eliminator e = new ForcingChainsEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
             if (e.eliminate()) hasEliminated = true;
         }
 
@@ -121,6 +148,11 @@ public class SudokuSolver implements Updateable {
     }
 
 
+    // forcing chain forces a move
+    // http://www.sadmansoftware.com/sudoku/forcingchain.php
+    // xyz wing forces an elimination
+    // http://www.sadmansoftware.com/sudoku/xyzwing.php
+    // both if/then style
     private boolean checkForcedChains()
     {
         // Given an original puzzle O
@@ -314,7 +346,7 @@ public class SudokuSolver implements Updateable {
         //System.out.println("Difficulty " + p.getName());
         SudokuSolver sv = new SudokuSolver(shadowPuzzle);
         SolveStats s = new SolveStats();
-        sv.setSmartest();
+        sv.setSmartest().setEarlyStop(true);
         int maxReasonLevel = -1;
         //int maxNumberOfIterations = 1;
         while (!shadowPuzzle.isComplete() && !shadowPuzzle.isInconsistent()) {
@@ -362,4 +394,5 @@ public class SudokuSolver implements Updateable {
     public void update() {
         recalculateCandidates();
     }
+
 }

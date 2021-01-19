@@ -94,42 +94,6 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testRadiationFromIntersections() {
-
-        solver.setSimplest().setEliminateIntersectionRadiation();
-
-        // TODO: these tests only work if we somehow force all elimination steps
-        // TODO: maybe not the best test for this
-        // TODO: do a more specific test see eliminator tests
-
-        assertEquals(65, getTotalNumberOfCellsWithPencilMarks()); // empty cells remain the same
-        assertEquals(261, getTotalNumberOfPencilMarks()); // possibilities strongly reduced
-
-        assertEquals(10, getPossibleMoves().size());
-    }
-
-    @Test
-    public void testNakedPairElimination() {
-
-        solver.setSimplest().setEliminateNakedPairs();
-
-        assertEquals(65, getTotalNumberOfCellsWithPencilMarks()); // empty cells remain the same
-        assertEquals(264, getTotalNumberOfPencilMarks()); // possibilities strongly reduced
-
-        assertEquals(23, getPossibleMoves().size());
-    }
-
-    @Test
-    public void testRadiationFromIntersectionsAndNakedPairElimination() {
-        solver.setSimplest().setEliminateIntersectionRadiation().setEliminateNakedPairs();
-
-        assertEquals(65, getTotalNumberOfCellsWithPencilMarks()); // empty cells remain the same
-        assertEquals(184, getTotalNumberOfPencilMarks()); // possibilities strongly reduced
-
-        assertEquals(12, getPossibleMoves().size());
-    }
-
-    @Test
     public void testSolveSimplePuzzle() {
         solver.setSimplest();
         boolean solved = solver.solve();
@@ -221,7 +185,7 @@ public class SudokuSolverTest {
     }
 
     @Test
-    public void testNakedPairAfterXWingMultipleEliminationRounds() {
+    public void testMultipleEliminationRounds() {
         ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
         solver = new SudokuSolver(p);
         solver.setSmartest();
@@ -280,63 +244,6 @@ public class SudokuSolverTest {
                 "539214768\n", String.valueOf(p));
     }
 
-    @Test
-    public void testSwordfish() {
-        ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
-        solver = new SudokuSolver(p);
-        solver.setSmartest();
-
-        // TODO I think state is left behind in "p"
-        //System.out.println(String.valueOf(p));
-
-        p.doMove(new Coord("r1c1"), "1");
-        p.doMove(new Coord("r3c5"), "2");
-        p.doMove(new Coord("r3c6"), "1");
-        p.doMove(new Coord("r4c6"), "8");
-        p.doMove(new Coord("r8c6"), "5");
-
-        // Now, there are
-        //  x-wing of 8s at r3c2, r3c9, r9c2, r9c9
-        //  x-wing of 2s at r4c2, r7c2, r4c8, r7c8
-        //  swordfish of 4s at r1c4, r1c7, r1c8, r6c7, r6c8, r7c4, r7c7, r7c8
-
-
-        // Verify there are X-Wings (or higher dimensions) in the solutions
-
-//        assertEquals("pipo",
-//                String.valueOf(eliminationReasons(solver, new Coord("r1c2"))));
-//
-//        System.out.println(eliminationReasons(solver, new Coord("r1c2"))+"\n");
-//        System.out.println(eliminationReasons(solver, new Coord("r7c2"))+"\n");
-//        System.out.println(eliminationReasons(solver, new Coord("r6c1"))+"\n");
-
-        assertNotEquals(-1,
-                String.valueOf(solver.getEliminationReasons(new Coord("r1c2"))).indexOf("X-Wing"));
-        assertNotEquals(-1,
-                String.valueOf(solver.getEliminationReasons(new Coord("r7c2"))).indexOf("X-Wing"));
-        assertNotEquals(-1,
-                String.valueOf(solver.getEliminationReasons(new Coord("r6c1"))).indexOf("Swordfish"));
-
-        // Solving requires a swordfish
-        SolveStats stats = new SolveStats();
-        assertEquals("r6c1=7", String.valueOf(solver.nextMove(stats)) );
-
-        // But only requires one iteration
-        assertEquals("Rounds: 1", String.valueOf(stats));
-
-        // eventually, just make sure it is completely solved
-        solver.solve();
-        assertEquals("Extreme Sudoku Excessive 4/1/21:\n" +
-                "196437852\n" +
-                "274859613\n" +
-                "385621974\n" +
-                "463598127\n" +
-                "912743586\n" +
-                "758162349\n" +
-                "821376495\n" +
-                "647985231\n" +
-                "539214768\n", String.valueOf(p));
-    }
 
     @Test
     public void testEasyPuzzles() {
@@ -408,7 +315,7 @@ public class SudokuSolverTest {
         assertEquals(1, SudokuSolver.assessDifficulty(PuzzleDB.Trouw_535));
 
         // Requires naked trio and also a 2nd round
-        assertEquals(5, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_28_nov_2013));
+        assertEquals(6, SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_28_nov_2013));
 
         // Requires a swordfish and multiple rounds
         // AARGH sometimes 9 sometimes 10

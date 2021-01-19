@@ -23,7 +23,7 @@ public class SimpleEliminationReason extends Explanation {
     // TODO: seems to be fairly expensive. We could introduce an EliminationReasons class that
     // keeps an internal cache of coord --> reason just for the simple reasons.
     // If there is another symbol at the same coord and by the same group, combine the symbols
-    public List<Explanation> combine(List<Explanation> eliminationReasons) {
+    public List<Explanation> combine(Coord coord, List<Explanation> eliminationReasons) {
         if (eliminationReasons != null) {
             for (Explanation e : eliminationReasons) {
                 if (e instanceof SimpleEliminationReason) {
@@ -35,7 +35,7 @@ public class SimpleEliminationReason extends Explanation {
             }
         }
 
-        return super.combine(eliminationReasons);
+        return super.combine(coord, eliminationReasons);
     }
 
     public String toString() {

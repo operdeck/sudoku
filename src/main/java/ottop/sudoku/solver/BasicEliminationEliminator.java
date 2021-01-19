@@ -15,16 +15,6 @@ public class BasicEliminationEliminator extends Eliminator {
     }
 
     // This is not just eliminating, it really resets the whole set of candidates
-    // TODO: change this so we first create sets of symbols for all cells then
-    // eliminate as long as there is something to eliminate
-    //
-    // For all coords c
-    //    possibilities[c] = {all symbols}
-    // For all groups g
-    //    coords = g.getCoords
-    //    groupsymbols = symbols @ coords
-    //    for all c in coords
-    //       possibilities[c].removeAll( groupsymbols )
     public boolean eliminate() {
         boolean hasEliminated = false;
         candidatesPerCell.clear();

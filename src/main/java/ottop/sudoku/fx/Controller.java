@@ -96,7 +96,8 @@ public class Controller {
         currentSolver = (new SudokuSolver(myPuzzle))
                 .setEliminateIntersectionRadiation(cbRadiation.isSelected())
                 .setEliminateNakedPairs(cbNakedPairs.isSelected())
-                .setEliminateXWings(cbXWings.isSelected());
+                .setEliminateXWings(cbXWings.isSelected())
+                .setEarlyStop(false);
 
         // Puzzle level
 //        System.out.println("Assessing difficulty of: " + String.valueOf(myPuzzle));
@@ -208,7 +209,8 @@ public class Controller {
     public void eliminationAction(ActionEvent actionEvent) {
         currentSolver.setEliminateIntersectionRadiation(cbRadiation.isSelected())
                 .setEliminateNakedPairs(cbNakedPairs.isSelected())
-                .setEliminateXWings(cbXWings.isSelected());
+                .setEliminateXWings(cbXWings.isSelected())
+                .setEarlyStop(false);
 
         showEliminationReasons();
         redrawBoard();
@@ -282,6 +284,7 @@ public class Controller {
 
     public void doNextMove(ActionEvent actionEvent) {
         SolveStats stats = new SolveStats();
+        currentSolver.setEarlyStop(true); // stop early for easiest move
         Map.Entry<Coord, String> move = currentSolver.nextMove(stats);
         if (move != null) {
             Coord coord = move.getKey();
@@ -293,6 +296,7 @@ public class Controller {
 
             redrawBoard(); // redraw to wipe out any reason highlights
         }
+        currentSolver.setEarlyStop(false);
     }
 
     public void keyTyped(KeyEvent keyEvent) {
@@ -301,6 +305,7 @@ public class Controller {
 
     public void hintAction(ActionEvent actionEvent) {
         SolveStats stats = new SolveStats();
+        currentSolver.setEarlyStop(true); // stop early for easiest move
         Map.Entry<Coord, String> move = currentSolver.nextMove(stats);
         if (move != null) {
             Coord coord = move.getKey();
@@ -310,6 +315,7 @@ public class Controller {
 
             redrawBoard(); // redraw to wipe out any reason highlights
         }
+        currentSolver.setEarlyStop(false);
     }
 
     public void redoAction(ActionEvent actionEvent) {
