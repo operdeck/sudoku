@@ -6,11 +6,9 @@ import java.util.*;
 
 public abstract class AbstractGroup implements Comparable<AbstractGroup> {
     static final int EMPTYSYMBOLCODE = 0; // 0 by definition, code for empty cell is 0
-    private final Map<Coord, Integer> coords; // the cell coordinates in this group, mapped to internal index
+    final Map<Coord, Integer> coords; // the cell coordinates in this group, mapped to internal index
     private final String groupID;
     final int groupSize; // number of cells in a group, identical to number of distinct symbols - 1
-    final int startX;
-    final int startY;
 
     // Below depends on state of puzzle - which cells are occupied
 
@@ -38,34 +36,15 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
      */
 
 
-    public AbstractGroup(int startX, int startY, int size, String id) {
-        this.startX = startX;
-        this.startY = startY;
-        this.groupID = id;
-        this.groupSize = size;
-
-        coords = new HashMap<>();
-        for (int internalIndex = 0; internalIndex < groupSize; internalIndex++) {
-            int absX = startX + internalIndexToRelativeX(internalIndex);
-            int absY = startY + internalIndexToRelativeY(internalIndex);
-            coords.put(new Coord(absX, absY), internalIndex);
-        }
-
-        //resetGroup(myPuzzle);
-    }
-
     public AbstractGroup(Coord[] cells, String id) {
-        this.startX = minX(cells);
-        this.startY = minY(cells);
         this.groupID = id;
         this.groupSize = cells.length;
-
+//        this.startX = minX(cells);
+//        this.startY = minY(cells);
         coords = new HashMap<>();
-        for (int internalIndex = 0; internalIndex < groupSize; internalIndex++) {
-            coords.put(cells[internalIndex], internalIndex);
+        for (int i=0; i<cells.length; i++) {
+            coords.put(cells[i], i);
         }
-
-        //resetGroup(myPuzzle);
     }
 
     public void resetGroup(ISudoku myPuzzle) {
@@ -73,39 +52,15 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
         this.groupSymbolCodes = new int[this.groupSize];
 
         this.groupOccupiedSize = 0;
-        for (int i = 0; i < groupSize; i++) {
-            groupSymbolCodes[i] =
-                    myPuzzle.getSymbolCodeAtCoordinates(new Coord(startX + internalIndexToRelativeX(i),
-                            startY + internalIndexToRelativeY(i)));
-            if (groupSymbolCodes[i] != EMPTYSYMBOLCODE) {
-                hasSymbolCode[groupSymbolCodes[i]] = true;
+        for (Map.Entry<Coord, Integer> c: coords.entrySet()) {
+            groupSymbolCodes[c.getValue()] = myPuzzle.getSymbolCodeAtCoordinates(c.getKey());
+            if (groupSymbolCodes[c.getValue()] != EMPTYSYMBOLCODE) {
+                hasSymbolCode[groupSymbolCodes[c.getValue()]] = true;
                 groupOccupiedSize++;
             }
         }
-
     }
 
-
-    private static int minX(Coord[] cells) {
-        // TODO find nice stream reduce pattern
-        int currentMin = Integer.MAX_VALUE;
-        for (int i=0; i< cells.length; i++) {
-            if (cells[i].getX() < currentMin) currentMin = cells[i].getX();
-        }
-        return currentMin;
-    }
-
-    private static int minY(Coord[] cells) {
-        int currentMin = Integer.MAX_VALUE;
-        for (int i=0; i< cells.length; i++) {
-            if (cells[i].getY() < currentMin) currentMin = cells[i].getY();
-        }
-        return currentMin;
-    }
-
-    public abstract int internalIndexToRelativeX(int idx);
-
-    public abstract int internalIndexToRelativeY(int idx);
 
     public boolean isInGroup(Coord c) {
         return coords.containsKey(c);

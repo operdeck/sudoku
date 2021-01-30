@@ -32,7 +32,8 @@ public class Sudoku10x10 extends AbstractSudoku {
         int cnt = 0;
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 2; x++) {
-                AbstractGroup g = new RectangularGroup(x * 5, y * 2, 10,"Rect " + (++cnt));
+                AbstractGroup g =
+                        new RectangularGroup(x * 5, y * 2, (x+1) * 5, (y+1) * 2,"Rect " + (++cnt));
                 grps.add(g);
                 groupsWithBoundaries.add(g);
             }

@@ -29,7 +29,8 @@ public class NRCSudoku extends StandardSudoku {
         int cnt = 0;
         for (int y = 0; y < 2; y++) {
             for (int x = 0; x < 2; x++) {
-                AbstractGroup newGrp = new SquareGroup(x * 4 + 1, y * 4 + 1, "NRC Group " + (++cnt));
+                AbstractGroup newGrp =
+                        new SquareGroup(x * 4 + 1, y * 4 + 1, "NRC Group " + (++cnt));
                 grps.add(newGrp);
             }
         }

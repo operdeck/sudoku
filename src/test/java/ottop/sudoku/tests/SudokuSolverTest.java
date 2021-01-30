@@ -320,7 +320,6 @@ public class SudokuSolverTest {
 
         // Requires a swordfish and multiple rounds
         // AARGH sometimes 9 sometimes 10
-        System.out.println("Diff:"+SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_info_excessive_4jan2021));
         assertTrue(SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_info_excessive_4jan2021) >= 9);
 
         // empty or invalid puzzles

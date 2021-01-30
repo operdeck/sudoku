@@ -7,28 +7,21 @@ import java.util.Arrays;
 // just different way to initialize
 
 public class MultiCellGroup extends AbstractGroup {
-    private Coord[] cells;
-
-    private static Coord[] asCoords(String[] cells) {
-        Coord[] result = new Coord[cells.length];
-        for (int i=0; i< cells.length; i++) result[i] = new Coord(cells[i]);
-        return result;
-    }
-
+//    private Coord[] cells;
 
     public MultiCellGroup(String[] cells, String id) {
-        super(asCoords(cells), id);
-        this.cells = asCoords(cells);
+        super(Coord.toCoords(cells), id);
+//        this.cells = Coord.toCoords(cells);
     }
 
-    @Override
-    public int internalIndexToRelativeX(int idx) {
-        // int absX = startX + internalIndexToRelativeX(internalIndex);
-        return this.cells[idx].getX() - startX;
-    }
-
-    @Override
-    public int internalIndexToRelativeY(int idx) {
-        return this.cells[idx].getY() - startY;
-    }
+//    @Override
+//    public int internalIndexToRelativeX(int idx) {
+//        // int absX = startX + internalIndexToRelativeX(internalIndex);
+//        return this.cells[idx].getX() - startX;
+//    }
+//
+//    @Override
+//    public int internalIndexToRelativeY(int idx) {
+//        return this.cells[idx].getY() - startY;
+//    }
 }

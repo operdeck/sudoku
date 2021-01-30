@@ -19,17 +19,40 @@ public class FxUtils {
     public static void drawGroup(Canvas canvas, ISudoku p, AbstractGroup g) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         Set<Coord> coords = g.getCoords();
-        int xMin=Integer.MAX_VALUE, yMin=Integer.MAX_VALUE;
-        int xMax=Integer.MIN_VALUE, yMax= Integer.MIN_VALUE;
-        for (Coord c: coords) {
-            xMin = Math.min(xMin, c.getX());
-            xMax = Math.max(xMax, c.getX());
-            yMin = Math.min(yMin, c.getY());
-            yMax = Math.max(yMax, c.getY());
-        }
-        gc.strokeRect(getCellX(canvas, p, xMin), getCellY(canvas, p, yMin),
-                (xMax-xMin+1)*getCellWidth(canvas, p), (yMax-yMin+1)*getCellHeight(canvas, p));
 
+        // for all coords c
+        // if not cell left of c in g draw left border
+        for (Coord c: coords) {
+            int x = c.getX();
+            int y = c.getY();
+            double posXLeft = getCellX(canvas, p, x);
+            double posXRight = getCellX(canvas, p, x+1);
+            double posYTop = getCellY(canvas, p, y);
+            double posYBottom = getCellY(canvas, p, y+1);
+            if (x == 0 || !g.isInGroup(new Coord(x-1, y))) {
+                gc.strokeLine(posXLeft, posYBottom, posXLeft, posYTop);
+            }
+            if (x > p.getWidth() || !g.isInGroup(new Coord(x+1, y))) {
+                gc.strokeLine(posXRight, posYBottom, posXRight, posYTop);
+            }
+            if (y == 0 || !g.isInGroup(new Coord(x, y-1))) {
+                gc.strokeLine(posXLeft, posYTop, posXRight, posYTop);
+            }
+            if (y > p.getHeight() || !g.isInGroup(new Coord(x, y+1))) {
+                gc.strokeLine(posXLeft, posYBottom, posXRight, posYBottom);
+            }
+        }
+//        int xMin=Integer.MAX_VALUE, yMin=Integer.MAX_VALUE;
+//        int xMax=Integer.MIN_VALUE, yMax= Integer.MIN_VALUE;
+//        for (Coord c: coords) {
+//            xMin = Math.min(xMin, c.getX());
+//            xMax = Math.max(xMax, c.getX());
+//            yMin = Math.min(yMin, c.getY());
+//            yMax = Math.max(yMax, c.getY());
+//        }
+//        gc.strokeRect(getCellX(canvas, p, xMin), getCellY(canvas, p, yMin),
+//                (xMax-xMin+1)*getCellWidth(canvas, p), (yMax-yMin+1)*getCellHeight(canvas, p));
+//
     }
 
     public static void drawPuzzleOnCanvas(Canvas canvas, ISudoku p, Coord currentPosition,

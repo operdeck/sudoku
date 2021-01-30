@@ -43,6 +43,12 @@ public class Coord implements Comparable<Coord> {
         return super.equals(obj);
     }
 
+    public static Coord[] toCoords(String[] cells) {
+        Coord[] result = new Coord[cells.length];
+        for (int i=0; i< cells.length; i++) result[i] = new Coord(cells[i]);
+        return result;
+    }
+
     @Override
     public String toString() {
         int y = getY();
