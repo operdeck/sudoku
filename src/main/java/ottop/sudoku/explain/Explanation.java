@@ -3,17 +3,18 @@ package ottop.sudoku.explain;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.board.AbstractGroup;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public abstract class Explanation {
-    protected final Set<String> symbols;
+    final Set<String> symbols;
 
-    // TODO: or just one Coord? And then we can have a map of Coord --> Reasons?
+    // TODO: or just one Coord?
+    final Set<Coord> coords;
 
-    protected final Set<Coord> coords;
+    protected Explanation(Set<String> symbols, Set<Coord> coords) {
+        this.symbols = symbols;
+        this.coords = coords;
+    }
 
     protected Explanation(String symbol, Set<Coord> coords) {
         this.symbols = new HashSet<>();
@@ -23,15 +24,13 @@ public abstract class Explanation {
 
     protected Explanation(Set<String> symbols, Coord coord) {
         this.symbols = symbols;
-        this.coords = new HashSet<>();
-        this.coords.add(coord);
+        this.coords = Collections.singleton(coord);
     }
 
     protected Explanation(String symbol, Coord coord) {
         this.symbols = new HashSet<>();
         this.symbols.add(symbol);
-        this.coords = new HashSet<>();
-        this.coords.add(coord);
+        this.coords = Collections.singleton(coord);
     }
 
     public String toString() {
@@ -41,12 +40,7 @@ public abstract class Explanation {
         } else {
             result.append(symbols.iterator().next());
         }
-//        result.append(" from ");
-//        if (coords.size() > 1) {
-//            result.append(coords);
-//        } else {
-//            result.append(coords.iterator().next());
-//        }
+
         return result.toString();
     }
 
@@ -58,14 +52,18 @@ public abstract class Explanation {
         return eliminationReasons;
     }
 
-    // TODO: getReasonGroups / getReasonCells
-
     public List<AbstractGroup> getHighlightGroups() {
         return null;
     }
 
-    public Set<Coord> getHighlightSubArea() {
+    public Map<String, Set<Coord>> getHighlightCells() {
         return null;
+    }
+
+    Map<String, Set<Coord>> getHighlightCells(Set<Coord> cells) {
+        Map<String, Set<Coord>> result = new HashMap<>();
+        result.put("", cells);
+        return result;
     }
 
     public abstract int getDifficulty();

@@ -3,7 +3,9 @@ package ottop.sudoku.explain;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.board.AbstractGroup;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class IntersectionRadiationEliminationReason extends Explanation {
@@ -59,8 +61,8 @@ public class IntersectionRadiationEliminationReason extends Explanation {
         return List.of(mustBeInGroup, removedFromGroup);
     }
 
-    public Set<Coord> getHighlightSubArea() {
-        return intersection;
+    public Map<String, Set<Coord>> getHighlightCells() {
+        return getHighlightCells(intersection);
     }
 
     @Override

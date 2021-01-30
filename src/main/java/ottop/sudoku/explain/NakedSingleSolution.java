@@ -2,6 +2,8 @@ package ottop.sudoku.explain;
 
 import ottop.sudoku.board.Coord;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class NakedSingleSolution extends Explanation {
@@ -19,7 +21,7 @@ public class NakedSingleSolution extends Explanation {
         return result.toString();
     }
 
-    public Set<Coord> getHighlightSubArea() {
-        return coords;
+    public Map<String, Set<Coord>> getHighlightCells() {
+        return getHighlightCells(coords);
     }
 }

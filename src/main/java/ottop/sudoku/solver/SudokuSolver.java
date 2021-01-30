@@ -18,6 +18,7 @@ public class SudokuSolver implements Updateable {
     // Map of cell to a set of possible values. The values are the
     // internal representation of the cell symbols.
     private Map<Coord, Set<Integer>> candidatesPerCell = null;
+    private Map<Coord, Set<Integer>> candidatesPerCellAfterBasicElimination = null;
     private final Map<Coord, List<Explanation>> eliminationReasons = new HashMap<>();
 
     // TODO instead of this,
@@ -66,11 +67,11 @@ public class SudokuSolver implements Updateable {
         return this;
     }
 
-    public SudokuSolver setForcingChains() {
-        return setForcingChains(true);
+    public SudokuSolver setEliminateForcingChains() {
+        return setEliminateForcingChains(true);
     }
 
-    public SudokuSolver setForcingChains(boolean onOff) {
+    public SudokuSolver setEliminateForcingChains(boolean onOff) {
         doForcingChains = onOff;
         candidatesPerCell = null; // flags that this cache needs reinitialization
         return this;
@@ -80,7 +81,7 @@ public class SudokuSolver implements Updateable {
         setEliminateNakedPairs(false);
         setEliminateIntersectionRadiation(false);
         setEliminateXWings(false);
-        setForcingChains(false);
+        setEliminateForcingChains(false);
         return this;
     }
 
@@ -88,7 +89,7 @@ public class SudokuSolver implements Updateable {
         setEliminateNakedPairs(true);
         setEliminateIntersectionRadiation(true);
         setEliminateXWings(true);
-//        setForcingChains(true);
+        setEliminateForcingChains(true);
         return this;
     }
 
@@ -116,6 +117,12 @@ public class SudokuSolver implements Updateable {
                 new BasicEliminationEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
 
         boolean hasEliminated = simpleEliminator.eliminate();
+
+        // Keep a basic elimination map for nice display of the eliminated possibilities
+        candidatesPerCellAfterBasicElimination = new HashMap<>();
+        for (Map.Entry<Coord, Set<Integer>> e: candidatesPerCell.entrySet()) {
+            candidatesPerCellAfterBasicElimination.put(e.getKey(), new TreeSet(e.getValue()));
+        }
 
         if (!hasEliminated | !earlyStopping) {
             oneRoundOfCandidateElimination();
@@ -341,12 +348,15 @@ public class SudokuSolver implements Updateable {
         return reasonsPlusCandidateMove;
     }
 
+    // Alternatively: just solve with standard recursion. Nr of branches is complexity score.
     public static int assessDifficulty(ISudoku p) {
-        ISudoku shadowPuzzle = p; // clone should not be necessary at all
+        ISudoku shadowPuzzle = p.clone(); // clone should not be necessary at all
         //System.out.println("Difficulty " + p.getName());
         SudokuSolver sv = new SudokuSolver(shadowPuzzle);
         SolveStats s = new SolveStats();
-        sv.setSmartest().setEarlyStop(true);
+        // TODO: w/o forcing chains 66/95
+        // with: 54/95 - WTF???!
+        sv.setSmartest().setEarlyStop(true).setEliminateForcingChains(true);
         int maxReasonLevel = -1;
         //int maxNumberOfIterations = 1;
         while (!shadowPuzzle.isComplete() && !shadowPuzzle.isInconsistent()) {
@@ -365,7 +375,7 @@ public class SudokuSolver implements Updateable {
                 //maxNumberOfIterations = Math.max(maxNumberOfIterations, sv.numberOfEliminationIterations);
 
                 shadowPuzzle.doMove(nextMove.getKey(), nextMove.getValue());
-           } else {
+            } else {
                 break;
             }
         }
@@ -385,9 +395,15 @@ public class SudokuSolver implements Updateable {
 //    }
 
     public Set<Integer> getCandidatesAtCell(Coord c) {
-    if (candidatesPerCell == null) recalculateCandidates();
+        if (candidatesPerCell == null) recalculateCandidates();
 
-    return candidatesPerCell.get(c);
+        return candidatesPerCell.get(c);
+    }
+
+    public Set<Integer> getCandidatesAtCellAfterBasicElimination(Coord c) {
+        if (candidatesPerCell == null) recalculateCandidates();
+
+        return candidatesPerCellAfterBasicElimination.get(c);
     }
 
     @Override

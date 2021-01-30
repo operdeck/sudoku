@@ -1,11 +1,15 @@
 package ottop.sudoku;
 
 import ottop.sudoku.puzzle.*;
+import ottop.sudoku.reader.MagicTourReader;
+import ottop.sudoku.reader.SudokuReader;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
-import java.rmi.StubNotFoundException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class PuzzleDB {
     private static ISudoku emptyStandardPuzzle = new StandardSudoku("Empty standard Sudoku",
@@ -20,6 +24,17 @@ public class PuzzleDB {
             ".........");
 
     private static ISudoku emptyNRCPuzzle = new NRCSudoku("Empty NRC Sudoku",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........",
+            ".........");
+
+    private static ISudoku emptySDoku = new SDoku("Empty S-Doku",
             ".........",
             ".........",
             ".........",
@@ -165,6 +180,17 @@ public class PuzzleDB {
             ".....5...",
             ".........");
 
+    private static ISudoku brainHouse = new SDoku("Fresh Brainhouse",
+            "4........",
+            ".........",
+            "6.9......",
+            "...2.....",
+            "...4.....",
+            "...7.....",
+            "....9....",
+            "2.73.8...",
+            ".5...6...");
+
     public static ISudoku sudoku_very_hard_1 = new StandardSudoku("SudokuMain Essentials #1",
             ".3.48.6.9",
             "....27...",
@@ -231,36 +257,51 @@ public class PuzzleDB {
             "68 953 4 ",
             "9 5 846 3");
 
-    // TODO include some others from the puzzle book
-
-    public static String[] getPuzzleNames() {
+    private static List<ISudoku> getDeclaredPuzzles(PuzzleDB db) {
         Field[] allFields = PuzzleDB.class.getDeclaredFields();
-        List<String> puzzleNames = new ArrayList<>();
-        PuzzleDB db = new PuzzleDB();
+        List<ISudoku> puzzles = new ArrayList<>();
         for (Field f : allFields) {
             try {
-                puzzleNames.add(((ISudoku) f.get(db)).getName());
+                puzzles.add(((ISudoku) f.get(db)).clone());
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
+        return puzzles;
+    }
+
+    private static List<ISudoku> getMagicTourPuzzles() {
+        List<ISudoku> puzzles = new ArrayList<>();
+        try {
+            SudokuReader sr = new MagicTourReader();
+            while (sr.hasNext()) {
+                puzzles.add(sr.next());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return puzzles;
+    }
+
+    public static String[] getPuzzleNames() {
+        PuzzleDB db = new PuzzleDB();
+        List<String> puzzleNames = new ArrayList<>();
+        getDeclaredPuzzles(db).forEach((p) -> puzzleNames.add(p.getName()));
+        getMagicTourPuzzles().forEach((p) -> puzzleNames.add(p.getName()));
         return puzzleNames.toArray(new String[0]);
     }
 
     public static ISudoku getPuzzleByName(String name) {
-        Field[] allFields = PuzzleDB.class.getDeclaredFields();
+        AtomicReference<ISudoku> result = new AtomicReference<>();
         PuzzleDB db = new PuzzleDB();
-        for (Field f : allFields) {
-            ISudoku p;
-            try {
-                p = (ISudoku) f.get(db);
-                if (name.equals(p.getName())) {
-                    return p.clone();
-                }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
+        getDeclaredPuzzles(db).forEach((p) -> {
+            if (p.getName().equals(name)) result.set(p);
+        });
+        if (result.get() == null) {
+            getMagicTourPuzzles().forEach((p) -> {
+                if (p.getName().equals(name)) result.set(p);
+            });
         }
-        return null;
+        return result.get();
     }
 }

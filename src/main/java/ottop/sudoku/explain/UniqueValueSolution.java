@@ -3,7 +3,9 @@ package ottop.sudoku.explain;
 import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.Coord;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class UniqueValueSolution extends Explanation {
@@ -28,7 +30,8 @@ public class UniqueValueSolution extends Explanation {
     public List<AbstractGroup> getHighlightGroups() {
         return uniqueInGroups;
     }
-    public Set<Coord> getHighlightSubArea() {
-        return coords;
+
+    public Map<String, Set<Coord>> getHighlightCells() {
+        return getHighlightCells(coords);
     }
 }

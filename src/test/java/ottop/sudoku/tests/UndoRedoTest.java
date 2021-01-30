@@ -11,7 +11,7 @@ import static junit.framework.TestCase.*;
 public class UndoRedoTest {
     @Test
     public void testUndoRedo() {
-        ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
+        ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021.clone();
         SudokuSolver s1 = new SudokuSolver(p);
 
         assertFalse(p.canUndo());
@@ -83,7 +83,7 @@ public class UndoRedoTest {
 
     @Test
     public void testNoStateLeftBehind() {
-        ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
+        ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021.clone();
         SudokuSolver s1 = new SudokuSolver(p);
 
         // Do some moves

@@ -3,6 +3,8 @@ package ottop.sudoku.explain;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.board.AbstractGroup;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -39,7 +41,7 @@ public class XWingEliminationReason extends Explanation {
         return result.toString();
     }
 
-    public Set<Coord> getHighlightSubArea() {
+    public Map<String, Set<Coord>> getHighlightCells() {
         Set<Coord> xwingCells = new TreeSet<>();
         Set<Coord> allGroup2 = new TreeSet<>();
         for (AbstractGroup g: groups1) {
@@ -49,7 +51,8 @@ public class XWingEliminationReason extends Explanation {
             allGroup2.addAll(g.getCoords());
         }
         xwingCells.retainAll(allGroup2);
-        return xwingCells;
+
+        return getHighlightCells(xwingCells);
     }
 
     @Override

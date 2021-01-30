@@ -11,6 +11,8 @@ import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.puzzle.ISudoku;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public class FxUtils {
@@ -30,7 +32,9 @@ public class FxUtils {
 
     }
 
-    public static void drawPuzzleOnCanvas(Canvas canvas, ISudoku p, Coord highlight, Set<Coord> highlightedSubArea) {
+    public static void drawPuzzleOnCanvas(Canvas canvas, ISudoku p, Coord currentPosition,
+                                          Collection<Set<Coord>> highlightedCells,
+                                          List<AbstractGroup> highlightedGroups) {
         // Canvas
         GraphicsContext gc = canvas.getGraphicsContext2D();
         double canvasHeight = canvas.getHeight();
@@ -43,19 +47,28 @@ public class FxUtils {
         gc.fillRect(0, 0, canvasWidth, canvasHeight);
 
         // For buddy cells
-        Set<Coord> buddies = p.getBuddies(highlight);
+        Set<Coord> buddies = p.getBuddies(currentPosition);
 
-        // Background of individual cells
+        // The highlighted cells may come in multiple groups each with different colors
+        Color[] colors = {Color.BLACK, Color.DARKGREEN, Color.DARKORANGE, Color.MEDIUMVIOLETRED,
+        Color.SADDLEBROWN, Color.FIREBRICK, Color.LIME, Color.AQUA, Color.SLATEBLUE};
+
+        // Cell backgrounds
         for (Coord c: p.getAllCells()) {
-            Color background;
-            if (p.isAtOverlay(c)) {
-                background = Color.SEAGREEN;
-                if (highlightedSubArea != null && highlightedSubArea.contains(c)) background = Color.BURLYWOOD;
-                else if (highlight != null && p.getBuddies(highlight).contains(c)) background = Color.DARKGREEN;
+            Color background = Color.WHITE;
+            // Find the highlight group of this cell to determine its color
+            int highlightGroupIdx = getHighlightGroupIdx(highlightedCells, c);
+            if (highlightGroupIdx != -1) {
+                background = Color.GOLD;
             } else {
-                background = Color.WHITE;
-                if (highlightedSubArea != null && highlightedSubArea.contains(c)) background = Color.BURLYWOOD;
-                else if (highlight != null && p.getBuddies(highlight).contains(c)) background = Color.LIGHTGRAY;
+                if (p.isAtOverlay(c)) {
+                    background = Color.PALEGREEN;
+                    if (currentPosition != null && p.getBuddies(currentPosition).contains(c))
+                        background = Color.MEDIUMSEAGREEN;
+                } else {
+                    if (currentPosition != null && p.getBuddies(currentPosition).contains(c))
+                        background = Color.LIGHTGRAY;
+                }
             }
             gc.setFill(background);
             gc.fillRect(getCellX(canvas, p, c.getX()), getCellY(canvas, p, c.getY()),
@@ -67,12 +80,13 @@ public class FxUtils {
         gc.setFont(cellText);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
+        gc.setLineWidth(1);
         for (Coord c : p.getAllCells()) {
             gc.setStroke(Color.BLUE);
             gc.strokeRect(getCellX(canvas, p, c.getX()), getCellY(canvas, p, c.getY()),
                     getCellWidth(canvas, p), getCellHeight(canvas, p));
             if (p.isOccupied(c)) {
-                if (c.equals(highlight)) {
+                if (c.equals(currentPosition)) {
                     gc.setStroke(Color.DARKGRAY);
                 } else {
                     gc.setStroke(Color.BLACK);
@@ -88,11 +102,54 @@ public class FxUtils {
         for (AbstractGroup g: p.getGroupsWithVisualBoundary()) {
             drawGroup(canvas, p, g);
         }
+
+        // Highlighted groups
+        if (highlightedGroups != null) {
+            gc.setStroke(Color.ORANGE);
+            gc.setLineWidth(3);
+            for (AbstractGroup g : highlightedGroups) {
+                drawGroup(canvas, p, g);
+            }
+        }
+
+        // Cell borders for highlighted cells
+        gc.setLineWidth(3);
+        for (Coord c : p.getAllCells()) {
+            int highlightGroupIdx = getHighlightGroupIdx(highlightedCells, c);
+            if (highlightGroupIdx >= 0) {
+                Color border = colors[highlightGroupIdx % colors.length];
+                gc.setStroke(border);
+//                if (highlightGroupIdx == 0 && highlightedCells.size()>1) {
+//                    gc.strokeOval(getCellX(canvas, p, c.getX()), getCellY(canvas, p, c.getY()),
+//                            getCellWidth(canvas, p), getCellHeight(canvas, p));
+//                }
+                gc.strokeRect(getCellX(canvas, p, c.getX()), getCellY(canvas, p, c.getY()),
+                        getCellWidth(canvas, p), getCellHeight(canvas, p));
+            }
+        }
+
     }
 
-    public static void drawPossibilities(Canvas canvas, ISudoku p, Coord c, Set<Integer> symbolCodes) {
+    private static int getHighlightGroupIdx(Collection<Set<Coord>> highlightedCells, Coord c) {
+        int highlightGroupIdx = -1;
+        if (highlightedCells != null) {
+            int idx = 0;
+            for (Set<Coord> cs : highlightedCells) {
+                if (cs.contains(c)) {
+                    highlightGroupIdx = idx;
+                    break;
+                }
+                idx++;
+            }
+        }
+        return highlightGroupIdx;
+    }
+
+    public static void drawPossibilities(Canvas canvas, ISudoku p, Coord c,
+                                         Set<Integer> candidatesAtCell,
+                                         Set<Integer> candidatesAtCellAfterSimpleElimination) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setStroke(Color.DARKGRAY);
+        gc.setStroke(Color.DIMGRAY);
         gc.setLineWidth(0.5);
         Font smallText = Font.font("Helvetica", 8);
         gc.setFont(smallText);
@@ -103,12 +160,20 @@ public class FxUtils {
         int nmarkerrows = (int) Math.sqrt(n);
         int nmarkercols = (int) Math.ceil(n / (double) nmarkerrows);
 
-        for (int symbolCode : symbolCodes) {
+        for (int symbolCode : candidatesAtCellAfterSimpleElimination) {
             int subrow = (symbolCode - 1) / nmarkercols;
             int subcol = (symbolCode - 1) % nmarkercols;
-            gc.strokeText(p.symbolCodeToSymbol(symbolCode),
-                    getCellX(canvas, p, c.getX() + 0.15 + 0.7 * subcol / (double) (nmarkercols - 1)),
-                    getCellY(canvas, p, c.getY() + 0.15 + 0.7 * subrow / (double) (nmarkerrows - 1)));
+            double relx = c.getX() + 0.15 + 0.7 * subcol / (double) (nmarkercols - 1);
+            double rely = c.getY() + 0.15 + 0.7 * subrow / (double) (nmarkerrows - 1);
+            gc.strokeText(p.symbolCodeToSymbol(symbolCode), getCellX(canvas, p, relx), getCellY(canvas, p, rely));
+
+            // Strike through if eliminated
+            if (!candidatesAtCell.contains(symbolCode)) {
+                double relsizex = 0.7 * 0.4 / (double) (nmarkercols - 1);
+                double relsizey = 0.7 * 0.4 / (double) (nmarkerrows - 1);
+                gc.strokeLine(getCellX(canvas, p, relx - relsizex), getCellY(canvas, p, rely),
+                        getCellX(canvas, p, relx + relsizex), getCellY(canvas, p, rely));
+            }
         }
     }
 

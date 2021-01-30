@@ -54,19 +54,53 @@ public abstract class AbstractGroup implements Comparable<AbstractGroup> {
         //resetGroup(myPuzzle);
     }
 
+    public AbstractGroup(Coord[] cells, String id) {
+        this.startX = minX(cells);
+        this.startY = minY(cells);
+        this.groupID = id;
+        this.groupSize = cells.length;
+
+        coords = new HashMap<>();
+        for (int internalIndex = 0; internalIndex < groupSize; internalIndex++) {
+            coords.put(cells[internalIndex], internalIndex);
+        }
+
+        //resetGroup(myPuzzle);
+    }
+
     public void resetGroup(ISudoku myPuzzle) {
         this.hasSymbolCode = new boolean[myPuzzle.getSymbolCodeRange()];
         this.groupSymbolCodes = new int[this.groupSize];
 
         this.groupOccupiedSize = 0;
         for (int i = 0; i < groupSize; i++) {
-            groupSymbolCodes[i] = myPuzzle.getSymbolCodeAtCoordinates(new Coord(startX + internalIndexToRelativeX(i), startY + internalIndexToRelativeY(i)));
+            groupSymbolCodes[i] =
+                    myPuzzle.getSymbolCodeAtCoordinates(new Coord(startX + internalIndexToRelativeX(i),
+                            startY + internalIndexToRelativeY(i)));
             if (groupSymbolCodes[i] != EMPTYSYMBOLCODE) {
                 hasSymbolCode[groupSymbolCodes[i]] = true;
                 groupOccupiedSize++;
             }
         }
 
+    }
+
+
+    private static int minX(Coord[] cells) {
+        // TODO find nice stream reduce pattern
+        int currentMin = Integer.MAX_VALUE;
+        for (int i=0; i< cells.length; i++) {
+            if (cells[i].getX() < currentMin) currentMin = cells[i].getX();
+        }
+        return currentMin;
+    }
+
+    private static int minY(Coord[] cells) {
+        int currentMin = Integer.MAX_VALUE;
+        for (int i=0; i< cells.length; i++) {
+            if (cells[i].getY() < currentMin) currentMin = cells[i].getY();
+        }
+        return currentMin;
     }
 
     public abstract int internalIndexToRelativeX(int idx);

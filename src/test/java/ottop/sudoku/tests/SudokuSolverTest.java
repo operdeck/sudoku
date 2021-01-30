@@ -114,14 +114,15 @@ public class SudokuSolverTest {
 
     @Test
     public void testRepeatedSolves() {
-        ISudoku p = PuzzleDB.Trouw_535;
+        ISudoku p = PuzzleDB.Trouw_535.clone();
         solver = new SudokuSolver(p);
         assertTrue(solver.solve());
         assertNotNull(p);
         assertTrue(p.isSolved());
 
         // Doing the same thing again should work if no state is left behind in the puzzle itself
-        solver = new SudokuSolver(PuzzleDB.Trouw_535);
+        p = PuzzleDB.Trouw_535.clone();
+        solver = new SudokuSolver(p);
         assertFalse(p.isSolved());
         assertTrue(solver.solve());
         assertNotNull(p);
@@ -186,7 +187,7 @@ public class SudokuSolverTest {
 
     @Test
     public void testMultipleEliminationRounds() {
-        ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021;
+        ISudoku p = PuzzleDB.extremesudoku_info_excessive_4jan2021.clone();
         solver = new SudokuSolver(p);
         solver.setSmartest();
 
@@ -319,6 +320,7 @@ public class SudokuSolverTest {
 
         // Requires a swordfish and multiple rounds
         // AARGH sometimes 9 sometimes 10
+        System.out.println("Diff:"+SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_info_excessive_4jan2021));
         assertTrue(SudokuSolver.assessDifficulty(PuzzleDB.extremesudoku_info_excessive_4jan2021) >= 9);
 
         // empty or invalid puzzles

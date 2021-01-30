@@ -142,6 +142,7 @@ public class EliminatorTest {
         s.setEarlyStop(false); // forces further elimination even if a move is found already
 
         // "3" should be eliminated because of col 5 x square 5
+//        System.out.println(s.getEliminationReasons(new Coord("r8c5")));
         assertTrue(String.valueOf(s.getEliminationReasons(new Coord("r8c5"))).
                 indexOf("Removed 3 because it has to be in the intersection of Column 5 with Group 5 (Intersection Radiation)") != -1);
         assertEquals("[6, 9]", String.valueOf(s.getCandidatesAtCell(new Coord("r8c5"))));
@@ -270,10 +271,31 @@ public class EliminatorTest {
 
         // Enable forcing chains
 
-        sv.setForcingChains();
+        sv.setEliminateForcingChains();
         move = sv.nextMove(new SolveStats());
 
         assertNotNull(move);
-        assertEquals("r1c2=7", String.valueOf(move));
+        assertEquals("r2c1=1", String.valueOf(move));
+    }
+
+    @Test
+    public void testXYWing()
+    {
+        // Magic tour #4 requires a small forcing chain
+        ISudoku p = PuzzleDB.getPuzzleByName("Magic tour 4");
+        SudokuSolver sv = new SudokuSolver(p);
+        sv.setEliminateNakedPairs().setEliminateIntersectionRadiation().setEliminateXWings();
+
+        assertFalse(sv.solve());
+
+        sv.setEliminateForcingChains();
+
+        assertTrue(sv.solve());
+
+        // XY-Wing at r3c3
+        assertTrue(String.valueOf(sv.getEliminationReasons(new Coord("r2c3"))).indexOf("(XY-Wing)") != -1);
+
+        // More complex forcing chain
+        assertTrue(String.valueOf(sv.getEliminationReasons(new Coord("r4c2"))).indexOf("(Forcing Chains)") != -1);
     }
 }
