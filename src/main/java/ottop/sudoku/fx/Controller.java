@@ -100,8 +100,8 @@ public class Controller {
 //        System.out.println("Assessing difficulty of: " + String.valueOf(myPuzzle));
 //        System.out.println("Before, complete=" + myPuzzle.isComplete());
 //        System.out.println("Before, solver=" + currentSolver);
-//         int level = SudokuSolver.assessDifficulty(myPuzzle);
-//         tbLevel.setText("Level: " + level);
+         int level = SudokuSolver.assessDifficulty(myPuzzle.clone());
+         tbLevel.setText("Level: " + level);
 //        System.out.println("After, complete=" + myPuzzle.isComplete());
 //        System.out.println("After, solver=" + currentSolver);
 

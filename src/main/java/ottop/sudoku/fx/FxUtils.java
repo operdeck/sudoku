@@ -140,6 +140,8 @@ public class FxUtils {
         for (Coord c : p.getAllCells()) {
             int highlightGroupIdx = getHighlightGroupIdx(highlightedCells, c);
             if (highlightGroupIdx >= 0) {
+                // Choose colors based on cell group. This is currently only
+                // for forced chains so each chain gets its own color.
                 Color border = colors[highlightGroupIdx % colors.length];
                 gc.setStroke(border);
 //                if (highlightGroupIdx == 0 && highlightedCells.size()>1) {
@@ -188,7 +190,9 @@ public class FxUtils {
             int subcol = (symbolCode - 1) % nmarkercols;
             double relx = c.getX() + 0.15 + 0.7 * subcol / (double) (nmarkercols - 1);
             double rely = c.getY() + 0.15 + 0.7 * subrow / (double) (nmarkerrows - 1);
-            gc.strokeText(p.symbolCodeToSymbol(symbolCode), getCellX(canvas, p, relx), getCellY(canvas, p, rely));
+            // TODO for chains use color corresponding to chain
+            gc.strokeText(p.symbolCodeToSymbol(symbolCode),
+                    getCellX(canvas, p, relx), getCellY(canvas, p, rely));
 
             // Strike through if eliminated
             if (!candidatesAtCell.contains(symbolCode)) {

@@ -4,11 +4,12 @@ import ottop.sudoku.board.Coord;
 import ottop.sudoku.solver.ForcingChainsEliminator;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ForcingChainsReason extends Explanation {
     private Coord startCell;
     private List<String> startCellSymbols = new ArrayList<>();
-    private List<List<Coord>> chains = new ArrayList<>();
+    private List<List<ForcingChainsEliminator.Step>> chains = new ArrayList<>();
     private int depth; // indication of length of chain size
 
     public ForcingChainsReason(String symbol,
@@ -26,7 +27,7 @@ public class ForcingChainsReason extends Explanation {
     public int getTotalChainLength()
     {
         int l = 0;
-        for (List<Coord> aChain : chains) {
+        for (List<ForcingChainsEliminator.Step> aChain : chains) {
             l += aChain.size();
         }
         return l;
@@ -34,10 +35,10 @@ public class ForcingChainsReason extends Explanation {
 
     @Override
     public int getDifficulty() {
-        return 999;
-    } // TODO!
+        return 10+getTotalChainLength();
+    }
 
-    public void addChain(String symbol, List<Coord> stepChain) {
+    public void addChain(String symbol, List<ForcingChainsEliminator.Step> stepChain) {
         startCellSymbols.add(symbol);
         chains.add(stepChain);
     }
@@ -52,14 +53,13 @@ public class ForcingChainsReason extends Explanation {
             sb.append(coords.iterator().next());
         }
         sb.append(" with ").append(chains.size()).append(" chains starting at ").append(startCell);
-        for (int i=0; i<startCellSymbols.size(); i++) {
-            sb.append(" {").append(startCellSymbols.get(i)).append(": ").append(chains.get(i)).append("}");
-        }
+
         String kind = "Forcing Chains";
         // XYWing http://www.sadmansoftware.com/sudoku/xywing.php
-        if (startCellSymbols.size() == 2 && chains.size() == 2 && chains.get(0).size() == 1 && chains.get(1).size() == 1) {
-            Coord c1 = chains.get(0).get(0);
-            Coord c2 = chains.get(1).get(0);
+        if (startCellSymbols.size() == 2 && chains.size() == 2 &&
+                chains.get(0).size() == 4 && chains.get(1).size() == chains.get(0).size()) {
+            ForcingChainsEliminator.Step c1 = chains.get(0).get(0);
+            ForcingChainsEliminator.Step c2 = chains.get(1).get(0);
             // c1 must be buddy of start
             // c2 must be buddy of start
             // c1 and c2 must have had only 2 candidates
@@ -67,7 +67,15 @@ public class ForcingChainsReason extends Explanation {
             // c1 and c2 should share one candidate which is the removed one
             kind = "XY-Wing";
         }
-        sb.append(" (").append(kind).append(")");
+        sb.append(" (").append(kind).append(")"); //.append(" [").append(chains.toString()).append("]");
+        sb.append(":");
+//        sb.append(" {");
+        for (int i=0; i<startCellSymbols.size(); i++) {
+            sb.append("\n  ");
+            sb.append(startCellSymbols.get(i)).append(": ");
+            sb.append(chains.get(i));
+        }
+//        sb.append("}");
         return sb.toString();
     }
 
@@ -76,7 +84,10 @@ public class ForcingChainsReason extends Explanation {
 
         result.put("", Collections.singleton(startCell));
         for (int i=0; i<chains.size(); i++) {
-            result.put(startCellSymbols.get(i), new HashSet<>(chains.get(i)));
+            List<ForcingChainsEliminator.Step> chain = chains.get(i);
+            Set<Coord> chainCells = chain.stream().map(ForcingChainsEliminator.Step::getCoord).collect(Collectors.toSet());
+
+            result.put(startCellSymbols.get(i), chainCells);
         }
 
         return result;

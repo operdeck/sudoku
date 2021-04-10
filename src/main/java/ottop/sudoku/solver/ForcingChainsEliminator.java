@@ -1,6 +1,6 @@
 package ottop.sudoku.solver;
 
-import org.jetbrains.annotations.NotNull;
+import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.explain.Explanation;
 import ottop.sudoku.explain.ForcingChainsReason;
@@ -8,6 +8,13 @@ import ottop.sudoku.puzzle.ISudoku;
 
 import java.text.MessageFormat;
 import java.util.*;
+
+
+// forcing chain forces a move
+// http://www.sadmansoftware.com/sudoku/forcingchain.php
+// xyz wing forces an elimination
+// http://www.sadmansoftware.com/sudoku/xyzwing.php
+// both if/then style
 
 public class ForcingChainsEliminator extends Eliminator {
 
@@ -26,15 +33,17 @@ public class ForcingChainsEliminator extends Eliminator {
                 String symbol = myPuzzle.symbolCodeToSymbol(candidate);
                 startingSymbols[i] = symbol;
                 chains[i] = new ArrayList<>();
-                chains[i].add(new MoveStep(chains[i], null, c, symbol));
+                chains[i].add(new NakedSingleMoveStep(chains[i], null, c, symbol));
                 i++;
             }
         }
 
         public String toString() {
-            StringBuilder sb = new StringBuilder("Forcing Chain starting at " + startingPoint + "\n");
+            StringBuilder sb = new StringBuilder().append("Forcing Chain starting at ").
+                    append(startingPoint).append(" candidates: ").append(Arrays.toString(startingSymbols)).append("\n");
             for (int i=0; i< chains.length; i++) {
-                sb.append(getSubChainStrings(String.valueOf(startingPoint), chains[i].get(0), null));
+                sb.append(getSubChainStrings("   "+startingSymbols[i] +"@"+ startingPoint,
+                        chains[i].get(0), null));
                 //sb.append("   chain " + i + ": ").append(String.valueOf(chains[i])).append("\n");
             }
             return sb.toString();
@@ -93,15 +102,23 @@ public class ForcingChainsEliminator extends Eliminator {
             return shared;
         }
 
+//        private List<Coord> getSequenceLeadingUpTo___old(Step step) {
+//            List<Coord> sequence = new ArrayList<>();
+//            if (step.parent != null) {
+//                sequence.addAll(getSequenceLeadingUpTo(step.parent));
+//            }
+//            if (step instanceof EliminationStep) {
+//                sequence.add(step.coord);
+//            }
+//            return sequence;
+//        }
 
-        private List<Coord> getSequenceLeadingUpTo(Step step) {
-            List<Coord> sequence = new ArrayList<>();
+        private List<Step> getSequenceLeadingUpTo(Step step) {
+            List<Step> sequence = new ArrayList<>();
             if (step.parent != null) {
                 sequence.addAll(getSequenceLeadingUpTo(step.parent));
             }
-            if (step instanceof EliminationStep) {
-                sequence.add(step.coord);
-            }
+            sequence.add(step);
             return sequence;
         }
 
@@ -126,8 +143,12 @@ public class ForcingChainsEliminator extends Eliminator {
             // Assuming: all shared results are Eliminations
             boolean allAreEliminations = shared.stream().allMatch(s -> (s instanceof EliminationStep));
             if (!allAreEliminations) {
-                System.out.println("Expected all conclusions to be eliminations but not all of them are: " + shared);
+                // This should not be happening
+                System.out.println("**UNEXPECTED** All conclusions should be eliminations. Shared conclusions: " + shared);
                 System.out.println(this);
+//                if (shared.size()==2) {
+//                    System.out.println(String.valueOf(myPuzzle));
+//                }
                 return null;
             }
 
@@ -139,11 +160,11 @@ public class ForcingChainsEliminator extends Eliminator {
                         new ForcingChainsReason(sharedConclusion.symbol, startingPoint, sharedConclusion.coord);
                 int currentChainMaxLevel = -1;
                 for (int i=0; i<chains.length; i++) {
-                    List<Coord> stepChain = null;
+                    List<Step> stepChain = null;
                     for (Step s: chains[i]) {
                         if (s.equals(sharedConclusion)) {
                             if (s.level > currentChainMaxLevel) currentChainMaxLevel = s.level;
-                            List<Coord> currentStepChain = getSequenceLeadingUpTo(s.parent);
+                            List<Step> currentStepChain = getSequenceLeadingUpTo(s); // s.parent to exclude last
                             if (stepChain == null || currentStepChain.size() < stepChain.size()) {
                                 stepChain = currentStepChain;
                             }
@@ -162,7 +183,7 @@ public class ForcingChainsEliminator extends Eliminator {
     }
 
     // TODO: use more broadly? Coord + symbol
-    class Step{
+    public class Step{
         Step parent;
         List<Step> children = new ArrayList<>();
         boolean isResolved = false;
@@ -186,6 +207,8 @@ public class ForcingChainsEliminator extends Eliminator {
             if (parent.coord.equals(buddy)) return true;
             return parent.isInParentChain(buddy);
         }
+        public Coord getCoord() { return coord; }
+
         @Override
         public int hashCode() {
             return coord.hashCode() ^ symbol.hashCode();
@@ -201,15 +224,17 @@ public class ForcingChainsEliminator extends Eliminator {
         }
 
         boolean addConclusions() { return false; }
+
         public String toString() {
             return symbol+"@"+coord;
         }
     }
-    class MoveStep extends Step {
+
+    abstract class MoveStep extends Step {
         MoveStep(List<Step> container, Step parent, Coord c, String symbol) {
             super(container, parent, c, symbol);
         }
-        public boolean addConclusions() {
+        boolean addConclusions() {
             boolean hasAdded = false;
             int symbolCode = myPuzzle.symbolToSymbolCode(symbol);
             for (Coord buddy: myPuzzle.getBuddies(coord)) {
@@ -217,7 +242,9 @@ public class ForcingChainsEliminator extends Eliminator {
                     // see if buddy is already in the list
                     // if buddy is a move that would be inconsistent?
                     // if an elimination we could combine but perhaps that goes too far
-                    if (myContainer.contains(buddy)) System.out.println("** buddy already present: " + buddy);
+                    if (myContainer.contains(buddy)) {
+                        System.out.println("**UNEXPECTED** buddy " + buddy + " already present in " + this);
+                    }
 
                     Set<Integer> buddyCandidates = candidatesPerCell.get(buddy);
                     if (buddyCandidates.contains(symbolCode)) {
@@ -232,11 +259,27 @@ public class ForcingChainsEliminator extends Eliminator {
             isResolved = true;
             return hasAdded;
         }
+    }
 
-        public String toString() {
-            return "M:"+super.toString();
+    class NakedSingleMoveStep extends MoveStep {
+        NakedSingleMoveStep(List<Step> container, Step parent, Coord c, String symbol) {
+            super(container, parent, c, symbol);
         }
+        public String toString() {
+            return "S:"+super.toString();
+        }
+    }
 
+    class UniqueValueMoveStep extends MoveStep {
+        private final AbstractGroup uniqueInGroup;
+
+        UniqueValueMoveStep(List<Step> container, Step parent, Coord c, String symbol, AbstractGroup uniqueInGroup) {
+            super(container, parent, c, symbol);
+            this.uniqueInGroup = uniqueInGroup;
+        }
+        public String toString() {
+            return "U("+uniqueInGroup+"):"+super.toString();
+        }
     }
 
     class EliminationStep extends Step {
@@ -244,24 +287,108 @@ public class ForcingChainsEliminator extends Eliminator {
         {
             super(container, parent, c, symbol);
         }
-        public boolean addConclusions() {
-            // avoid the same cells of any of your parents
+        boolean addConclusions() {
             boolean hasAdded = false;
-            int symbolCode = myPuzzle.symbolToSymbolCode(symbol);
-            Set<Integer> candidates = new TreeSet<>(candidatesPerCell.get(coord));
-            if (candidates.size() == 2) {
-                if (candidates.remove(symbolCode)) {
-                    // Naked single
-                    String loneNumber = myPuzzle.symbolCodeToSymbol(candidates.iterator().next());
-                    if (myContainer.add(new MoveStep(myContainer, this, coord, loneNumber))) {
-                        hasAdded = true;
+
+            // Check # of candidates in current cell
+            // removing any eliminations in this cell by the parent chain
+            // TODO: instead of just applying the parent chain, in principle we
+            // could also apply any eliminations from the same chain. However this
+            // would become rather difficult to understand. We would also have to
+            // include those in the explanations.
+            Set<Integer> candidates = new TreeSet<>(candidatesPerCell.get(coord)); // is a copy of the candidates
+            Step p = this;
+            while (p != null) {
+                // For longer chains there could be multiple eliminations in
+                // the same cell. But unfortunately this does not happen often.
+                if (p.coord.equals(this.coord)) {
+                    candidates.remove(myPuzzle.symbolToSymbolCode(p.symbol));
+                }
+                p = p.parent;
+            }
+
+            // Check for NO candidates. If that happens this chain is resulting
+            // in an inconsistent state so should be dismissed.
+            if (candidates.size() == 0) {
+                //System.out.println("***** INCONSISTENT **** nothing remaining at " + coord);
+                isResolved = true;
+                return false;
+            }
+
+            // Naked single if one candidate remaining
+            if (candidates.size() == 1) {
+                String loneNumber = myPuzzle.symbolCodeToSymbol(candidates.stream().findAny().get());
+                if (myContainer.add(new NakedSingleMoveStep(myContainer, this, coord, loneNumber))) {
+                    hasAdded = true;
+                }
+            }
+
+            // Now check for lone symbols
+            if (!hasAdded) {
+                int symbolCode = myPuzzle.symbolToSymbolCode(symbol);
+
+                for (AbstractGroup buddyGrp : myPuzzle.getBuddyGroups(coord)) {
+
+                    // For a buddy group see where the current symbol is a possibility. Start with
+                    // the possibilities remaining from the current puzzle. Exclude the current cell
+                    // as the elimination is there. But also eliminate any cells from the parent chain
+                    // that eliminate the symbol and are in this same group.
+
+                    Set<Coord> possibilities = new HashSet<>();
+                    for (Coord c : buddyGrp.getCoords()) {
+                        if (!c.equals(coord)) { // it is eliminated at this coord so not adding as a possibility
+                            if (buddyGrp.isPossibility(symbolCode, c)) {
+                                possibilities.add(c);
+                            }
+                        }
+                    }
+
+                    // TODO: this is incomplete.. We should consider the full chain I'm afraid
+                    // because just checking the parent chain may miss out on sibling eliminations.
+
+                    // TODO may work, see tour 10 removal 8 from r4c4...
+                    // however now only at 42/95 in the magic tour, only 1 extra...
+
+                    // See if there is a parent that is in the same buddy group and that
+                    // eliminates the same symbol
+//                    p = this.parent;
+//                    while (p != null) {
+//                        if (p.symbol.equals(this.symbol) && buddyGrp.isInGroup(p.coord)) {
+//                            possibilities.remove(p.coord);
+//                        }
+//                        p = p.parent;
+//                    }
+
+                    for (Step s : myContainer) {
+                        if (s.symbol.equals(this.symbol) && buddyGrp.isInGroup(s.coord)) {
+                            possibilities.remove(s.coord);
+                        }
+                    }
+
+
+                    // TODO: this SEEMS to increase magic tour to 46/95 from 41/95.
+                    // TODO: double check this carefully
+                    // TODO: hey we lost one, now 45...
+
+                    // We have only 1 possibility for "symbolCode" in this buddy group
+                    if (possibilities.size() == 1) {
+                        //                        System.out.println("Unique symbol " + symbol + " (eliminated at " + coord +
+                        //                                ") in " + buddyGrp + ": " + possibilities);
+
+                        // Unique symbol
+                        if (myContainer.add(new UniqueValueMoveStep(myContainer, this,
+                                possibilities.stream().findAny().get(), symbol,
+                                buddyGrp))) {
+                            hasAdded = true;
+                        }
                     }
                 }
             }
-            // TODO consider unique value logic as well
+
             isResolved = true;
             return hasAdded;
         }
+
         public String toString() {
             return "E:"+super.toString();
         }
@@ -276,13 +403,11 @@ public class ForcingChainsEliminator extends Eliminator {
 
         // TODO find start by finding cells with 2 then 3 etc possibilities
         // TODO or just try all and use the one with smallest total conclusions but > 0
-//        Coord start = new Coord("r9c2");
-//        Coord start = new Coord("r1c2");
 
         ForcingChainsReason bestFc = null;
         Map<Step, ForcingChainsReason> remainingFcs = new HashMap<>();
         for (Coord start: myPuzzle.getAllCells()) {
-            if (!myPuzzle.isOccupied(start)) {
+            if (!myPuzzle.isOccupied(start) && candidatesPerCell.get(start).size()>1) {
                 // Find all chains starting at 'start' but early stop at depth > current best depth
                 // Opportunity here to start with cell with only 2 or 3 candidates
                 // TODO or max depth to 5 or so..
@@ -292,19 +417,24 @@ public class ForcingChainsEliminator extends Eliminator {
 
                 List<ForcingChainsReason> fcrs = fc.findChains(maxDepth);
 
+//                System.out.println("\n"+fc);
+//                System.out.println("Results in " + (fcrs==null?0:fcrs.size()) + " possible chains");
+
                 if (fcrs != null && fcrs.size() > 0) {
                     for (ForcingChainsReason fcr: fcrs) {
-                        Coord removal = fcr.getRemovedFrom().iterator().next();
+                        Coord removal = fcr.getRemovedFrom().stream().findAny().get();
                         Step mv = new Step(null, null, removal, fcr.getSymbol());
                         if (fcr.compareTo(remainingFcs.get(mv)) < 0) {
                             remainingFcs.put(mv, fcr); // Better one at same cell/symbol
                         }
 
-                        System.out.println(new StringBuilder().append("Forcing chain size ")
-                                .append(fcr.getTotalChainLength()).append("/depth ").append(fcr.getChainDepth())
-                                .append(" found at ").append(start)
-                                .append(":").toString());
-                        System.out.println(MessageFormat.format("   {0}", fcr));
+                        if (verbose) {
+                            System.out.println(new StringBuilder().append("Forcing chains size ")
+                                    .append(fcr.getTotalChainLength()).append("/depth ").append(fcr.getChainDepth())
+                                    .append(" found at ").append(start)
+                                    .append(":").toString());
+                            System.out.println(MessageFormat.format("   {0}", fcr));
+                        }
 
                         if (bestFc == null ||
                                 (fcr.getChainDepth() < bestFc.getChainDepth()) ||
@@ -321,12 +451,14 @@ public class ForcingChainsEliminator extends Eliminator {
         // TODO: consider adding siblings of the "removed from" set. Same parent,
         // same symbol elimination but different cells.
 
-        System.out.println("Found " + remainingFcs.size() + " chains:");
-        System.out.println("   keys: " + remainingFcs.keySet());
-        for (ForcingChainsReason x: remainingFcs.values()) {
-            System.out.println("   " + x);
+        if (verbose) {
+            System.out.println("Found " + remainingFcs.size() + " chains:");
+            System.out.println("   keys: " + remainingFcs.keySet());
+            for (ForcingChainsReason x : remainingFcs.values()) {
+                System.out.println("   " + x);
+            }
+            System.out.println("Best FC: " + bestFc);
         }
-        System.out.println("Best FC: " + bestFc);
 
         // eliminate in puzzle
         boolean hasRemoved = false;

@@ -257,6 +257,17 @@ public class PuzzleDB {
             "68 953 4 ",
             "9 5 846 3");
 
+    private static ISudoku forcing_chains_mixed = new StandardSudoku("Halve solved Excessive Sudoku 4/1/21",
+            "1.6..7..2" +
+                    ".7..5..1." +
+                    "3..6219.." +
+                    "4..5.81.." +
+                    ".1..4..8." +
+                    "7.81.2..9" +
+                    "..1..6..5" +
+                    ".47985.3." +
+                    "5..2147..");
+
     private static List<ISudoku> getDeclaredPuzzles(PuzzleDB db) {
         Field[] allFields = PuzzleDB.class.getDeclaredFields();
         List<ISudoku> puzzles = new ArrayList<>();

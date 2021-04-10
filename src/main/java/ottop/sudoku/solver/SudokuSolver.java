@@ -30,11 +30,21 @@ public class SudokuSolver implements Updateable {
     private boolean doEliminationXWings;
     private boolean doForcingChains;
     private boolean earlyStopping = true;
+    private boolean verbose = false;
 
     public SudokuSolver(ISudoku p) {
         myPuzzle = p;
         p.setSolver(this);
         setSimplest();
+    }
+
+    public SudokuSolver setVerbose() {
+        return setVerbose(true);
+    }
+
+    public SudokuSolver setVerbose(boolean onOff) {
+        this.verbose = onOff;
+        return this;
     }
 
     public SudokuSolver setEliminateNakedPairs() {
@@ -115,6 +125,7 @@ public class SudokuSolver implements Updateable {
 
         Eliminator simpleEliminator =
                 new BasicEliminationEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+        simpleEliminator.setVerbose(verbose);
 
         boolean hasEliminated = simpleEliminator.eliminate();
 
@@ -136,47 +147,26 @@ public class SudokuSolver implements Updateable {
 
         if ((!hasEliminated || !earlyStopping) && doEliminationIntersectionRadiation) {
             Eliminator e = new IntersectionRadiationEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+            e.setVerbose(verbose);
             if (e.eliminate()) hasEliminated = true;
         }
         if ((!hasEliminated || !earlyStopping) && doEliminationNakedPairs) {
             Eliminator e = new NakedGroupEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+            e.setVerbose(verbose);
             if (e.eliminate()) hasEliminated = true;
         }
         if ((!hasEliminated || !earlyStopping) && doEliminationXWings) {
             Eliminator e = new XWingEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+            e.setVerbose(verbose);
             if (e.eliminate()) hasEliminated = true;
         }
         if ((!hasEliminated || !earlyStopping) && doForcingChains) {
             Eliminator e = new ForcingChainsEliminator(myPuzzle, candidatesPerCell, eliminationReasons);
+            e.setVerbose(verbose);
             if (e.eliminate()) hasEliminated = true;
         }
 
         return hasEliminated;
-    }
-
-
-    // forcing chain forces a move
-    // http://www.sadmansoftware.com/sudoku/forcingchain.php
-    // xyz wing forces an elimination
-    // http://www.sadmansoftware.com/sudoku/xyzwing.php
-    // both if/then style
-    private boolean checkForcedChains()
-    {
-        // Given an original puzzle O
-        // Find a coord C with possibilities Di (> 1, start with C's with only 2)
-        // Do move for all possibilities Mi giving new puzzles Pi
-        // Apply only forced moves to all of Pi giving Fi until no more moves
-        // When all done:
-        //    if there is an i for which Fi is solved then we accidentally guessed a solution
-        //    if there is an i for which Fi is invalid then Mi is not a valid move
-        //    otherwise for all i that do not result in an invalid puzzle Fi
-        //        if there is a coordinate K that is empty in O and that is not empty in all of Fi
-        //           if that has the SAME value in all of Fi then we have a move: at C place Di (return)
-        // Otherwise no move :(
-        //
-
-
-        return true;
     }
 
     public Map<Coord, String> getAllNakedSingles() {
@@ -334,7 +324,9 @@ public class SudokuSolver implements Updateable {
         if (candidatesPerCell == null) recalculateCandidates();
 
         List<Explanation> reasonsPlusCandidateMove = new ArrayList<>();
-        reasonsPlusCandidateMove.addAll(eliminationReasons.get(c));
+        if (eliminationReasons.get(c) != null) {
+            reasonsPlusCandidateMove.addAll(eliminationReasons.get(c));
+        }
         String symbol = getNakedSingleAt(c);
         if (symbol != null) {
             reasonsPlusCandidateMove.add(new NakedSingleSolution(symbol, c));
@@ -354,9 +346,7 @@ public class SudokuSolver implements Updateable {
         //System.out.println("Difficulty " + p.getName());
         SudokuSolver sv = new SudokuSolver(shadowPuzzle);
         SolveStats s = new SolveStats();
-        // TODO: w/o forcing chains 66/95
-        // with: 54/95 - WTF???!
-        sv.setSmartest().setEarlyStop(true).setEliminateForcingChains(true);
+        sv.setSmartest().setEarlyStop(true);//.setEliminateForcingChains(false);
         int maxReasonLevel = -1;
         //int maxNumberOfIterations = 1;
         while (!shadowPuzzle.isComplete() && !shadowPuzzle.isInconsistent()) {

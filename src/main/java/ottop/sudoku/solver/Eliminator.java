@@ -15,12 +15,22 @@ public abstract class Eliminator {
     ISudoku myPuzzle;
     Map<Coord, Set<Integer>> candidatesPerCell;
     Map<Coord, List<Explanation>> removalReasons;
+    boolean verbose = false;
 
     Eliminator(ISudoku myPuzzle, Map<Coord, Set<Integer>> candidatesPerCell, Map<Coord, List<Explanation>> removalReasons)
     {
         this.myPuzzle = myPuzzle;
         this.candidatesPerCell = candidatesPerCell;
         this.removalReasons = removalReasons;
+    }
+
+    public Eliminator setVerbose() {
+        return setVerbose(true);
+    }
+
+    public Eliminator setVerbose(boolean onOff) {
+        this.verbose = onOff;
+        return this;
     }
 
     void recordEliminationReason(Coord coord, Explanation reason) {

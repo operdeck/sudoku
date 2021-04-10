@@ -3,7 +3,6 @@ package ottop.sudoku.tests;
 import org.junit.Assert;
 import org.junit.Test;
 import ottop.sudoku.PuzzleDB;
-import ottop.sudoku.board.AbstractGroup;
 import ottop.sudoku.board.Coord;
 import ottop.sudoku.explain.Explanation;
 import ottop.sudoku.puzzle.ISudoku;
@@ -143,8 +142,7 @@ public class EliminatorTest {
 
         // "3" should be eliminated because of col 5 x square 5
 //        System.out.println(s.getEliminationReasons(new Coord("r8c5")));
-        assertTrue(String.valueOf(s.getEliminationReasons(new Coord("r8c5"))).
-                indexOf("Removed 3 because it has to be in the intersection of Column 5 with Group 5 (Intersection Radiation)") != -1);
+        assertTrue(String.valueOf(s.getEliminationReasons(new Coord("r8c5"))).contains("Removed 3 because it has to be in the intersection of Column 5 with Group 5 (Intersection Radiation)"));
         assertEquals("[6, 9]", String.valueOf(s.getCandidatesAtCell(new Coord("r8c5"))));
     }
 
@@ -170,20 +168,17 @@ public class EliminatorTest {
 
         // Simple naked pair
 
-        assertTrue(String.valueOf(s.getEliminationReasons(new Coord("r9c2"))).
-                indexOf("Removed [5, 9] in Group 7 because [5, 9] have to be in [r9c1, r7c3] (Simple Naked Pair)") != -1);
+        assertTrue(String.valueOf(s.getEliminationReasons(new Coord("r9c2"))).contains("Removed [5, 9] in Group 7 because [5, 9] have to be in [r9c1, r7c3] (Simple Naked Pair)"));
         assertEquals("[8]", String.valueOf(s.getCandidatesAtCell(new Coord("r9c2"))));
 
         // Extended naked trio
 
-        assertTrue(String.valueOf(s.getEliminationReasons(new Coord("r8c4"))).
-                indexOf("Removed [8, 9] in Column 4 because [4, 8, 9] have to be in [r1c4, r3c4, r7c4] (Extended Naked Trio)") != -1);
+        assertTrue(String.valueOf(s.getEliminationReasons(new Coord("r8c4"))).contains("Removed [8, 9] in Column 4 because [4, 8, 9] have to be in [r1c4, r3c4, r7c4] (Extended Naked Trio)"));
         assertEquals("[3]", String.valueOf(s.getCandidatesAtCell(new Coord("r8c4"))));
 
         // Extended naked quad
 
-        assertTrue(String.valueOf(s.getEliminationReasons(new Coord("r3c2"))).
-                indexOf("Removed 9 in Group 1 because [2, 4, 5, 9] have to be in [r1c1, r1c2, r2c2, r2c3] (Extended Naked Quad)") != -1);
+        assertTrue(String.valueOf(s.getEliminationReasons(new Coord("r3c2"))).contains("Removed 9 in Group 1 because [2, 4, 5, 9] have to be in [r1c1, r1c2, r2c2, r2c3] (Extended Naked Quad)"));
         assertEquals("[3]", String.valueOf(s.getCandidatesAtCell(new Coord("r3c2"))));
 
     }
@@ -243,7 +238,7 @@ public class EliminatorTest {
         Assert.assertEquals("Rounds: 1", String.valueOf(stats));
 
         // eventually, just make sure it is completely solved
-        solver.solve();
+        solver.solve(); // TODO: zoom into "Expected all conclusions to be eliminations but not all of them are"
         Assert.assertEquals("Extreme Sudoku Excessive 4/1/21:\n" +
                 "196437852\n" +
                 "274859613\n" +
@@ -275,10 +270,37 @@ public class EliminatorTest {
         move = sv.nextMove(new SolveStats());
 
         assertNotNull(move);
-        assertEquals("r2c1=1", String.valueOf(move));
+        assertEquals("r1c2=7", String.valueOf(move));
+//        assertEquals("r2c1=1", String.valueOf(move));
     }
 
     @Test
+    public void testForcingChainsNotAllConclusionsAreEliminations()
+    {
+        ISudoku p = new StandardSudoku("Halve solved Excessive Sudoku 4/1/21",
+                "1.6..7..2" +
+                ".7..5..1." +
+                "3..6219.." +
+                "4..5.81.." +
+                ".1..4..8." +
+                "7.81.2..9" +
+                "..1..6..5" +
+                ".47985.3." +
+                "5..2147..");
+
+        SudokuSolver sv = new SudokuSolver(p);
+        sv.setSmartest().setEarlyStop(false);
+        sv.setVerbose(false);
+
+        Map.Entry<Coord, String> mv = sv.nextMove(new SolveStats());
+
+        //System.out.println(mv);
+        assertEquals("r1c2=9", String.valueOf(mv));
+    }
+
+    @Test
+    // This really just verifies that certain simpler forced chains are
+    // correctly identified as XY-Wings
     public void testXYWing()
     {
         // Magic tour #4 requires a small forcing chain
@@ -293,9 +315,38 @@ public class EliminatorTest {
         assertTrue(sv.solve());
 
         // XY-Wing at r3c3
-        assertTrue(String.valueOf(sv.getEliminationReasons(new Coord("r2c3"))).indexOf("(XY-Wing)") != -1);
+//        System.out.println(String.valueOf(sv.getEliminationReasons(new Coord("r2c3"))));
+        assertTrue(String.valueOf(sv.getEliminationReasons(new Coord("r2c3"))).contains("(XY-Wing)"));
 
         // More complex forcing chain
-        assertTrue(String.valueOf(sv.getEliminationReasons(new Coord("r4c2"))).indexOf("(Forcing Chains)") != -1);
+        assertTrue(String.valueOf(sv.getEliminationReasons(new Coord("r4c2"))).contains("(Forcing Chains)"));
+    }
+
+    @Test
+    // Most forcing chains eventually find eliminations using just
+    // naked pairs. Unique Values can also be part of the forced chains however,
+    // here we assert this happens.
+    public void testForcingChainsWithUniqueValueMoves()
+    {
+        ISudoku p = PuzzleDB.getPuzzleByName("Magic tour 10");
+        SudokuSolver sv = new SudokuSolver(p);
+        sv.setVerbose(false).setSmartest();
+        SolveStats stats = new SolveStats();
+
+        // Easy moves
+        for (int i=0; i<8; i++) {
+            Map.Entry<Coord, String> x = sv.nextMove(stats);
+            p.doMove(x.getKey(), x.getValue());
+        }
+
+        // This is the hard one that requires a pretty advanced forcing chain
+        Map.Entry<Coord, String> hardMove = sv.nextMove(stats);
+        assertEquals("r4c4=6", String.valueOf(hardMove));
+        List<Explanation> r = sv.getEliminationReasons(new Coord("r4c6")); // NB is not where the move is done
+
+        // It's a subtle test but this means there is a "unique value" part of the forced chains
+        assertTrue(r.toString().contains("U:"));
+
+        assertTrue(sv.solve());
     }
 }
